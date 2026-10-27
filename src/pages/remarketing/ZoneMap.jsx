@@ -3,8 +3,11 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { REMARKETING_ZONES } from '../../data/remarketingZones';
 
-const TILES = 'https://{s}.basemaps.cartocdn.com/{style}/{z}/{x}/{y}{r}.png';
-const ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>';
+const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/{layer}/MapServer/tile/{z}/{y}/{x}';
+const ESRI_ATTRIBUTION = 'Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors';
+const OSM = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+const OSM_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+const MAX_TILE_ERRORS = 4;
 const LABEL_ZOOM = 11.5;
 const META = Object.fromEntries(REMARKETING_ZONES.map((z) => [z.zip, z]));
 const ALL_BOUNDS = L.latLngBounds(REMARKETING_ZONES.map((z) => [z.lat, z.lng]));
@@ -48,8 +51,16 @@ export default function ZoneMap({ zips, region, focus, hoverZip, onToggle, onHov
     zipPane.style.zIndex = 430;
     zipPane.style.pointerEvents = 'none';
 
-    L.tileLayer(TILES, { style: 'dark_nolabels', subdomains: 'abcd', maxZoom: 19, attribution: ATTRIBUTION, className: 'rmk-tiles' }).addTo(map);
-    L.tileLayer(TILES, { style: 'dark_only_labels', subdomains: 'abcd', maxZoom: 19, pane: 'places', className: 'rmk-tiles-labels' }).addTo(map);
+    const base = L.tileLayer(ESRI, { layer: 'World_Dark_Gray_Base', maxNativeZoom: 16, maxZoom: 19, attribution: ESRI_ATTRIBUTION, className: 'rmk-tiles' }).addTo(map);
+    const reference = L.tileLayer(ESRI, { layer: 'World_Dark_Gray_Reference', maxNativeZoom: 16, maxZoom: 19, pane: 'places', className: 'rmk-tiles-labels' }).addTo(map);
+    let tileErrors = 0;
+    base.on('tileerror', () => {
+      tileErrors += 1;
+      if (tileErrors !== MAX_TILE_ERRORS) return;
+      base.remove();
+      reference.remove();
+      L.tileLayer(OSM, { maxZoom: 19, attribution: OSM_ATTRIBUTION, className: 'rmk-tiles-osm' }).addTo(map);
+    });
 
     const zipLabels = L.layerGroup(
       REMARKETING_ZONES.map((z) =>

@@ -153,12 +153,15 @@
 }
 
 .rmk__map .rmk-tiles {
-  filter: sepia(0.7) hue-rotate(190deg) saturate(2) brightness(0.92);
+  filter: sepia(0.6) hue-rotate(195deg) saturate(1.8) brightness(0.8);
 }
 
 .rmk__map .rmk-tiles-labels {
-  filter: brightness(1.15);
-  opacity: 0.85;
+  opacity: 0.9;
+}
+
+.rmk__map .rmk-tiles-osm {
+  filter: invert(1) hue-rotate(180deg) sepia(0.35) hue-rotate(195deg) saturate(1.4) brightness(0.75) contrast(1.1);
 }
 
 .rmk__map .rmk-zone {
