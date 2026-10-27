@@ -12,6 +12,10 @@ import TotalsPage from './pages/summary/TotalsPage';
 import RemindersPage from './pages/reminders/RemindersPage';
 import ProtocolPage from './pages/protocol/ProtocolPage';
 import ProtocolAlerts from './components/ProtocolAlerts';
+import AssistantPage from './pages/assistant/AssistantPage';
+import QualityPage from './pages/qc/QualityPage';
+import RemarketingPage from './pages/remarketing/RemarketingPage';
+import AdminPage from './pages/admin/AdminPage';
 import { ALL_SECTIONS } from './sections';
 import './App.css';
 
@@ -23,6 +27,10 @@ const PAGES = {
   '/resumenes': TotalsPage,
   '/recordatorios': RemindersPage,
   '/protocolo': ProtocolPage,
+  '/asistente': AssistantPage,
+  '/control-de-calidad': QualityPage,
+  '/remarketing': RemarketingPage,
+  '/admin': AdminPage,
 };
 
 function AnimatedRoutes() {
