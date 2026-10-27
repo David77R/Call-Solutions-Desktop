@@ -36,6 +36,7 @@ function readUnlocked() {
 function PinGate({ onUnlock }) {
   const [pin, setPin] = useState('');
   const [wrong, setWrong] = useState(false);
+  const [visible, setVisible] = useState(false);
 
   if (!ADMIN_PIN) {
     return (
@@ -74,7 +75,16 @@ function PinGate({ onUnlock }) {
       <label htmlFor="admin-pin" className="sf-sr">
         PIN
       </label>
-      <input id="admin-pin" className="sf-input pin__input" type="password" autoFocus value={pin} onChange={(e) => setPin(e.target.value)} />
+      <div className="pin__field">
+        <input id="admin-pin" className="sf-input pin__input" type={visible ? 'text' : 'password'} autoFocus autoComplete="off" value={pin} onChange={(e) => setPin(e.target.value)} />
+        <button type="button" className="pin__eye" onClick={() => setVisible((v) => !v)} aria-label={visible ? 'Ocultar PIN' : 'Mostrar PIN'} aria-pressed={visible}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" />
+            <circle cx="12" cy="12" r="3" />
+            <path className={visible ? 'pin__slash' : 'pin__slash is-on'} d="M4 4l16 16" />
+          </svg>
+        </button>
+      </div>
       {wrong && <p className="pin__error">PIN incorrecto.</p>}
       <button type="submit" className="pin__submit" disabled={!pin}>
         Entrar
