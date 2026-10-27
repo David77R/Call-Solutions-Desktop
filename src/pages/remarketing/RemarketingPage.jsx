@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import CompanyTabs from '../../components/CompanyTabs';
 import { useCatalog } from '../../lib/useCatalog';
 import { useAuth } from '../../lib/AuthContext';
 import { accentTokens } from '../../lib/color';
-import { REGION_VIEWBOXES, REMARKETING_VIEWBOX, REMARKETING_ZONES } from '../../data/remarketingZones';
+import { REMARKETING_ZONES } from '../../data/remarketingZones';
+import ZoneMap from './ZoneMap';
 import { REMARKETING_SLUGS, resetZones, toggleZone, useZoneProgress } from '../../lib/remarketing';
 import { labelFromDateKey, shiftDateKey, todayKey } from '../../lib/summaries';
 import '../summary/Summary.css';
@@ -22,33 +23,6 @@ const FILTERS = [
   { key: 'pending', label: 'Sin marcar' },
 ];
 
-const parseBox = (s) => s.split(' ').map(Number);
-
-function useAnimatedViewBox(target) {
-  const [box, setBox] = useState(() => parseBox(target));
-  const current = useRef(box);
-
-  useEffect(() => {
-    const from = current.current;
-    const to = parseBox(target);
-    const start = performance.now();
-    const duration = 700;
-    let frame;
-    const tick = (now) => {
-      const t = Math.min(1, (now - start) / duration);
-      const e = 1 - Math.pow(1 - t, 4);
-      const next = from.map((v, i) => v + (to[i] - v) * e);
-      current.current = next;
-      setBox(next);
-      if (t < 1) frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [target]);
-
-  return box.join(' ');
-}
-
 export default function RemarketingPage() {
   const { companies } = useCatalog();
   const { user } = useAuth();
@@ -62,7 +36,15 @@ export default function RemarketingPage() {
   const [confirmReset, setConfirmReset] = useState(false);
   const company = options.find((c) => c.slug === slug) || options[0] || null;
   const [zips, setZips] = useZoneProgress(company?.slug, dateKey);
-  const viewBox = useAnimatedViewBox(region === 'all' ? REMARKETING_VIEWBOX : REGION_VIEWBOXES[region]);
+  const [focus, setFocus] = useState(null);
+  const [expanded, setExpanded] = useState(false);
+  const wrapRef = useRef(null);
+  const zipsRef = useRef(zips);
+
+  useEffect(() => {
+    zipsRef.current = zips;
+  }, [zips]);
+
   const color = company?.color_primary || '#7f97e8';
   const isToday = dateKey === todayKey();
 
@@ -78,10 +60,25 @@ export default function RemarketingPage() {
     }).sort((a, b) => a.name.localeCompare(b.name));
   }, [zips, filter, region, search]);
 
-  const toggle = (z) => {
-    const done = !!zips[z.zip]?.done;
-    const entry = toggleZone(company.slug, dateKey, z.zip, done, user?.displayName);
-    setZips((prev) => ({ ...prev, [z.zip]: entry }));
+  const toggle = useCallback(
+    (z) => {
+      if (!company) return;
+      const entry = toggleZone(company.slug, dateKey, z.zip, !!zipsRef.current[z.zip]?.done, user?.displayName);
+      zipsRef.current = { ...zipsRef.current, [z.zip]: entry };
+      setZips((prev) => ({ ...prev, [z.zip]: entry }));
+    },
+    [company, dateKey, user?.displayName, setZips]
+  );
+
+  useEffect(() => {
+    const sync = () => setExpanded(document.fullscreenElement === wrapRef.current);
+    document.addEventListener('fullscreenchange', sync);
+    return () => document.removeEventListener('fullscreenchange', sync);
+  }, []);
+
+  const toggleExpanded = () => {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    else wrapRef.current?.requestFullscreen().catch(() => {});
   };
 
   const markedZips = Object.keys(zips).filter((z) => zips[z]?.done);
@@ -92,7 +89,7 @@ export default function RemarketingPage() {
         <div>
           <h1 className="rmk__title">Remarketing</h1>
           <p className="rmk__sub">
-            {doneCount} de {REMARKETING_ZONES.length} zonas trabajadas hoy. Toca una zona del mapa para marcarla.
+            {doneCount} de {REMARKETING_ZONES.length} zonas trabajadas. Haz clic en una zona para marcarla y usa la rueda del mouse para acercarte.
           </p>
         </div>
         <div className="date-nav">
@@ -113,52 +110,35 @@ export default function RemarketingPage() {
       </div>
 
       <div className="rmk__layout">
-        <div className="rmk__map-wrap">
-          <div className="rmk__regions" role="group" aria-label="Región del mapa">
-            {REGIONS.map((r) => (
-              <button key={r.key} type="button" aria-pressed={region === r.key} onClick={() => setRegion(r.key)}>
-                {r.label}
-              </button>
-            ))}
-          </div>
-          <svg className="rmk__map" viewBox={viewBox} role="group" aria-label="Mapa de zonas de remarketing">
-            {REMARKETING_ZONES.map((z) => {
-              const done = !!zips[z.zip]?.done;
-              const dim = region !== 'all' && z.region !== region;
-              return (
-                <path
-                  key={z.zip}
-                  d={z.path}
-                  className={`rmk__zone${done ? ' is-done' : ''}${dim ? ' is-dim' : ''}${hover?.zip === z.zip ? ' is-hover' : ''}`}
-                  style={done ? { fill: color } : undefined}
-                  tabIndex={dim ? -1 : 0}
-                  role="button"
-                  aria-pressed={done}
-                  aria-label={`${z.name} ${z.zip}`}
-                  onClick={() => toggle(z)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      toggle(z);
-                    }
-                  }}
-                  onMouseEnter={() => setHover(z)}
-                  onMouseLeave={() => setHover((h) => (h?.zip === z.zip ? null : h))}
-                />
-              );
-            })}
-            {region !== 'all' &&
-              REMARKETING_ZONES.filter((z) => z.region === region).map((z) => (
-                <text key={`t-${z.zip}`} x={z.cx} y={z.cy} className="rmk__label">
-                  {z.zip}
-                </text>
+        <div className="rmk__map-wrap" ref={wrapRef}>
+          <div className="rmk__toolbar">
+            <div className="rmk__regions" role="group" aria-label="Región del mapa">
+              {REGIONS.map((r) => (
+                <button key={r.key} type="button" aria-pressed={region === r.key} onClick={() => setRegion(r.key)}>
+                  {r.label}
+                </button>
               ))}
-          </svg>
+            </div>
+            <button type="button" className="rmk__expand" onClick={toggleExpanded} aria-pressed={expanded}>
+              {expanded ? 'Salir de pantalla completa' : 'Pantalla completa'}
+            </button>
+          </div>
+          <ZoneMap zips={zips} region={region} focus={focus} hoverZip={hover?.zip ?? null} onToggle={toggle} onHover={setHover} />
           {hover && (
             <div className="rmk__tip" key={hover.zip}>
               <strong>{hover.name}</strong>
               <span>{hover.zip}</span>
-              {zips[hover.zip]?.done && <span className="rmk__tip-by">Marcada por {zips[hover.zip].doneBy}</span>}
+              {zips[hover.zip]?.done ? (
+                <span className="rmk__tip-by">Marcada por {zips[hover.zip].doneBy}</span>
+              ) : (
+                <span className="rmk__tip-by">Sin marcar</span>
+              )}
+            </div>
+          )}
+          {expanded && (
+            <div className="rmk__float-count" style={{ '--p': doneCount / REMARKETING_ZONES.length }}>
+              <span className="rmk__float-dot" aria-hidden="true" />
+              {company?.name} · {doneCount} de {REMARKETING_ZONES.length}
             </div>
           )}
         </div>
@@ -179,17 +159,18 @@ export default function RemarketingPage() {
             {list.map((z) => {
               const done = !!zips[z.zip]?.done;
               return (
-                <li key={z.zip}>
-                  <button
-                    type="button"
-                    className={done ? 'rmk__item is-done' : 'rmk__item'}
-                    onClick={() => toggle(z)}
-                    onMouseEnter={() => setHover(z)}
-                    onMouseLeave={() => setHover(null)}
-                  >
+                <li key={z.zip} className={done ? 'rmk__row is-done' : 'rmk__row'} onMouseEnter={() => setHover(z)} onMouseLeave={() => setHover(null)}>
+                  <button type="button" className="rmk__item" aria-pressed={done} onClick={() => toggle(z)}>
                     <span className="rmk__check" aria-hidden="true" />
                     <span className="rmk__item-name">{z.name}</span>
                     <span className="rmk__item-zip">{z.zip}</span>
+                  </button>
+                  <button type="button" className="rmk__locate" aria-label={`Ver ${z.name} ${z.zip} en el mapa`} title="Ver en el mapa" onClick={() => setFocus({ zip: z.zip, at: Date.now() })}>
+                    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                      <circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" strokeWidth="2" />
+                      <circle cx="12" cy="12" r="2.5" fill="currentColor" />
+                      <path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
                   </button>
                 </li>
               );
