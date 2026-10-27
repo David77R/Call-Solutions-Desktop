@@ -5,11 +5,15 @@ import { AuthProvider, useAuth } from './lib/AuthContext';
 import logo from './assets/ccs-logo.png';
 import ComingSoon from './pages/ComingSoon';
 import PricesPage from './pages/prices/PricesPage';
+import CallFlowPage from './pages/callflow/CallFlowPage';
+import FavoritesPage from './pages/favorites/FavoritesPage';
 import { ALL_SECTIONS } from './sections';
 import './App.css';
 
 const PAGES = {
   '/precios': PricesPage,
+  '/flujo-de-llamada': CallFlowPage,
+  '/favoritos': FavoritesPage,
 };
 
 function AnimatedRoutes() {

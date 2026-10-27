@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import CompanyTabs, { shortCompanyName } from '../../components/CompanyTabs';
 import WeightDial from '../../components/WeightDial';
 import QuoteTicket from '../../components/QuoteTicket';
@@ -38,6 +39,8 @@ export default function PricesPage() {
   const [selected, setSelected] = useState(null);
   const [lang, setLang] = useState('es');
   const inputRef = useRef(null);
+  const location = useLocation();
+  const openedFromState = useRef(false);
 
   const trimmed = query.trim();
   const results = useMemo(
@@ -72,6 +75,13 @@ export default function PricesPage() {
     },
     [catalog]
   );
+
+  useEffect(() => {
+    const incoming = location.state?.item;
+    if (!incoming || openedFromState.current || !catalog.rows.length) return;
+    openedFromState.current = true;
+    handleSelect(incoming);
+  }, [location.state, catalog.rows.length, handleSelect]);
 
   const handleCompany = (slug) => {
     setActiveSlug(slug);

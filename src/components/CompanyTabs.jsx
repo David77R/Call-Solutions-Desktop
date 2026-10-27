@@ -6,13 +6,14 @@ export function shortCompanyName(name) {
   return name.replace(/\s*(Mobile\s+)?(Pet\s+)?Grooming$/i, '').trim() || name;
 }
 
-export default function CompanyTabs({ companies, activeSlug, onChange }) {
+export default function CompanyTabs({ companies, activeSlug, onChange, showAll = true }) {
   const listRef = useRef(null);
   const tabRefs = useRef({});
   const [indicator, setIndicator] = useState(null);
 
-  const tabs = [{ slug: null, name: 'Todas', color: MOON }, ...companies.map((c) => ({ slug: c.slug, name: shortCompanyName(c.name), color: c.color_primary }))];
-  const active = tabs.find((t) => t.slug === activeSlug) || tabs[0];
+  const companyTabs = companies.map((c) => ({ slug: c.slug, name: shortCompanyName(c.name), color: c.color_primary }));
+  const tabs = showAll ? [{ slug: null, name: 'Todas', color: MOON }, ...companyTabs] : companyTabs;
+  const active = tabs.find((t) => t.slug === activeSlug) || tabs[0] || { slug: null, color: MOON };
 
   useLayoutEffect(() => {
     const measure = () => {
