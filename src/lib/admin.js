@@ -39,15 +39,20 @@ export function saveRoster(slug, names) {
 }
 
 export function useAgents() {
-  const [agents, setAgents] = useState([]);
+  const [state, setState] = useState({ agents: [], error: null, loading: true });
   useEffect(
     () =>
       onSnapshot(
         collection(db, 'agents'),
-        (snap) => setAgents(snap.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''))),
-        () => {}
+        (snap) =>
+          setState({
+            agents: snap.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => (a.displayName || '').localeCompare(b.displayName || '')),
+            error: null,
+            loading: false,
+          }),
+        (err) => setState({ agents: [], error: err.code || 'error', loading: false })
       ),
     []
   );
-  return agents;
+  return state;
 }

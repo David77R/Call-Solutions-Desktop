@@ -94,7 +94,16 @@ function PinGate({ onUnlock }) {
 }
 
 function Agents() {
-  const agents = useAgents();
+  const { agents, error, loading } = useAgents();
+  if (error === 'permission-denied') {
+    return (
+      <p className="co-card__issue">
+        Las reglas de Firestore no dejan leer la colección "agents". Hay que agregarla a las reglas en la consola de Firebase para que aparezcan los agentes y se guarden las fotos de perfil.
+      </p>
+    );
+  }
+  if (error) return <p className="co-card__issue">No se pudo cargar la lista de agentes ({error}).</p>;
+  if (loading) return <p className="admin-hint">Cargando agentes…</p>;
   return (
     <ul className="agents">
       {agents.map((a, i) => (

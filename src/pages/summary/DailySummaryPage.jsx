@@ -28,9 +28,15 @@ function HistoryItem({ entry, active, onEdit }) {
         <span className="history-item__author">{entry.author_name}</span>
       </div>
       <div className="history-item__stats">
-        <span>{m.calls} llamadas</span>
-        <span>{m.appointments} citas nuevas</span>
-        <span>{m.confirmed} confirmadas</span>
+        <span>
+          <strong>{m.calls}</strong> llamadas
+        </span>
+        <span>
+          <strong>{m.appointments}</strong> citas nuevas
+        </span>
+        <span>
+          <strong>{m.confirmed}</strong> confirmadas
+        </span>
       </div>
       <div className="history-item__actions">
         {confirming ? (
