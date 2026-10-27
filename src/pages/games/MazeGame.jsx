@@ -51,6 +51,14 @@ function afterHit(g) {
 export default function MazeGame({ agentName }) {
   const [g, setG] = useState(null);
   const savedRef = useRef(false);
+  const rootRef = useRef(null);
+  const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => {
+    const sync = () => setExpanded(!!document.fullscreenElement && document.fullscreenElement === rootRef.current);
+    document.addEventListener('fullscreenchange', sync);
+    return () => document.removeEventListener('fullscreenchange', sync);
+  }, []);
 
   const start = () => {
     savedRef.current = false;
@@ -150,6 +158,11 @@ export default function MazeGame({ agentName }) {
     );
   }
 
+  const toggleExpanded = () => {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    else rootRef.current?.requestFullscreen().catch(() => {});
+  };
+
   const cells = [];
   for (let y = 0; y < g.height; y++) {
     for (let x = 0; x < g.width; x++) {
@@ -161,17 +174,7 @@ export default function MazeGame({ agentName }) {
   const pos = (y, x) => ({ transform: `translate(${x * 100}%, ${y * 100}%)` });
 
   return (
-    <div className="maze">
-      <div className="maze__hud">
-        <span>Nivel {g.index + 1}</span>
-        <span className="maze__lives" aria-label={`${g.lives} vidas`}>
-          {Array.from({ length: START_LIVES }, (_, i) => (
-            <span key={i} className={i < g.lives ? 'maze__heart' : 'maze__heart is-lost'} />
-          ))}
-        </span>
-        <span className="maze__score">{g.score} pts</span>
-      </div>
-
+    <div className="maze" ref={rootRef}>
       <div className="maze__board" style={{ '--w': g.width, '--h': g.height }} key={g.hitAt}>
         <div className="maze__grid">{cells}</div>
         <div className="maze__layer">
@@ -189,6 +192,17 @@ export default function MazeGame({ agentName }) {
         {g.status === 'clear' && <div className="maze__banner">¡Nivel {g.index + 1} superado!</div>}
       </div>
 
+      <div className="maze__side">
+        <div className="maze__hud">
+          <span>Nivel {g.index + 1}</span>
+          <span className="maze__lives" aria-label={`${g.lives} vidas`}>
+            {Array.from({ length: START_LIVES }, (_, i) => (
+              <span key={i} className={i < g.lives ? 'maze__heart' : 'maze__heart is-lost'} />
+            ))}
+          </span>
+          <span className="maze__score">{g.score} pts</span>
+        </div>
+
       <div className="maze__pad" aria-label="Controles">
         <button type="button" className="maze__key maze__key--up" aria-label="Arriba" onClick={() => move(-1, 0)}>
           ▲
@@ -202,6 +216,12 @@ export default function MazeGame({ agentName }) {
         <button type="button" className="maze__key maze__key--right" aria-label="Derecha" onClick={() => move(0, 1)}>
           ▶
         </button>
+      </div>
+
+        <button type="button" className="maze__expand" aria-pressed={expanded} onClick={toggleExpanded}>
+          {expanded ? 'Salir de pantalla completa' : 'Pantalla completa'}
+        </button>
+        <p className="maze__help">Muévete con las flechas o W A S D.</p>
       </div>
     </div>
   );
