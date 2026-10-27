@@ -7,7 +7,6 @@ export const METRICS = [
   { key: 'appointments', label: 'Citas nuevas', short: 'citas' },
   { key: 'calls', label: 'Llamadas recibidas', short: 'llamadas' },
   { key: 'messages', label: 'Mensajes', short: 'mensajes' },
-  { key: 'confirmed', label: 'Confirmadas para mañana', short: 'confirmadas' },
   { key: 'completed', label: 'Citas realizadas', short: 'realizadas' },
   { key: 'booking', label: '% de agendamiento', short: '%', isRate: true },
 ];
@@ -92,7 +91,7 @@ export function listBuckets(from, to, grain) {
 }
 
 export function emptyTotals() {
-  return { calls: 0, messages: 0, appointments: 0, confirmed: 0, completed: 0, entries: 0 };
+  return { calls: 0, messages: 0, appointments: 0, completed: 0, entries: 0 };
 }
 
 export function addEntry(totals, entry) {
@@ -100,7 +99,6 @@ export function addEntry(totals, entry) {
   totals.calls += m.calls;
   totals.messages += m.messages;
   totals.appointments += m.appointments;
-  totals.confirmed += m.confirmed;
   totals.completed += m.completed;
   totals.entries += 1;
   return totals;

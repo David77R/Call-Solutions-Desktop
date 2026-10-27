@@ -155,7 +155,6 @@ export default function StatsPage() {
     { key: 'appointments', label: 'Citas nuevas' },
     { key: 'calls', label: 'Llamadas' },
     { key: 'messages', label: 'Mensajes' },
-    { key: 'confirmed', label: 'Confirmadas' },
     { key: 'booking', label: '% de agendamiento', rate: true },
   ];
 
@@ -192,8 +191,8 @@ export default function StatsPage() {
     : null;
 
   const exportCsv = () => {
-    const header = ['Fecha', 'Empresa', 'Autor', 'Llamadas', 'Mensajes', 'Citas nuevas', 'Realizadas', 'Confirmadas mañana', '% agendamiento', 'Editado por', 'Editado el', 'ID del registro'];
-    const rows = auditRows.map(({ e, m }) => [e.date_key, e.company_name, e.author_name || '', m.calls, m.messages, m.appointments, m.completed, m.confirmed, m.bookingPct, e.edited_by || '', e.edited_at || '', e.id]);
+    const header = ['Fecha', 'Empresa', 'Autor', 'Llamadas', 'Mensajes', 'Citas nuevas', 'Realizadas', '% agendamiento', 'Editado por', 'Editado el', 'ID del registro'];
+    const rows = auditRows.map(({ e, m }) => [e.date_key, e.company_name, e.author_name || '', m.calls, m.messages, m.appointments, m.completed, m.bookingPct, e.edited_by || '', e.edited_at || '', e.id]);
     downloadFile(`estadisticas-citas_${range.from}_a_${range.to}.csv`, toCsv([header, ...rows]));
   };
 
@@ -392,7 +391,6 @@ export default function StatsPage() {
                 {header('messages', 'Mensajes')}
                 {header('appointments', 'Citas nuevas')}
                 {header('completed', 'Realizadas')}
-                {header('confirmed', 'Confirmadas')}
                 {header('bookingPct', '% agend.')}
                 <th scope="col">
                   <span className="th-static">Edición</span>
@@ -416,7 +414,6 @@ export default function StatsPage() {
                     <td className="num">{m.messages}</td>
                     <td className="num">{m.appointments}</td>
                     <td className="num">{m.hasGroomers ? m.completed : '—'}</td>
-                    <td className="num">{m.confirmed}</td>
                     <td className="num">{m.messages + m.appointments ? `${m.bookingPct}%` : '—'}</td>
                     <td className="audit__edit">{e.edited_by ? `${e.edited_by}, ${new Date(e.edited_at).toLocaleString('es-VE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}` : 'Original'}</td>
                   </tr>
@@ -424,7 +421,7 @@ export default function StatsPage() {
               })}
               {!auditRows.length && (
                 <tr>
-                  <td colSpan={10} className="audit__empty">
+                  <td colSpan={9} className="audit__empty">
                     {loading ? 'Cargando…' : 'No hay resúmenes guardados para este filtro.'}
                   </td>
                 </tr>
