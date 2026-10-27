@@ -37,6 +37,7 @@ export default function PricesPage() {
   const [activeSlug, setActiveSlug] = useState(null);
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState(null);
+  const [selectedBreed, setSelectedBreed] = useState(null);
   const [lang, setLang] = useState('es');
   const inputRef = useRef(null);
   const location = useLocation();
@@ -72,9 +73,15 @@ export default function PricesPage() {
       }
       addToHistory(next);
       setSelected(next);
+      setSelectedBreed(breed ? titleCase(breed.breed) : null);
     },
-    [catalog]
+    [catalog, breed]
   );
+
+  const clearSelected = useCallback(() => {
+    setSelected(null);
+    setSelectedBreed(null);
+  }, []);
 
   useEffect(() => {
     const incoming = location.state?.item;
@@ -85,7 +92,7 @@ export default function PricesPage() {
 
   const handleCompany = (slug) => {
     setActiveSlug(slug);
-    if (slug && selected && selected.company_slug !== slug) setSelected(null);
+    if (slug && selected && selected.company_slug !== slug) clearSelected();
   };
 
   useEffect(() => {
@@ -97,14 +104,16 @@ export default function PricesPage() {
         inputRef.current?.focus();
         inputRef.current?.select();
       }
+      if (e.key === 'Escape' && !typing) clearSelected();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, []);
+  }, [clearSelected]);
 
   const onInputKey = (e) => {
     if (e.key === 'Escape') {
-      setQuery('');
+      if (query) setQuery('');
+      else clearSelected();
     }
     if (e.key === 'Enter' && results?.length) {
       handleSelect(results[0]);
@@ -172,9 +181,10 @@ export default function PricesPage() {
             item={selected}
             descriptions={descriptions}
             rows={catalog.rows}
-            breedFromQuery={breed ? titleCase(breed.breed) : null}
+            breedFromQuery={selectedBreed}
             lang={lang}
             onLangChange={setLang}
+            onClose={clearSelected}
           />
         </aside>
       </div>

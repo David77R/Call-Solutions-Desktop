@@ -1,7 +1,7 @@
 import { useEffect, useId, useState } from 'react';
 import AnimatedPrice from './AnimatedPrice';
 import ZonePicker from './ZonePicker';
-import { AlertIcon, CheckIcon, CopyIcon, PawIcon, StarIcon } from './Icons';
+import { AlertIcon, CheckIcon, CloseIcon, CopyIcon, PawIcon, StarIcon } from './Icons';
 import { coatDescriptions } from '../data/coats';
 import { getServiceDescription } from '../data/serviceDescriptions';
 import { isDiscountEligible, itemKey, parsePrice } from '../lib/search';
@@ -30,7 +30,7 @@ function EmptyTicket() {
   );
 }
 
-export default function QuoteTicket({ item, descriptions, rows, breedFromQuery, lang, onLangChange }) {
+export default function QuoteTicket({ item, descriptions, rows, breedFromQuery, lang, onLangChange, onClose }) {
   if (!item) return <EmptyTicket />;
   return (
     <FilledTicket
@@ -41,11 +41,12 @@ export default function QuoteTicket({ item, descriptions, rows, breedFromQuery, 
       breedFromQuery={breedFromQuery}
       lang={lang}
       onLangChange={onLangChange}
+      onClose={onClose}
     />
   );
 }
 
-function FilledTicket({ item, descriptions, rows, breedFromQuery, lang, onLangChange }) {
+function FilledTicket({ item, descriptions, rows, breedFromQuery, lang, onLangChange, onClose }) {
   const isBundle = item.type === 'breed_bundle';
   const [optionIndex, setOptionIndex] = useState(0);
   const setLang = onLangChange;
@@ -135,15 +136,23 @@ function FilledTicket({ item, descriptions, rows, breedFromQuery, lang, onLangCh
           <span className="ticket__company-dot" aria-hidden="true" />
           {item.company_name}
         </span>
-        <button
-          type="button"
-          className={favorited ? 'ticket__icon-btn is-on' : 'ticket__icon-btn'}
-          onClick={handleFavorite}
-          aria-pressed={favorited}
-          aria-label={favorited ? 'Quitar de favoritos' : 'Guardar en favoritos'}
-        >
-          <StarIcon key={favPulse} filled={favorited} className={favPulse ? 'pop' : undefined} />
-        </button>
+        <div className="ticket__actions">
+          <button
+            type="button"
+            className={favorited ? 'ticket__icon-btn is-on' : 'ticket__icon-btn'}
+            onClick={handleFavorite}
+            aria-pressed={favorited}
+            aria-label={favorited ? 'Quitar de favoritos' : 'Guardar en favoritos'}
+            title={favorited ? 'Quitar de favoritos' : 'Guardar en favoritos'}
+          >
+            <StarIcon key={favPulse} filled={favorited} className={favPulse ? 'pop' : undefined} />
+          </button>
+          {onClose && (
+            <button type="button" className="ticket__icon-btn ticket__close" onClick={onClose} aria-label="Quitar esta cotización" title="Quitar esta cotización (Esc)">
+              <CloseIcon size={20} />
+            </button>
+          )}
+        </div>
       </header>
 
       <div className="ticket__titles">
