@@ -4,6 +4,12 @@ import { agentDisplayName, agentInitials } from '../lib/agents';
 import { saveAgentPhoto, useAgentProfile } from '../lib/useAgentProfile';
 import './AgentCard.css';
 
+const PHOTO_ERRORS = {
+  'permission-denied': 'Firebase no deja guardar la foto. Revisa que la regla de "agents" esté publicada.',
+  unreadable: 'Esa imagen no se pudo abrir. Prueba con una foto en JPG o PNG (las HEIC del iPhone a veces fallan).',
+  timeout: 'La conexión está lenta y la foto no terminó de subir. Inténtalo de nuevo.',
+};
+
 export default function AgentCard() {
   const { user, logout } = useAuth();
   const profile = useAgentProfile(user);
@@ -16,7 +22,7 @@ export default function AgentCard() {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
-    if (!file.type.startsWith('image/')) {
+    if (file.type && !file.type.startsWith('image/')) {
       setError('Elige una imagen (JPG o PNG).');
       return;
     }
@@ -24,8 +30,8 @@ export default function AgentCard() {
     setError('');
     try {
       await saveAgentPhoto(user, file);
-    } catch {
-      setError('No se pudo guardar la foto. Inténtalo de nuevo.');
+    } catch (err) {
+      setError(PHOTO_ERRORS[err?.code] || PHOTO_ERRORS[err?.message] || 'No se pudo guardar la foto. Inténtalo de nuevo.');
     } finally {
       setSaving(false);
     }
