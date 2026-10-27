@@ -1,0 +1,79 @@
+.donut {
+  position: relative;
+  flex: none;
+}
+
+.donut svg {
+  display: block;
+}
+
+.donut__value {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.trend {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.trend__title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.trend__bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 120px;
+}
+
+.trend__col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  flex: 1;
+  height: 100%;
+  min-width: 0;
+}
+
+.trend__num {
+  font-size: 11.5px;
+  font-weight: 800;
+}
+
+.trend__bar {
+  width: min(22px, 70%);
+  min-height: 3px;
+  border-radius: 6px 6px 2px 2px;
+  transform-origin: bottom center;
+  animation: bar-grow 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes bar-grow {
+  from {
+    transform: scaleY(0);
+  }
+
+  to {
+    transform: scaleY(1);
+  }
+}
+
+.trend__label {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}

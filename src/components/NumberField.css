@@ -1,0 +1,84 @@
+.numfield {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.numfield__label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-soft);
+}
+
+.numfield__box {
+  display: flex;
+  align-items: stretch;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-md);
+  background: rgba(5, 3, 32, 0.45);
+  overflow: hidden;
+  transition:
+    border-color 220ms ease,
+    box-shadow 220ms ease;
+}
+
+.numfield__box:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+
+.numfield__btn {
+  flex: none;
+  width: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    transform 120ms ease;
+}
+
+.numfield__btn:hover:not(:disabled) {
+  background: var(--raised);
+}
+
+.numfield__btn:active:not(:disabled) {
+  transform: scale(0.9);
+}
+
+.numfield__btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.numfield__input {
+  flex: 1;
+  min-width: 0;
+  height: 52px;
+  border: 0;
+  background: transparent;
+  color: #ffffff;
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 800;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.numfield__input:focus {
+  outline: none;
+}
+
+.numfield--compact .numfield__btn {
+  width: 36px;
+  font-size: 17px;
+}
+
+.numfield--compact .numfield__input {
+  height: 42px;
+  font-size: 20px;
+}

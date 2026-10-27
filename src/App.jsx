@@ -7,6 +7,8 @@ import ComingSoon from './pages/ComingSoon';
 import PricesPage from './pages/prices/PricesPage';
 import CallFlowPage from './pages/callflow/CallFlowPage';
 import FavoritesPage from './pages/favorites/FavoritesPage';
+import DailySummaryPage from './pages/summary/DailySummaryPage';
+import TotalsPage from './pages/summary/TotalsPage';
 import { ALL_SECTIONS } from './sections';
 import './App.css';
 
@@ -14,6 +16,8 @@ const PAGES = {
   '/precios': PricesPage,
   '/flujo-de-llamada': CallFlowPage,
   '/favoritos': FavoritesPage,
+  '/resumen-del-dia': DailySummaryPage,
+  '/resumenes': TotalsPage,
 };
 
 function AnimatedRoutes() {
