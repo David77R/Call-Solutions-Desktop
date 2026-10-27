@@ -1,0 +1,15 @@
+export const DAILY_PROTOCOL_ITEMS = [
+  { id: 'p1', time: '08:00', label: 'Revisar status de las citas y groomers' },
+  { id: 'p2', time: '08:30', label: 'Contestar mensajes sin responder' },
+  { id: 'p3', time: '09:00', label: 'Revisar buzón de voz / Devolver llamadas perdidas' },
+  { id: 'p4', time: '09:30', label: 'Revisar mensajes de ayer' },
+  { id: 'p5', time: '11:00', label: 'Revisar status de las citas y groomers' },
+  { id: 'p6', time: '14:00', label: 'Revisar confirmaciones de mañana' },
+  { id: 'p7', time: '14:30', label: 'Revisar mensajes sin responder' },
+  { id: 'p8', time: '15:00', label: 'Verificar status de las citas y groomers' },
+  { id: 'p9', time: '15:30', label: 'Revisar unpaids de la semana' },
+  { id: 'p10', time: '16:00', label: 'Revisar precios y direcciones de mañana' },
+  { id: 'p11', time: '16:30', label: 'Revisar mensajes del día / seguimiento' },
+  { id: 'p12', time: '17:00', label: 'Control de calidad del día' },
+  { id: 'p13', time: '17:30', label: 'Revisar unpaids del día' },
+];

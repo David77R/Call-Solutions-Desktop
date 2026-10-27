@@ -24,6 +24,10 @@
 }
 
 .sidebar__link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   padding: 10px;
   border-radius: var(--radius-sm);
   font-size: 14px;
@@ -78,4 +82,20 @@
 .sidebar__fifo-sub {
   font-size: 12px;
   color: var(--text-muted);
+}
+
+.sidebar__badge {
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #ff8a7a;
+  color: var(--night);
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+  animation: pop-in 320ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.sidebar__badge--warn {
+  background: var(--warn);
 }

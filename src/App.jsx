@@ -9,6 +9,9 @@ import CallFlowPage from './pages/callflow/CallFlowPage';
 import FavoritesPage from './pages/favorites/FavoritesPage';
 import DailySummaryPage from './pages/summary/DailySummaryPage';
 import TotalsPage from './pages/summary/TotalsPage';
+import RemindersPage from './pages/reminders/RemindersPage';
+import ProtocolPage from './pages/protocol/ProtocolPage';
+import ProtocolAlerts from './components/ProtocolAlerts';
 import { ALL_SECTIONS } from './sections';
 import './App.css';
 
@@ -18,6 +21,8 @@ const PAGES = {
   '/favoritos': FavoritesPage,
   '/resumen-del-dia': DailySummaryPage,
   '/resumenes': TotalsPage,
+  '/recordatorios': RemindersPage,
+  '/protocolo': ProtocolPage,
 };
 
 function AnimatedRoutes() {
@@ -51,6 +56,7 @@ function Gate() {
 
   return (
     <BrowserRouter>
+      <ProtocolAlerts />
       <div className="shell">
         <Sidebar />
         <main className="shell__main">
