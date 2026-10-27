@@ -94,6 +94,12 @@ export default function Topbar() {
   }, [open.length]);
 
   useEffect(() => {
+    const onRing = () => setRing((n) => n + 1);
+    window.addEventListener('ccs-reminder-ring', onRing);
+    return () => window.removeEventListener('ccs-reminder-ring', onRing);
+  }, []);
+
+  useEffect(() => {
     const onKey = (e) => {
       const tag = e.target.tagName;
       if (e.key === '/' && tag !== 'INPUT' && tag !== 'TEXTAREA' && location.pathname !== '/precios') {

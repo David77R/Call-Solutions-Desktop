@@ -261,3 +261,112 @@
 .rem-card__next {
   border-color: var(--moon);
 }
+
+.composer__alarm-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 42px;
+  padding: 0 14px;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-soft);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background-color 250ms ease,
+    border-color 250ms ease,
+    color 250ms ease,
+    transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.composer__alarm-toggle:hover {
+  border-color: var(--moon);
+  color: var(--text);
+}
+
+.composer__alarm-toggle[aria-pressed='true'] {
+  border-color: var(--warn);
+  background: var(--warn-bg);
+  color: var(--warn-text);
+}
+
+.composer__alarm-toggle[aria-pressed='true'] svg {
+  animation: alarm-tick 1.2s ease-in-out infinite;
+}
+
+@keyframes alarm-tick {
+  50% {
+    transform: rotate(14deg) scale(1.1);
+  }
+}
+
+.composer__alarm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: rgba(5, 3, 32, 0.35);
+  animation: rise-in 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.composer__alarm-hint {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.alarm-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.alarm-fields__item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-soft);
+}
+
+.rem-card__alarm {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid color-mix(in srgb, var(--warn) 55%, transparent);
+  border-radius: 999px;
+  background: var(--warn-bg);
+  color: var(--warn-text);
+  font-size: 12.5px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.rem-card__alarm:hover {
+  transform: translateY(-1px);
+}
+
+.rem-card__alarm-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  background: rgba(5, 3, 32, 0.35);
+  animation: rise-in 280ms ease both;
+}
+
+.rem-card__alarm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}

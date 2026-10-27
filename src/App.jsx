@@ -12,6 +12,7 @@ import TotalsPage from './pages/summary/TotalsPage';
 import RemindersPage from './pages/reminders/RemindersPage';
 import ProtocolPage from './pages/protocol/ProtocolPage';
 import ProtocolAlerts from './components/ProtocolAlerts';
+import ReminderAlerts from './components/ReminderAlerts';
 import Topbar from './components/Topbar';
 import AssistantPage from './pages/assistant/AssistantPage';
 import QualityPage from './pages/qc/QualityPage';
@@ -70,6 +71,7 @@ function Gate() {
   return (
     <BrowserRouter>
       <ProtocolAlerts />
+      <ReminderAlerts />
       <div className="shell">
         <Sidebar />
         <main className="shell__main">

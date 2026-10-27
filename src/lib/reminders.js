@@ -36,10 +36,11 @@ export function useOpenRemindersCount() {
   return items.filter((r) => r.status === 'pending' || r.status === 'en_proceso').length;
 }
 
-export function createReminder(text, companySlug, agentName) {
+export function createReminder(text, companySlug, agentName, alarm = null) {
   const id = `rem_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   return setDoc(doc(db, COLLECTION, id), {
     text,
+    alarm,
     company_slug: companySlug || null,
     created_by: agentName || 'Agente',
     created_at: new Date().toISOString(),

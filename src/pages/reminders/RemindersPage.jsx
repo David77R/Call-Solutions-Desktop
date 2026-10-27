@@ -3,18 +3,66 @@ import CompanyTabs, { shortCompanyName } from '../../components/CompanyTabs';
 import { useCatalog } from '../../lib/useCatalog';
 import { useAuth } from '../../lib/AuthContext';
 import { STATUS, STATUS_ORDER, createReminder, formatDateTime, removeReminder, updateReminder, useReminders } from '../../lib/reminders';
+import { REPEAT, askNotificationPermission, buildAlarm, describeAlarm, localDayKey } from '../../lib/reminderAlarm';
+import { ClockIcon } from '../../components/Icons';
 import './RemindersPage.css';
+
+function defaultTime() {
+  const d = new Date(Date.now() + 60 * 60000);
+  d.setMinutes(0);
+  return `${String(d.getHours()).padStart(2, '0')}:00`;
+}
+
+function AlarmFields({ value, onChange, idPrefix }) {
+  return (
+    <div className="alarm-fields">
+      <label htmlFor={`${idPrefix}-time`} className="alarm-fields__item">
+        <span>Hora</span>
+        <input id={`${idPrefix}-time`} type="time" className="composer__select" value={value.time} onChange={(e) => onChange({ ...value, time: e.target.value })} />
+      </label>
+      <label htmlFor={`${idPrefix}-repeat`} className="alarm-fields__item">
+        <span>Repetir</span>
+        <select id={`${idPrefix}-repeat`} className="composer__select" value={value.repeat} onChange={(e) => onChange({ ...value, repeat: e.target.value })}>
+          {Object.entries(REPEAT).map(([key, label]) => (
+            <option key={key} value={key}>
+              {label}
+            </option>
+          ))}
+        </select>
+      </label>
+      {value.repeat === 'once' && (
+        <label htmlFor={`${idPrefix}-date`} className="alarm-fields__item">
+          <span>Día</span>
+          <input id={`${idPrefix}-date`} type="date" className="composer__select" min={localDayKey()} value={value.date} onChange={(e) => onChange({ ...value, date: e.target.value })} />
+        </label>
+      )}
+    </div>
+  );
+}
+
+function alarmDraft(alarm) {
+  return { time: alarm?.time || defaultTime(), repeat: alarm?.repeat || 'once', date: alarm?.date || localDayKey() };
+}
 
 function ReminderCard({ reminder, company, agentName, onDragStart, index }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(reminder.text);
   const [confirming, setConfirming] = useState(false);
+  const [alarmOpen, setAlarmOpen] = useState(false);
+  const [alarm, setAlarm] = useState(() => alarmDraft(reminder.alarm));
+  const fieldId = useId();
   const currentIndex = STATUS_ORDER.indexOf(reminder.status);
 
   const saveText = async () => {
     const text = draft.trim();
     if (text && text !== reminder.text) await updateReminder(reminder.id, { text }, agentName);
     setEditing(false);
+  };
+
+  const saveAlarm = (next) => {
+    updateReminder(reminder.id, { alarm: next }, agentName);
+    if (next) askNotificationPermission();
+    setAlarmOpen(false);
   };
 
   const move = (dir) => {
@@ -58,6 +106,32 @@ function ReminderCard({ reminder, company, agentName, onDragStart, index }) {
         </p>
       )}
 
+      {reminder.alarm?.time && !alarmOpen && (
+        <button type="button" className="rem-card__alarm" onClick={() => setAlarmOpen(true)} title="Cambiar el aviso">
+          <ClockIcon size={15} />
+          {describeAlarm(reminder.alarm)}
+        </button>
+      )}
+
+      {alarmOpen && (
+        <div className="rem-card__alarm-edit">
+          <AlarmFields value={alarm} onChange={setAlarm} idPrefix={fieldId} />
+          <div className="rem-card__alarm-actions">
+            <button type="button" className="sf-chip rem-card__next" disabled={!alarm.time} onClick={() => saveAlarm(buildAlarm(alarm))}>
+              Guardar aviso
+            </button>
+            {reminder.alarm?.time && (
+              <button type="button" className="sf-chip" onClick={() => saveAlarm(null)}>
+                Quitar aviso
+              </button>
+            )}
+            <button type="button" className="sf-chip" onClick={() => setAlarmOpen(false)}>
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+
       <p className="rem-card__meta">
         Creado por {reminder.created_by}
         {reminder.updated_by && reminder.updated_at ? `. ${STATUS[reminder.status]?.label} por ${reminder.updated_by}, ${formatDateTime(reminder.updated_at)}` : ''}
@@ -88,6 +162,18 @@ function ReminderCard({ reminder, company, agentName, onDragStart, index }) {
             <button type="button" className="sf-chip" onClick={() => setEditing(true)}>
               Editar
             </button>
+            {!reminder.alarm?.time && !alarmOpen && (
+              <button
+                type="button"
+                className="sf-chip"
+                onClick={() => {
+                  setAlarm(alarmDraft(null));
+                  setAlarmOpen(true);
+                }}
+              >
+                Programar aviso
+              </button>
+            )}
             <button type="button" className="sf-chip" onClick={() => setConfirming(true)}>
               Borrar
             </button>
@@ -106,6 +192,8 @@ export default function RemindersPage() {
   const [text, setText] = useState('');
   const [newCompany, setNewCompany] = useState('');
   const [over, setOver] = useState(null);
+  const [withAlarm, setWithAlarm] = useState(false);
+  const [alarm, setAlarm] = useState(() => alarmDraft(null));
   const id = useId();
   const agentName = user?.displayName || 'Agente';
 
@@ -116,8 +204,12 @@ export default function RemindersPage() {
     e.preventDefault();
     const t = text.trim();
     if (!t) return;
+    const nextAlarm = withAlarm ? buildAlarm(alarm) : null;
     setText('');
-    await createReminder(t, newCompany || filter, agentName);
+    setWithAlarm(false);
+    setAlarm(alarmDraft(null));
+    if (nextAlarm) askNotificationPermission();
+    await createReminder(t, newCompany || filter, agentName, nextAlarm);
   };
 
   const onDragStart = (e, reminderId) => {
@@ -168,10 +260,20 @@ export default function RemindersPage() {
               </option>
             ))}
           </select>
-          <button type="submit" className="composer__add" disabled={!text.trim()}>
+          <button type="button" className="composer__alarm-toggle" aria-pressed={withAlarm} onClick={() => setWithAlarm((v) => !v)}>
+            <ClockIcon size={16} />
+            {withAlarm ? 'Con aviso' : 'Programar aviso'}
+          </button>
+          <button type="submit" className="composer__add" disabled={!text.trim() || (withAlarm && !alarm.time)}>
             Agregar
           </button>
         </div>
+        {withAlarm && (
+          <div className="composer__alarm">
+            <AlarmFields value={alarm} onChange={setAlarm} idPrefix={`${id}-alarm`} />
+            <p className="composer__alarm-hint">A esa hora le sale un aviso animado a todo el equipo que tenga la app abierta, con sonido.</p>
+          </div>
+        )}
       </form>
 
       <div className="board">
