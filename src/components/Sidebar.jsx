@@ -15,6 +15,7 @@ export default function Sidebar() {
   return (
     <nav className="sidebar" aria-label="Secciones">
       <img className="sidebar__logo" src={logo} alt="CC+CS Solutions" />
+      <AgentCard />
 
       {SECTION_GROUPS.map((group) => (
         <div className="sidebar__group" key={group.label}>
@@ -46,8 +47,6 @@ export default function Sidebar() {
           <span className="sidebar__fifo-sub">Trivia, laberinto y leaderboard</span>
         </span>
       </NavLink>
-
-      <AgentCard />
     </nav>
   );
 }

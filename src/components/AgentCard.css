@@ -2,8 +2,11 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 12px 6px 0;
-  border-top: 1px solid var(--line);
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--panel);
+  animation: rise-in 520ms 120ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .agent-card__row {
