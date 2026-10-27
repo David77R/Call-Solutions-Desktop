@@ -1,0 +1,1805 @@
+{
+  "companies": [
+    {
+      "slug": "famous",
+      "name": "Famous Mobile Pet Grooming",
+      "color_primary": "#2A9C9B",
+      "color_secondary": "#74B7CD",
+      "color_accent": "#BF8950",
+      "logo": "famous.jpeg",
+      "notes": [
+        "Cargo adicional por distancia: Broward $15, Palm Beach $20, Los Cayos $25",
+        "Cargo adicional de $10-$15 por razas especiales (Pomeranian, Doodle, Poodle, Cocker, etc.)",
+        "Instagram: @famousmobilepetgrooming",
+        "Razas de doble manto (German Shepherd, Husky, Golden Retriever, Rottweiler, Akita Inu): en tallas Large y Extra Large se cobra el servicio completo (bano, cepillado, y corte o deslanado); no se ofrece un servicio mas basico para estas razas."
+      ],
+      "categories": [
+        {
+          "name": "Silver (baño + cepillado, sin corte)",
+          "items": [
+            {
+              "label": "Mini (0-15 lbs)",
+              "price_display": "$60.00",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 15.0
+            },
+            {
+              "label": "Small (16-25 lbs)",
+              "price_display": "$65.00",
+              "needs_review": false,
+              "weight_min_lbs": 16.0,
+              "weight_max_lbs": 25.0
+            },
+            {
+              "label": "Medium (26-40 lbs)",
+              "price_display": "$80.00",
+              "needs_review": false,
+              "weight_min_lbs": 26.0,
+              "weight_max_lbs": 45.0
+            },
+            {
+              "label": "Large (46-60 lbs)",
+              "price_display": "$100.00",
+              "needs_review": false,
+              "weight_min_lbs": 46.0,
+              "weight_max_lbs": 65.0
+            },
+            {
+              "label": "Extra Large (65-100 lbs)",
+              "price_display": "$120.00",
+              "needs_review": false,
+              "weight_min_lbs": 65.0,
+              "weight_max_lbs": 180.0
+            }
+          ]
+        },
+        {
+          "name": "Gold (Silver + corte o deslanado)",
+          "items": [
+            {
+              "label": "Mini (0-15 lbs)",
+              "price_display": "$70.00",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 15.0
+            },
+            {
+              "label": "Small (16-25 lbs)",
+              "price_display": "$75.00",
+              "needs_review": false,
+              "weight_min_lbs": 16.0,
+              "weight_max_lbs": 25.0
+            },
+            {
+              "label": "Medium (26-40 lbs)",
+              "price_display": "$100.00",
+              "needs_review": false,
+              "weight_min_lbs": 26.0,
+              "weight_max_lbs": 46.0
+            },
+            {
+              "label": "Large (46-60 lbs)",
+              "price_display": "$120.00",
+              "needs_review": false,
+              "weight_min_lbs": 46.0,
+              "weight_max_lbs": 60.0
+            },
+            {
+              "label": "Extra Large (65-100 lbs)",
+              "price_display": "$140.00",
+              "needs_review": false,
+              "weight_min_lbs": 65.0,
+              "weight_max_lbs": 180.0
+            }
+          ]
+        },
+        {
+          "name": "Servicios adicionales",
+          "items": [
+            {
+              "label": "Nail Trim",
+              "price_display": "$20.00",
+              "needs_review": false
+            },
+            {
+              "label": "Teeth Brushing",
+              "price_display": "$10.00",
+              "needs_review": false
+            },
+            {
+              "label": "Special Shampoo",
+              "price_display": "$15.00",
+              "needs_review": false
+            },
+            {
+              "label": "Nail Painting",
+              "price_display": "$10.00",
+              "needs_review": false
+            },
+            {
+              "label": "Extra Care",
+              "price_display": "$10.00",
+              "needs_review": false
+            },
+            {
+              "label": "Limpieza de Huellas y Nariz",
+              "price_display": "$10.00",
+              "needs_review": false
+            },
+            {
+              "label": "Deshedding (1/2 hora, nudos leves)",
+              "price_display": "$30.00",
+              "needs_review": false
+            },
+            {
+              "label": "Deshedding - Deslanado (1 hora)",
+              "price_display": "$60.00",
+              "needs_review": false
+            },
+            {
+              "label": "Detangle Hair / Knots (1 hora)",
+              "price_display": "$60.00",
+              "needs_review": false
+            },
+            {
+              "label": "Flea Shampoo",
+              "price_display": "$25.00",
+              "needs_review": false
+            }
+          ]
+        },
+        {
+          "name": "Deep Dental Cleaning",
+          "pill_label": "Limpieza Dental",
+          "items": [
+            {
+              "label": "Mini (0-15 lbs)",
+              "price_display": "$150.00",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 15.0
+            },
+            {
+              "label": "Small (16-25 lbs)",
+              "price_display": "$150.00",
+              "needs_review": false,
+              "weight_min_lbs": 16.0,
+              "weight_max_lbs": 25.0
+            },
+            {
+              "label": "Medium (26-40 lbs)",
+              "price_display": "$170.00",
+              "needs_review": false,
+              "weight_min_lbs": 26.0,
+              "weight_max_lbs": 40.0
+            },
+            {
+              "label": "Large (46-60 lbs)",
+              "price_display": "$200.00",
+              "needs_review": false,
+              "weight_min_lbs": 46.0,
+              "weight_max_lbs": 60.0
+            },
+            {
+              "label": "Extra Large",
+              "price_display": "$220.00",
+              "needs_review": false,
+              "weight_min_lbs": 61.0,
+              "weight_max_lbs": 150.0
+            }
+          ]
+        },
+        {
+          "name": "Baño para Gato Silver",
+          "pill_label": "Baño para Gato Silver",
+          "items": [
+            {
+              "label": "Baño para Gato - Silver",
+              "price_display": "$96.00",
+              "needs_review": false
+            }
+          ]
+        },
+        {
+          "name": "Baño para Gato Gold",
+          "pill_label": "Baño para Gato Gold",
+          "items": [
+            {
+              "label": "Baño para Gato - Gold",
+              "price_display": "$120.00",
+              "needs_review": false
+            }
+          ]
+        },
+        {
+          "name": "Limpieza Dental Gato",
+          "pill_label": "Limpieza Dental Gato",
+          "items": [
+            {
+              "label": "Cats (todas las tallas)",
+              "price_display": "$190.00",
+              "needs_review": false
+            }
+          ]
+        }
+      ],
+      "special_breed_surcharge": {
+        "keywords": [
+          "Pomeranian",
+          "Doodle",
+          "Poodle",
+          "Cocker"
+        ],
+        "amount": "$10-$15"
+      },
+      "double_coat_breeds": {
+        "keywords": [
+          "German Shepherd",
+          "Husky",
+          "Golden Retriever",
+          "Rottweiler",
+          "Akita Inu"
+        ],
+        "label": "Solo Gold"
+      }
+    },
+    {
+      "slug": "cruzin",
+      "name": "Cruzin Fur Style",
+      "color_primary": "#D3A448",
+      "color_secondary": "#6ACAD9",
+      "color_accent": "#2D3544",
+      "logo": "cruzin.jpeg",
+      "notes": [
+        "Tagline: We roll up Fur your Glowup",
+        "Cargo adicional por distancia (más de 30 millas): $30.00. Salen desde Fond du Lac, WI."
+      ],
+      "categories": [
+        {
+          "name": "Cruzin' Splash (baño, corte de unas, limpieza de oidos, recorte sanitario)",
+          "items": [
+            {
+              "label": "Small",
+              "price_display": "$70.00",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 25.0
+            },
+            {
+              "label": "Medium",
+              "price_display": "$80.00",
+              "needs_review": false,
+              "weight_min_lbs": 26.0,
+              "weight_max_lbs": 45.0
+            },
+            {
+              "label": "Large",
+              "price_display": "$95.00",
+              "needs_review": false,
+              "weight_min_lbs": 46.0,
+              "weight_max_lbs": 65.0
+            },
+            {
+              "label": "Extra Large",
+              "price_display": "$135.00",
+              "needs_review": false,
+              "weight_min_lbs": 66.0,
+              "weight_max_lbs": 150.0
+            }
+          ]
+        },
+        {
+          "name": "Cruzin' Furfection (Full Grooming: Splash + corte o deslanado)",
+          "items": [
+            {
+              "label": "Small",
+              "price_display": "$85.00",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 25.0
+            },
+            {
+              "label": "Medium",
+              "price_display": "$95.00",
+              "needs_review": false,
+              "weight_min_lbs": 26.0,
+              "weight_max_lbs": 45.0
+            },
+            {
+              "label": "Large",
+              "price_display": "$115.00",
+              "needs_review": false,
+              "weight_min_lbs": 46.0,
+              "weight_max_lbs": 65.0
+            },
+            {
+              "label": "Extra Large",
+              "price_display": "$160.00",
+              "needs_review": false,
+              "weight_min_lbs": 66.0,
+              "weight_max_lbs": 150.0
+            }
+          ]
+        },
+        {
+          "name": "Cruzin' Smile Refresh (limpieza cosmetica de placa)",
+          "items": [
+            {
+              "label": "Small",
+              "price_display": "$160.00",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 25.0
+            },
+            {
+              "label": "Medium",
+              "price_display": "$180.00",
+              "needs_review": false,
+              "weight_min_lbs": 26.0,
+              "weight_max_lbs": 45.0
+            },
+            {
+              "label": "Large",
+              "price_display": "$200.00",
+              "needs_review": false,
+              "weight_min_lbs": 46.0,
+              "weight_max_lbs": 65.0
+            },
+            {
+              "label": "Extra Large",
+              "price_display": "$220.00",
+              "needs_review": false,
+              "weight_min_lbs": 66.0,
+              "weight_max_lbs": 150.0
+            }
+          ],
+          "pill_label": "Limpieza Dental"
+        },
+        {
+          "name": "Glow-up Add-Ons",
+          "items": [
+            {
+              "label": "Extra Care",
+              "price_display": "$40.00",
+              "needs_review": false
+            },
+            {
+              "label": "Deshedding",
+              "price_display": "$30.00",
+              "needs_review": false
+            },
+            {
+              "label": "Only Nail Trim",
+              "price_display": "$25.00",
+              "needs_review": false
+            },
+            {
+              "label": "Cruzin' Smile",
+              "price_display": "$15.00",
+              "needs_review": false
+            },
+            {
+              "label": "Paw & Nose Balm",
+              "price_display": "$15.00",
+              "needs_review": false
+            },
+            {
+              "label": "Special Shampoo",
+              "price_display": "$20.00",
+              "needs_review": false
+            },
+            {
+              "label": "Flea Treatment",
+              "price_display": "$20.00",
+              "needs_review": false
+            },
+            {
+              "label": "Dematting",
+              "price_display": "$60.00",
+              "needs_review": false
+            }
+          ]
+        }
+      ],
+      "special_breed_surcharge": {
+        "keywords": [
+          "Pomeranian",
+          "Doodle",
+          "Poodle",
+          "Cocker"
+        ],
+        "amount": "$10-$15"
+      }
+    },
+    {
+      "slug": "abbie",
+      "name": "Abbie Grooming",
+      "color_primary": "#E6292A",
+      "color_secondary": "#80444A",
+      "color_accent": "#D304B4",
+      "logo": "abbie.png",
+      "notes": [
+        "Mascotas especiales pueden tener un recargo adicional de $20-$50 (el precio puede variar según condición y comportamiento).",
+        "Instagram: @abbiegrooming"
+      ],
+      "categories": [
+        {
+          "name": "Deep Dental Cleaning",
+          "items": [
+            {
+              "label": "Small (0-25 lbs)",
+              "price_display": "$170.00",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 25.0
+            },
+            {
+              "label": "Medium (25-45 lbs)",
+              "price_display": "$190.00",
+              "needs_review": false,
+              "weight_min_lbs": 25.0,
+              "weight_max_lbs": 45.0
+            },
+            {
+              "label": "Large (46-65 lbs)",
+              "price_display": "$220.00",
+              "needs_review": false,
+              "weight_min_lbs": 46.0,
+              "weight_max_lbs": 65.0
+            },
+            {
+              "label": "Extra Large (66-150 lbs)",
+              "price_display": "$250.00",
+              "needs_review": false,
+              "weight_min_lbs": 66.0,
+              "weight_max_lbs": 150.0
+            }
+          ],
+          "pill_label": "Limpieza Dental"
+        },
+        {
+          "name": "Promo Dental + Bath Services (baño, limpieza de oidos, afeitado sanitario)",
+          "items": [
+            {
+              "label": "Small (0-25 lbs)",
+              "price_display": "$190.00",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 25.0
+            },
+            {
+              "label": "Medium (26-45 lbs)",
+              "price_display": "$210.00",
+              "needs_review": false,
+              "weight_min_lbs": 26.0,
+              "weight_max_lbs": 45.0
+            },
+            {
+              "label": "Large (46-65 lbs)",
+              "price_display": "$240.00",
+              "needs_review": false,
+              "weight_min_lbs": 46.0,
+              "weight_max_lbs": 65.0
+            },
+            {
+              "label": "Extra Large (66-150 lbs)",
+              "price_display": "$270.00",
+              "needs_review": false,
+              "weight_min_lbs": 66.0,
+              "weight_max_lbs": 150.0
+            }
+          ],
+          "pill_label": "Promo Dental + Baño"
+        },
+        {
+          "name": "Servicios adicionales",
+          "items": [
+            {
+              "label": "Nudos en mal estado",
+              "price_display": "$60.00/hora",
+              "needs_review": false
+            },
+            {
+              "label": "Shampoo especial (Hydra)",
+              "price_display": "$20.00 - $40.00",
+              "needs_review": false
+            },
+            {
+              "label": "Deslanado",
+              "price_display": "$20.00 - $50.00",
+              "needs_review": false
+            },
+            {
+              "label": "Hidratación de huellas y nariz",
+              "price_display": "$10.00 - $20.00",
+              "needs_review": false
+            },
+            {
+              "label": "Shampoo medicado con antibiótico (piel sensible, irritacion, caspa)",
+              "price_display": "$20.00 - $30.00",
+              "needs_review": false
+            },
+            {
+              "label": "Corte de uñas (solo uñas)",
+              "price_display": "$50.00",
+              "needs_review": false
+            },
+            {
+              "label": "Shampoo antipulgas",
+              "price_display": "$30.00",
+              "needs_review": false
+            },
+            {
+              "label": "Kit dental (cepillo + crema)",
+              "price_display": "$25.00",
+              "needs_review": false
+            },
+            {
+              "label": "Cepillado de dientes",
+              "price_display": "Small $15.00 / Medium $25.00 / Large $30.00",
+              "needs_review": false
+            }
+          ]
+        },
+        {
+          "name": "Grooming por raza - Large (46-65 lbs)",
+          "items": [
+            {
+              "label": "Golden Retriever",
+              "price_display": "Bath $130 / Full Grooming $150",
+              "needs_review": false,
+              "weight_min_lbs": 46.0,
+              "weight_max_lbs": 65.0,
+              "coat": "doble_capa"
+            },
+            {
+              "label": "Labrador Retriever",
+              "price_display": "Bath $120 / Full Grooming $140",
+              "needs_review": false,
+              "weight_min_lbs": 46.0,
+              "weight_max_lbs": 65.0,
+              "coat": "corto_denso"
+            },
+            {
+              "label": "German Shepherd",
+              "price_display": "Bath $130 / Full Grooming $150",
+              "needs_review": false,
+              "weight_min_lbs": 46.0,
+              "weight_max_lbs": 65.0,
+              "coat": "doble_capa"
+            },
+            {
+              "label": "Husky",
+              "price_display": "Bath $110 / Full Grooming $130",
+              "needs_review": false,
+              "weight_min_lbs": 46.0,
+              "weight_max_lbs": 65.0,
+              "coat": "doble_capa"
+            },
+            {
+              "label": "Boxer",
+              "price_display": "Bath $100 / Full Grooming $130",
+              "needs_review": false,
+              "weight_min_lbs": 46.0,
+              "weight_max_lbs": 65.0,
+              "coat": "corto_denso"
+            },
+            {
+              "label": "Doberman",
+              "price_display": "Bath $100 / Full Grooming $130",
+              "needs_review": false,
+              "weight_min_lbs": 46.0,
+              "weight_max_lbs": 65.0,
+              "coat": "corto_denso"
+            },
+            {
+              "label": "Akita",
+              "price_display": "Bath $110 / Full Grooming $130",
+              "needs_review": false,
+              "weight_min_lbs": 46.0,
+              "weight_max_lbs": 65.0,
+              "coat": "doble_capa"
+            },
+            {
+              "label": "Chow Chow",
+              "price_display": "Bath $110 / Full Grooming $130",
+              "needs_review": false,
+              "weight_min_lbs": 46.0,
+              "weight_max_lbs": 65.0,
+              "coat": "doble_capa"
+            },
+            {
+              "label": "Belgian Malinois",
+              "price_display": "Bath $100 / Full Grooming $130",
+              "needs_review": false,
+              "weight_min_lbs": 46.0,
+              "weight_max_lbs": 65.0,
+              "coat": "corto_denso"
+            },
+            {
+              "label": "Goldendoodle",
+              "price_display": "Bath $120 / Full Grooming $150",
+              "needs_review": false,
+              "weight_min_lbs": 46.0,
+              "weight_max_lbs": 65.0,
+              "coat": "rizado"
+            },
+            {
+              "label": "Bernedoodle",
+              "price_display": "Bath $110 / Full Grooming $130",
+              "needs_review": false,
+              "weight_min_lbs": 46.0,
+              "weight_max_lbs": 65.0,
+              "coat": "rizado"
+            },
+            {
+              "label": "Rottweiler Large",
+              "price_display": "Bath $100 / Full Grooming $130",
+              "needs_review": false,
+              "weight_min_lbs": 46.0,
+              "weight_max_lbs": 65.0,
+              "coat": "corto_denso"
+            },
+            {
+              "label": "Dogo Argentino",
+              "price_display": "Bath $120 / Full Grooming $140",
+              "needs_review": false,
+              "weight_min_lbs": 46.0,
+              "weight_max_lbs": 65.0,
+              "coat": "corto_denso"
+            },
+            {
+              "label": "Australian Shepherd Large",
+              "price_display": "Bath $110 / Full Grooming $130",
+              "needs_review": false,
+              "weight_min_lbs": 46.0,
+              "weight_max_lbs": 65.0,
+              "coat": "doble_capa"
+            },
+            {
+              "label": "Border Collie Large",
+              "price_display": "Bath $130 / Full Grooming $150",
+              "needs_review": false,
+              "weight_min_lbs": 46.0,
+              "weight_max_lbs": 65.0,
+              "coat": "doble_capa"
+            },
+            {
+              "label": "Sheepadoodle",
+              "price_display": "Bath $120 / Full Grooming $150",
+              "needs_review": false,
+              "weight_min_lbs": 46.0,
+              "weight_max_lbs": 65.0,
+              "coat": "rizado"
+            },
+            {
+              "label": "Giant Schnauzer",
+              "price_display": "Bath $120 / Full Grooming $150",
+              "needs_review": false,
+              "weight_min_lbs": 46.0,
+              "weight_max_lbs": 65.0,
+              "coat": "alambrado"
+            },
+            {
+              "label": "Mixed Breeds Large",
+              "price_display": "Bath $100 / Full Grooming $150",
+              "needs_review": false,
+              "weight_min_lbs": 46.0,
+              "weight_max_lbs": 65.0
+            },
+            {
+              "label": "Samoyedo",
+              "price_display": "Bath $130 / Full Grooming $150",
+              "needs_review": false,
+              "weight_min_lbs": 46.0,
+              "weight_max_lbs": 65.0,
+              "coat": "doble_capa"
+            },
+            {
+              "label": "Norwegian Elkhound",
+              "price_display": "Bath $120 / Full Grooming $140",
+              "needs_review": false,
+              "weight_min_lbs": 46.0,
+              "weight_max_lbs": 65.0,
+              "coat": "doble_capa"
+            },
+            {
+              "label": "American Eskimo Dog",
+              "price_display": "Bath $120 / Full Grooming $150",
+              "needs_review": false,
+              "weight_min_lbs": 46.0,
+              "weight_max_lbs": 65.0,
+              "coat": "doble_capa"
+            }
+          ]
+        },
+        {
+          "name": "Grooming por raza - Extra Large (66-150 lbs)",
+          "items": [
+            {
+              "label": "Great Dane",
+              "price_display": "Bath $150 / Full Grooming $200",
+              "needs_review": false,
+              "weight_min_lbs": 66.0,
+              "weight_max_lbs": 150.0,
+              "coat": "corto_denso"
+            },
+            {
+              "label": "Cane Corso",
+              "price_display": "Bath $130 / Full Grooming $150",
+              "needs_review": false,
+              "weight_min_lbs": 66.0,
+              "weight_max_lbs": 150.0,
+              "coat": "corto_denso"
+            },
+            {
+              "label": "Standard Poodle",
+              "price_display": "Bath $150 / Full Grooming $170",
+              "needs_review": false,
+              "weight_min_lbs": 66.0,
+              "weight_max_lbs": 150.0,
+              "coat": "rizado"
+            },
+            {
+              "label": "Mastiff",
+              "price_display": "Bath $130 / Full Grooming $150",
+              "needs_review": false,
+              "weight_min_lbs": 66.0,
+              "weight_max_lbs": 150.0,
+              "coat": "corto_denso"
+            },
+            {
+              "label": "Saint Bernard",
+              "price_display": "Bath $150 / Full Grooming $170",
+              "needs_review": false,
+              "weight_min_lbs": 66.0,
+              "weight_max_lbs": 150.0,
+              "coat": "doble_capa"
+            },
+            {
+              "label": "Bernese Mountain Dog",
+              "price_display": "Bath $150 / Full Grooming $170",
+              "needs_review": false,
+              "weight_min_lbs": 66.0,
+              "weight_max_lbs": 150.0,
+              "coat": "doble_capa"
+            },
+            {
+              "label": "Newfoundland",
+              "price_display": "Bath $150 / Full Grooming $170",
+              "needs_review": false,
+              "weight_min_lbs": 66.0,
+              "weight_max_lbs": 150.0,
+              "coat": "doble_capa"
+            },
+            {
+              "label": "Rottweiler Extra Large",
+              "price_display": "Bath $150 / Full Grooming $170",
+              "needs_review": false,
+              "weight_min_lbs": 66.0,
+              "weight_max_lbs": 150.0,
+              "coat": "corto_denso"
+            },
+            {
+              "label": "Alaskan Malamute",
+              "price_display": "Bath $150 / Full Grooming $170",
+              "needs_review": false,
+              "weight_min_lbs": 66.0,
+              "weight_max_lbs": 150.0,
+              "coat": "doble_capa"
+            },
+            {
+              "label": "Great Pyrenees",
+              "price_display": "Bath $150 / Full Grooming $170",
+              "needs_review": false,
+              "weight_min_lbs": 66.0,
+              "weight_max_lbs": 150.0,
+              "coat": "doble_capa"
+            },
+            {
+              "label": "Husky Extra Large",
+              "price_display": "Bath $150 / Full Grooming $170",
+              "needs_review": false,
+              "weight_min_lbs": 66.0,
+              "weight_max_lbs": 150.0,
+              "coat": "doble_capa"
+            },
+            {
+              "label": "Golden Retriever Extra Large",
+              "price_display": "Bath $150 / Full Grooming $170",
+              "needs_review": false,
+              "weight_min_lbs": 66.0,
+              "weight_max_lbs": 150.0,
+              "coat": "doble_capa"
+            },
+            {
+              "label": "Dalmata",
+              "price_display": "Bath $130 / Full Grooming $150",
+              "needs_review": false,
+              "weight_min_lbs": 66.0,
+              "weight_max_lbs": 150.0,
+              "coat": "corto_denso"
+            },
+            {
+              "label": "English Bulldog Extra Large",
+              "price_display": "Bath $130 / Full Grooming $150",
+              "needs_review": false,
+              "weight_min_lbs": 66.0,
+              "weight_max_lbs": 150.0,
+              "coat": "corto_denso"
+            },
+            {
+              "label": "Mixed Breeds Extra Large",
+              "price_display": "Bath $130 / Full Grooming $150",
+              "needs_review": false,
+              "weight_min_lbs": 66.0,
+              "weight_max_lbs": 150.0
+            }
+          ]
+        },
+        {
+          "name": "Grooming por raza - Pequenas (0-25 lbs) y Medium (26-45 lbs)",
+          "items": [
+            {
+              "label": "Chihuahua",
+              "price_display": "Bath $75 / Full Grooming $85",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 25.0,
+              "coat": "corto_denso"
+            },
+            {
+              "label": "Yorkshire Terrier",
+              "price_display": "Bath $75 / Full Grooming $85",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 25.0,
+              "coat": "liso_largo"
+            },
+            {
+              "label": "Maltese",
+              "price_display": "Bath $75 / Full Grooming $85",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 25.0,
+              "coat": "liso_largo"
+            },
+            {
+              "label": "Toy Poodle",
+              "price_display": "Bath Small $85 / Bath Medium $110 / Full Grooming Small $95 / Full Grooming Medium $130",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 45.0,
+              "coat": "rizado"
+            },
+            {
+              "label": "Poodle",
+              "price_display": "Bath Small $85 / Bath Medium $110 / Full Grooming Small $95 / Full Grooming Medium $130",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 45.0,
+              "coat": "rizado"
+            },
+            {
+              "label": "Mini Goldendoodle",
+              "price_display": "Bath Small $85 / Bath Medium $110 / Full Grooming Small $95 / Full Grooming Medium $130",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 45.0,
+              "coat": "rizado"
+            },
+            {
+              "label": "Pomeranian",
+              "price_display": "Bath $90 / Full Grooming $100",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 25.0
+            },
+            {
+              "label": "Shih Tzu",
+              "price_display": "Bath $75 / Full Grooming $85",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 25.0,
+              "coat": "liso_largo"
+            },
+            {
+              "label": "Carlino / Pug",
+              "price_display": "Bath $75 / Full Grooming $85",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 25.0,
+              "coat": "corto_denso"
+            },
+            {
+              "label": "Boston Terrier",
+              "price_display": "Bath $80 / Full Grooming $90",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 25.0,
+              "coat": "corto_denso"
+            },
+            {
+              "label": "Cavalier King Charles",
+              "price_display": "Bath $90 / Full Grooming $100",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 25.0,
+              "coat": "sedoso"
+            },
+            {
+              "label": "Cocker Spaniel",
+              "price_display": "Bath $90 / Full Grooming $100",
+              "needs_review": false,
+              "weight_min_lbs": 26.0,
+              "weight_max_lbs": 45.0,
+              "coat": "sedoso"
+            },
+            {
+              "label": "French Bulldog",
+              "price_display": "Bath $80 / Full Grooming $90",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 25.0,
+              "coat": "corto_denso"
+            },
+            {
+              "label": "English Bulldog",
+              "price_display": "Bath $80 / Full Grooming $90",
+              "needs_review": false,
+              "weight_min_lbs": 26.0,
+              "weight_max_lbs": 45.0,
+              "coat": "corto_denso"
+            },
+            {
+              "label": "Beagle",
+              "price_display": "Bath $80 / Full Grooming $90",
+              "needs_review": false,
+              "weight_min_lbs": 26.0,
+              "weight_max_lbs": 45.0,
+              "coat": "corto_denso"
+            },
+            {
+              "label": "Corgi",
+              "price_display": "Bath $90 / Full Grooming $100",
+              "needs_review": false,
+              "weight_min_lbs": 26.0,
+              "weight_max_lbs": 45.0,
+              "coat": "doble_capa"
+            },
+            {
+              "label": "Basset Hound",
+              "price_display": "Bath $100 / Full Grooming $120",
+              "needs_review": false,
+              "weight_min_lbs": 26.0,
+              "weight_max_lbs": 45.0,
+              "coat": "corto_denso"
+            },
+            {
+              "label": "Schnauzer Mini",
+              "price_display": "Bath $75 / Full Grooming $85",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 25.0,
+              "coat": "alambrado"
+            },
+            {
+              "label": "Schnauzer Medium",
+              "price_display": "Bath $90 / Full Grooming $100",
+              "needs_review": false,
+              "weight_min_lbs": 26.0,
+              "weight_max_lbs": 45.0,
+              "coat": "alambrado"
+            },
+            {
+              "label": "Wheaten Terrier",
+              "price_display": "Bath $80 / Full Grooming $90",
+              "needs_review": false,
+              "weight_min_lbs": 26.0,
+              "weight_max_lbs": 45.0,
+              "coat": "rizado"
+            },
+            {
+              "label": "Border Collie Small",
+              "price_display": "Bath $80 / Full Grooming $90",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 25.0,
+              "coat": "doble_capa"
+            },
+            {
+              "label": "Australian Shepherd Small",
+              "price_display": "Bath $90 / Full Grooming $100",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 25.0,
+              "coat": "doble_capa"
+            },
+            {
+              "label": "Pitbull Medium",
+              "price_display": "Bath $80 / Full Grooming $90",
+              "needs_review": false,
+              "weight_min_lbs": 26.0,
+              "weight_max_lbs": 45.0,
+              "coat": "corto_denso"
+            },
+            {
+              "label": "Cavapoo",
+              "price_display": "Bath $85 / Full Grooming $95",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 25.0,
+              "coat": "rizado"
+            },
+            {
+              "label": "Cockapoo",
+              "price_display": "Bath $85 / Full Grooming $95",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 25.0,
+              "coat": "rizado"
+            },
+            {
+              "label": "Dachshund",
+              "price_display": "Bath $85 / Full Grooming $95",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 25.0,
+              "coat": "corto_denso"
+            },
+            {
+              "label": "Mixed Breeds Medium",
+              "price_display": "Bath $85 / Full Grooming $95",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 45.0
+            },
+            {
+              "label": "Miniature Poodle",
+              "price_display": "Bath Small $85 / Bath Medium $110 / Full Grooming Small $95 / Full Grooming Medium $130",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 45.0,
+              "coat": "rizado"
+            },
+            {
+              "label": "West Highland White Terrier",
+              "price_display": "Bath $80 / Full Grooming $90",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 25.0,
+              "coat": "alambrado"
+            },
+            {
+              "label": "Shiba Inu",
+              "price_display": "Bath $85 / Full Grooming $95",
+              "needs_review": false,
+              "weight_min_lbs": 16.0,
+              "weight_max_lbs": 25.0,
+              "coat": "doble_capa"
+            },
+            {
+              "label": "Japanese Chin",
+              "price_display": "Bath $75 / Full Grooming $85",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 15.0,
+              "coat": "sedoso"
+            },
+            {
+              "label": "Pomsky",
+              "price_display": "Bath $90 / Full Grooming $100",
+              "needs_review": false,
+              "weight_min_lbs": 26.0,
+              "weight_max_lbs": 45.0
+            }
+          ]
+        },
+        {
+          "name": "Baño para Gatos (Cat Bath)",
+          "pill_label": "bath",
+          "items": [
+            {
+              "label": "Baño para gatos - todas las tallas",
+              "price_display": "$120.00",
+              "needs_review": false
+            }
+          ]
+        },
+        {
+          "name": "Grooming Completo para Gatos (Cat Full Grooming)",
+          "pill_label": "full grooming",
+          "items": [
+            {
+              "label": "Grooming completo para gatos - todas las tallas",
+              "price_display": "$160.00",
+              "needs_review": false
+            }
+          ]
+        },
+        {
+          "name": "Limpieza Dental para Gatos (Cat Dental)",
+          "pill_label": "limpieza dental",
+          "items": [
+            {
+              "label": "Limpieza dental para gatos - todas las tallas",
+              "price_display": "$200.00",
+              "needs_review": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "tinis",
+      "name": "Tini's Pet Grooming",
+      "color_primary": "#0F8C8C",
+      "color_secondary": "#0B6B6B",
+      "color_accent": "#F2B705",
+      "logo": "tinis.jpeg",
+      "notes": [
+        "Instagram: @tinispetgrooming",
+        "Dirección: 16183 Lake Vista Boulevard, Orlando FL 32828",
+        "Cargo adicional por distancia (más de 30 millas): $30.00"
+      ],
+      "categories": [
+        {
+          "name": "Full Grooming Service Standard",
+          "items": [
+            {
+              "label": "Small - hasta 15 lbs",
+              "price_display": "$90.00",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 20.0
+            },
+            {
+              "label": "Medium - 16 a 40 lbs",
+              "price_display": "$110.00",
+              "needs_review": false,
+              "weight_min_lbs": 16.0,
+              "weight_max_lbs": 40.0
+            },
+            {
+              "label": "Large - 41 a 60 lbs",
+              "price_display": "$145.00",
+              "needs_review": false,
+              "weight_min_lbs": 41.0,
+              "weight_max_lbs": 60.0
+            }
+          ]
+        },
+        {
+          "name": "Bath Packages standard",
+          "items": [
+            {
+              "label": "Small - hasta 15 lbs",
+              "price_display": "$65.00",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 15.0
+            },
+            {
+              "label": "Medium - 16 a 40 lbs",
+              "price_display": "$80.00",
+              "needs_review": false,
+              "weight_min_lbs": 16.0,
+              "weight_max_lbs": 40.0
+            },
+            {
+              "label": "Large - 41 a 80 lbs",
+              "price_display": "$110.00",
+              "needs_review": false,
+              "weight_min_lbs": 41.0,
+              "weight_max_lbs": 80.0
+            }
+          ]
+        },
+        {
+          "name": "Raza especial - Poodle Mix & Sheepdogs",
+          "items": [
+            {
+              "label": "Bath Package - Small (hasta 20 lbs)",
+              "price_display": "$95.00",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 20.0
+            },
+            {
+              "label": "Full Grooming - Small (hasta 20 lbs)",
+              "price_display": "$120.00",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 20.0
+            },
+            {
+              "label": "Bath Package - Medium (21-40 lbs)",
+              "price_display": "$115.00",
+              "needs_review": false,
+              "weight_min_lbs": 21.0,
+              "weight_max_lbs": 40.0
+            },
+            {
+              "label": "Full Grooming - Medium (21-40 lbs)",
+              "price_display": "$145.00",
+              "needs_review": false,
+              "weight_min_lbs": 21.0,
+              "weight_max_lbs": 40.0
+            },
+            {
+              "label": "Bath Package - Large (41-60 lbs)",
+              "price_display": "$145.00",
+              "needs_review": false,
+              "weight_min_lbs": 41.0,
+              "weight_max_lbs": 60.0
+            },
+            {
+              "label": "Full Grooming - Large (41-60 lbs)",
+              "price_display": "$190.00",
+              "needs_review": false,
+              "weight_min_lbs": 41.0,
+              "weight_max_lbs": 60.0
+            }
+          ]
+        },
+        {
+          "name": "Raza especial - Husky & Mix",
+          "items": [
+            {
+              "label": "Full Grooming - Small (hasta 20 lbs)",
+              "price_display": "$120.00",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 20.0
+            },
+            {
+              "label": "Full Grooming - Medium (21-40 lbs)",
+              "price_display": "$150.00",
+              "needs_review": false,
+              "weight_min_lbs": 21.0,
+              "weight_max_lbs": 40.0
+            },
+            {
+              "label": "Full Grooming - Large (41-80 lbs)",
+              "price_display": "$185.00",
+              "needs_review": false,
+              "weight_min_lbs": 41.0,
+              "weight_max_lbs": 80.0
+            },
+            {
+              "label": "Full Grooming - Extra Large (mas de 81 lbs)",
+              "price_display": "$240.00",
+              "needs_review": false,
+              "weight_min_lbs": 81.0,
+              "weight_max_lbs": 300.0
+            }
+          ]
+        },
+        {
+          "name": "Raza especial - Cavalier",
+          "items": [
+            {
+              "label": "Basic Package - Small (hasta 20 lbs)",
+              "price_display": "$90.00",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 20.0
+            },
+            {
+              "label": "Full Grooming - Small (hasta 20 lbs)",
+              "price_display": "$125.00",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 20.0
+            },
+            {
+              "label": "Basic Package - Medium (21-60 lbs)",
+              "price_display": "$135.00",
+              "needs_review": false,
+              "weight_min_lbs": 21.0,
+              "weight_max_lbs": 60.0
+            },
+            {
+              "label": "Full Grooming - Medium (21-60 lbs)",
+              "price_display": "$170.00",
+              "needs_review": false,
+              "weight_min_lbs": 21.0,
+              "weight_max_lbs": 60.0
+            }
+          ]
+        },
+        {
+          "name": "Raza especial - Cocker Spaniel & Mix",
+          "items": [
+            {
+              "label": "Basic Package - Small (hasta 20 lbs)",
+              "price_display": "$95.00",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 20.0
+            },
+            {
+              "label": "Full Grooming - Small (hasta 20 lbs)",
+              "price_display": "$120.00",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 20.0
+            },
+            {
+              "label": "Basic Package - Medium (21-40 lbs)",
+              "price_display": "$110.00",
+              "needs_review": false,
+              "weight_min_lbs": 21.0,
+              "weight_max_lbs": 40.0
+            },
+            {
+              "label": "Full Grooming - Medium (21-40 lbs)",
+              "price_display": "$145.00",
+              "needs_review": false,
+              "weight_min_lbs": 21.0,
+              "weight_max_lbs": 40.0
+            },
+            {
+              "label": "Basic Package - Large (21-60 lbs)",
+              "price_display": "$140.00",
+              "needs_review": false,
+              "weight_min_lbs": 21.0,
+              "weight_max_lbs": 60.0
+            }
+          ]
+        },
+        {
+          "name": "Servicios adicionales",
+          "items": [
+            {
+              "label": "Fee por distancia",
+              "price_display": "$20.00",
+              "needs_review": false
+            },
+            {
+              "label": "Nail Clipping",
+              "price_display": "$20.00",
+              "needs_review": false
+            },
+            {
+              "label": "Fee Cancelacion",
+              "price_display": "$25.00",
+              "needs_review": false
+            },
+            {
+              "label": "Senior Dog - Special Care",
+              "price_display": "$25.00",
+              "needs_review": false
+            },
+            {
+              "label": "Deshedding - Large (41-100 lbs)",
+              "price_display": "$50.00",
+              "needs_review": false,
+              "weight_min_lbs": 41.0,
+              "weight_max_lbs": 100.0
+            },
+            {
+              "label": "Deshedding - Medium (16-40 lbs)",
+              "price_display": "$30.00",
+              "needs_review": false,
+              "weight_min_lbs": 16.0,
+              "weight_max_lbs": 40.0
+            },
+            {
+              "label": "Flea & Tick Preventive - Medium (hasta 40 lbs)",
+              "price_display": "$15.00",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 40.0
+            },
+            {
+              "label": "Flea & Tick Preventive - Large (mas de 40 lbs)",
+              "price_display": "$30.00",
+              "needs_review": false,
+              "weight_min_lbs": 40.0,
+              "weight_max_lbs": 300.0
+            },
+            {
+              "label": "Severe Knots - Large (41-100 lbs)",
+              "price_display": "$40.00",
+              "needs_review": false,
+              "weight_min_lbs": 41.0,
+              "weight_max_lbs": 100.0
+            },
+            {
+              "label": "Severe Knots - Medium (hasta 40 lbs)",
+              "price_display": "$20.00",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 40.0
+            },
+            {
+              "label": "Gland Expression",
+              "price_display": "$10.00",
+              "needs_review": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "mayami",
+      "name": "Mayami Pet Grooming",
+      "color_primary": "#CA1778",
+      "color_secondary": "#D36E9C",
+      "color_accent": "#E8B3D4",
+      "logo": "mayami.jpeg",
+      "notes": [
+        "Cargo adicional de $10-$15 por razas especiales (Pomeranian, Doodle, Poodle, Cocker, etc.)",
+        "Instagram: @mayamipets"
+      ],
+      "categories": [
+        {
+          "name": "Dog Grooming Service",
+          "items": [
+            {
+              "label": "Full Groom Small - hasta 15 lbs",
+              "price_display": "$85.00",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 15.0
+            },
+            {
+              "label": "Full Groom Medium 26-40 lbs",
+              "price_display": "$95.00",
+              "needs_review": false,
+              "weight_min_lbs": 26.0,
+              "weight_max_lbs": 40.0
+            },
+            {
+              "label": "Full Groom Large 41-65 lbs",
+              "price_display": "$150.00",
+              "needs_review": false,
+              "weight_min_lbs": 41.0,
+              "weight_max_lbs": 65.0
+            },
+            {
+              "label": "Full Groom Extra Large 66-100 lbs",
+              "price_display": "$180.00",
+              "needs_review": false,
+              "weight_min_lbs": 66.0,
+              "weight_max_lbs": 100.0
+            }
+          ],
+          "pill_label": "Full Grooming"
+        },
+        {
+          "name": "Deep Dental Cleaning",
+          "items": [
+            {
+              "label": "Small",
+              "price_display": "$180.00",
+              "needs_review": false,
+              "weight_min_lbs": 16.0,
+              "weight_max_lbs": 25.0
+            },
+            {
+              "label": "Medium",
+              "price_display": "$190.00",
+              "needs_review": false,
+              "weight_min_lbs": 26.0,
+              "weight_max_lbs": 40.0
+            },
+            {
+              "label": "Large",
+              "price_display": "$200.00",
+              "needs_review": false,
+              "weight_min_lbs": 46.0,
+              "weight_max_lbs": 60.0
+            },
+            {
+              "label": "Extra Large",
+              "price_display": "$220.00",
+              "needs_review": false,
+              "weight_min_lbs": 66.0,
+              "weight_max_lbs": 150.0
+            }
+          ],
+          "pill_label": "Limpieza Dental"
+        },
+        {
+          "name": "Cat Service",
+          "items": [
+            {
+              "label": "Cat Full Groom",
+              "price_display": "$140.00",
+              "needs_review": false
+            },
+            {
+              "label": "Cat Deep Dental Cleaning",
+              "price_display": "$200.00",
+              "needs_review": false
+            }
+          ],
+          "pill_label": "Full Grooming"
+        },
+        {
+          "name": "Servicios adicionales",
+          "items": [
+            {
+              "label": "1/2 hora Detangle Hair (nudos)",
+              "price_display": "$30.00",
+              "needs_review": false
+            },
+            {
+              "label": "1 hora Detangle Hair (nudos)",
+              "price_display": "$50.00",
+              "needs_review": false
+            },
+            {
+              "label": "Deshedding - Deslanado",
+              "price_display": "$25.00",
+              "needs_review": false
+            },
+            {
+              "label": "Flea Shampoo",
+              "price_display": "$25.00",
+              "needs_review": false
+            },
+            {
+              "label": "Nail Trim",
+              "price_display": "$20.00",
+              "needs_review": false
+            },
+            {
+              "label": "Teeth Brushing",
+              "price_display": "$10.00",
+              "needs_review": false
+            },
+            {
+              "label": "Special Shampoo",
+              "price_display": "$15.00",
+              "needs_review": false
+            },
+            {
+              "label": "Nail Painting",
+              "price_display": "$10.00",
+              "needs_review": false
+            },
+            {
+              "label": "Extra Care",
+              "price_display": "$10.00",
+              "needs_review": false
+            },
+            {
+              "label": "Limpieza de Huellas y Nariz",
+              "price_display": "$10.00",
+              "needs_review": false
+            }
+          ]
+        }
+      ],
+      "special_breed_surcharge": {
+        "keywords": [
+          "Pomeranian",
+          "Doodle",
+          "Poodle",
+          "Cocker"
+        ],
+        "amount": "$10-$15"
+      }
+    },
+    {
+      "slug": "cutepaws",
+      "name": "Cute Paws Grooming",
+      "color_primary": "#F47920",
+      "color_secondary": "#1A2744",
+      "color_accent": "#4FC3E8",
+      "logo": "cutepaws.jpeg",
+      "notes": [
+        "El servicio de doble capa (Double-coated hair) tiene un precio único de $110 para el rango de 40 a 100 lbs, sin importar el tamaño exacto dentro de ese rango."
+      ],
+      "categories": [
+        {
+          "name": "Full Grooming",
+          "pill_label": "Full Grooming",
+          "items": [
+            {
+              "label": "Small (0-19 lbs)",
+              "price_display": "$80.00",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 19.0
+            },
+            {
+              "label": "Medium (20-39 lbs)",
+              "price_display": "$90.00",
+              "needs_review": false,
+              "weight_min_lbs": 20.0,
+              "weight_max_lbs": 39.0
+            },
+            {
+              "label": "Large (40-59 lbs)",
+              "price_display": "$100.00",
+              "needs_review": false,
+              "weight_min_lbs": 40.0,
+              "weight_max_lbs": 59.0
+            },
+            {
+              "label": "Extra Large (60-100 lbs)",
+              "price_display": "$160.00",
+              "needs_review": false,
+              "weight_min_lbs": 60.0,
+              "weight_max_lbs": 100.0
+            }
+          ]
+        },
+        {
+          "name": "Basic Grooming",
+          "pill_label": "Basic Grooming",
+          "items": [
+            {
+              "label": "Small (0-19 lbs)",
+              "price_display": "$70.00",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 19.0
+            },
+            {
+              "label": "Medium (20-39 lbs)",
+              "price_display": "$80.00",
+              "needs_review": false,
+              "weight_min_lbs": 20.0,
+              "weight_max_lbs": 39.0
+            },
+            {
+              "label": "Large (40-59 lbs)",
+              "price_display": "$90.00",
+              "needs_review": false,
+              "weight_min_lbs": 40.0,
+              "weight_max_lbs": 59.0
+            },
+            {
+              "label": "Extra Large (60-100 lbs)",
+              "price_display": "$130.00",
+              "needs_review": false,
+              "weight_min_lbs": 60.0,
+              "weight_max_lbs": 100.0
+            }
+          ]
+        },
+        {
+          "name": "Bath and Tidy",
+          "pill_label": "Bath and Tidy",
+          "items": [
+            {
+              "label": "Small (0-19 lbs)",
+              "price_display": "$60.00",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 19.0
+            },
+            {
+              "label": "Medium (20-39 lbs)",
+              "price_display": "$70.00",
+              "needs_review": false,
+              "weight_min_lbs": 20.0,
+              "weight_max_lbs": 39.0
+            },
+            {
+              "label": "Large (40-59 lbs)",
+              "price_display": "$80.00",
+              "needs_review": false,
+              "weight_min_lbs": 40.0,
+              "weight_max_lbs": 59.0
+            },
+            {
+              "label": "Extra Large (60-100 lbs)",
+              "price_display": "$110.00",
+              "needs_review": false,
+              "weight_min_lbs": 60.0,
+              "weight_max_lbs": 100.0
+            }
+          ]
+        },
+        {
+          "name": "Double-coated hair",
+          "pill_label": "Double-coated hair",
+          "items": [
+            {
+              "label": "Double-coated hair (40-100 lbs)",
+              "price_display": "$110.00",
+              "needs_review": false,
+              "weight_min_lbs": 40.0,
+              "weight_max_lbs": 100.0
+            }
+          ]
+        },
+        {
+          "name": "Special Breed Small",
+          "pill_label": "Special Breed Small",
+          "items": [
+            {
+              "label": "Special Breed Small (Pomeranian, PomSky, Spaniel, Doodle)",
+              "price_display": "$100.00",
+              "needs_review": false
+            }
+          ]
+        },
+        {
+          "name": "Special Breed Hair-Doodle",
+          "pill_label": "Special Breed Hair-Doodle",
+          "items": [
+            {
+              "label": "Special Breed Hair-Doodle",
+              "price_display": "$120.00",
+              "needs_review": false
+            }
+          ]
+        },
+        {
+          "name": "Servicios adicionales",
+          "items": [
+            {
+              "label": "Nails",
+              "price_display": "$20.00",
+              "needs_review": false
+            }
+          ]
+        },
+        {
+          "name": "Bath Service Cat",
+          "pill_label": "Bath Service Cat",
+          "items": [
+            {
+              "label": "Bath Service Cat",
+              "price_display": "$90.00",
+              "needs_review": false
+            }
+          ]
+        },
+        {
+          "name": "Full Groom Cat",
+          "pill_label": "Full Groom Cat",
+          "items": [
+            {
+              "label": "Full Groom Cat",
+              "price_display": "$110.00",
+              "needs_review": false
+            }
+          ]
+        },
+        {
+          "name": "Deep Dental Cleaning",
+          "pill_label": "Limpieza Dental",
+          "items": [
+            {
+              "label": "Small (1-19 lbs)",
+              "price_display": "$160.00",
+              "needs_review": false,
+              "weight_min_lbs": 1.0,
+              "weight_max_lbs": 19.0
+            },
+            {
+              "label": "Medium (20-39 lbs)",
+              "price_display": "$180.00",
+              "needs_review": false,
+              "weight_min_lbs": 20.0,
+              "weight_max_lbs": 39.0
+            },
+            {
+              "label": "Large (40-59 lbs)",
+              "price_display": "$200.00",
+              "needs_review": false,
+              "weight_min_lbs": 40.0,
+              "weight_max_lbs": 59.0
+            },
+            {
+              "label": "Extra Large (60-100 lbs)",
+              "price_display": "$220.00",
+              "needs_review": false,
+              "weight_min_lbs": 60.0,
+              "weight_max_lbs": 100.0
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

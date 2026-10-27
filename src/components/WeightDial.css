@@ -1,0 +1,136 @@
+.weight-dial {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.weight-dial__svg {
+  width: 100%;
+  max-width: 560px;
+  height: auto;
+  overflow: visible;
+}
+
+.weight-dial__band {
+  stroke-dasharray: 1 1;
+  stroke-dashoffset: 1;
+  animation: dial-draw 760ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  transition:
+    stroke 500ms ease,
+    filter 400ms ease;
+}
+
+.weight-dial__band.is-current {
+  filter: drop-shadow(0 0 14px var(--dial-accent));
+}
+
+@keyframes dial-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.weight-dial__labels text {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 800;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  opacity: 0;
+  animation: dial-fade 420ms ease forwards;
+}
+
+@keyframes dial-fade {
+  to {
+    opacity: 1;
+  }
+}
+
+.weight-dial__ticks line {
+  stroke: var(--line-strong);
+  stroke-width: 2;
+}
+
+.weight-dial__scale text {
+  font-family: var(--font-body);
+  font-size: 12px;
+  fill: var(--text-muted);
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
+.weight-dial__range path,
+.weight-dial__range line {
+  fill: none;
+  stroke: var(--warn);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.weight-dial__range path {
+  stroke-dasharray: 1 1;
+  stroke-dashoffset: 1;
+  animation: dial-draw 900ms 200ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.weight-dial__range line {
+  opacity: 0;
+  animation: dial-fade 300ms 900ms ease forwards;
+}
+
+.weight-dial__needle {
+  transform-box: view-box;
+  transform-origin: 300px 300px;
+  opacity: 0;
+  transition:
+    transform 1100ms cubic-bezier(0.34, 1.4, 0.5, 1),
+    opacity 300ms ease;
+}
+
+.weight-dial__needle.is-on {
+  opacity: 1;
+}
+
+.weight-dial__needle line {
+  stroke: #ffffff;
+  stroke-width: 5;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.55));
+}
+
+.weight-dial__needle circle {
+  fill: #ffffff;
+}
+
+.weight-dial__readout {
+  font-family: var(--font-display);
+  font-size: 58px;
+  font-weight: 800;
+  fill: #ffffff;
+  text-anchor: middle;
+  font-variant-numeric: tabular-nums;
+}
+
+.weight-dial__size {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 700;
+  fill: var(--accent-text, var(--moon));
+  text-anchor: middle;
+}
+
+.weight-dial__caption {
+  max-width: 520px;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--text-soft);
+  animation: rise-in 420ms 300ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.weight-dial__caption.is-warning {
+  color: var(--warn-text);
+}

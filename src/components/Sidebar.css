@@ -1,0 +1,81 @@
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px 18px;
+}
+
+.sidebar__logo {
+  width: 112px;
+  height: auto;
+  margin: 0 8px 4px;
+}
+
+.sidebar__group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebar__group-label {
+  padding: 0 10px 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.sidebar__link {
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.sidebar__link:hover {
+  background: var(--raised);
+}
+
+.sidebar__link.is-active {
+  background: var(--moon);
+  color: var(--night);
+  font-weight: 800;
+}
+
+.sidebar__fifo {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  background: var(--panel);
+  color: var(--text);
+  text-decoration: none;
+  border: 2px solid transparent;
+}
+
+.sidebar__fifo:hover,
+.sidebar__fifo.is-active {
+  border-color: var(--moon);
+}
+
+.sidebar__fifo-face {
+  width: 40px;
+  height: auto;
+}
+
+.sidebar__fifo-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebar__fifo-title {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.sidebar__fifo-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+}

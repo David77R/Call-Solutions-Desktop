@@ -1,0 +1,23 @@
+:root {
+  --night: #050320;
+  --panel: #0e0c45;
+  --raised: #17165c;
+  --line: #2a2978;
+  --line-strong: #5d64a8;
+  --moon: #7f97e8;
+  --wolf: #3a5bdb;
+  --text: #eef0ff;
+  --text-soft: #c9ceee;
+  --text-muted: #aeb4e0;
+  --warn-bg: #2e2208;
+  --warn-text: #fbd98e;
+  --warn: #f2b544;
+
+  --font-body: 'Nunito', system-ui, sans-serif;
+  --font-display: 'Saira', 'Nunito', system-ui, sans-serif;
+
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --radius-xl: 28px;
+}
