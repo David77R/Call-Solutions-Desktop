@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { MAZE_LEVELS } from '../../data/mazeLevels';
 import { saveMazeScore } from '../../lib/games';
-import fifo from '../../assets/fifo.png';
+import fifo from '../../assets/fifo.webp';
 
 const FLEA_TICK_MS = 520;
 const START_LIVES = 3;

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { generateTrivia } from '../../lib/trivia';
 import { saveTriviaScore } from '../../lib/games';
-import fifo from '../../assets/fifo.png';
+import fifo from '../../assets/fifo.webp';
 
 const COUNT = 8;
 

@@ -19,8 +19,8 @@
   inset: -10%;
   background: linear-gradient(115deg, #7f97e8 0%, #5ef2ff 22%, #c084fc 44%, #ff7ad9 62%, #7f97e8 82%, #5ef2ff 100%);
   background-size: 300% 300%;
-  -webkit-mask-image: url('../../assets/pets-mask.png');
-  mask-image: url('../../assets/pets-mask.png');
+  -webkit-mask-image: url('../../assets/pets-mask.webp');
+  mask-image: url('../../assets/pets-mask.webp');
   -webkit-mask-size: 340px auto;
   mask-size: 340px auto;
   -webkit-mask-repeat: repeat;

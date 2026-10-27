@@ -1,47 +1,80 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from './firebase';
-import seedData from '../data/seedData.json';
 import { flattenCatalog } from './search';
 
 const OFFLINE_FALLBACK_MS = 6000;
 const byName = (a, b) => a.name.localeCompare(b.name);
 
-export function useCatalog() {
-  const [state, setState] = useState({ companies: [], status: 'loading' });
+let snapshot = { companies: [], rows: [], status: 'loading' };
+let started = false;
+const listeners = new Set();
 
-  useEffect(() => {
-    let settled = false;
-    const useSeed = () => {
+function emit(next) {
+  snapshot = next;
+  listeners.forEach((listener) => listener());
+}
+
+function setCompanies(companies, status) {
+  emit({ companies, rows: flattenCatalog(companies), status });
+}
+
+function setStatus(status) {
+  if (snapshot.status !== status) emit({ ...snapshot, status });
+}
+
+function start() {
+  if (started) return;
+  started = true;
+  let settled = false;
+
+  const useSeed = () => {
+    settled = true;
+    if (snapshot.companies.length) {
+      setStatus('offline');
+      return;
+    }
+    import('../data/seedData.json')
+      .then(({ default: seed }) => {
+        if (snapshot.companies.length) setStatus('offline');
+        else setCompanies([...seed.companies].sort(byName), 'offline');
+      })
+      .catch(() => setStatus('offline'));
+  };
+
+  setTimeout(() => {
+    if (!settled) useSeed();
+  }, OFFLINE_FALLBACK_MS);
+
+  onSnapshot(
+    collection(db, 'priceCatalog'),
+    { includeMetadataChanges: true },
+    (snap) => {
+      const fromCache = snap.metadata.fromCache;
+      if (snap.empty) {
+        if (!fromCache) useSeed();
+        return;
+      }
       settled = true;
-      setState((s) => (s.companies.length ? { ...s, status: 'offline' } : { companies: [...seedData.companies].sort(byName), status: 'offline' }));
-    };
+      const status = fromCache ? 'offline' : 'live';
+      if (snapshot.companies.length && !snap.docChanges().length) {
+        setStatus(status);
+        return;
+      }
+      setCompanies(snap.docs.map((d) => d.data()).sort(byName), status);
+    },
+    useSeed
+  );
+}
 
-    const timer = setTimeout(() => {
-      if (!settled) useSeed();
-    }, OFFLINE_FALLBACK_MS);
+function subscribe(listener) {
+  start();
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
 
-    const unsubscribe = onSnapshot(
-      collection(db, 'priceCatalog'),
-      { includeMetadataChanges: true },
-      (snap) => {
-        const fromCache = snap.metadata.fromCache;
-        if (snap.empty) {
-          if (!fromCache) useSeed();
-          return;
-        }
-        settled = true;
-        setState({ companies: snap.docs.map((d) => d.data()).sort(byName), status: fromCache ? 'offline' : 'live' });
-      },
-      useSeed
-    );
+const getSnapshot = () => snapshot;
 
-    return () => {
-      clearTimeout(timer);
-      unsubscribe();
-    };
-  }, []);
-
-  const rows = useMemo(() => flattenCatalog(state.companies), [state.companies]);
-  return { companies: state.companies, rows, status: state.status };
+export function useCatalog() {
+  return useSyncExternalStore(subscribe, getSnapshot);
 }

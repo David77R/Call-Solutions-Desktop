@@ -1,7 +1,7 @@
 import { useId, useState } from 'react';
 import HoloBackdrop from './HoloBackdrop';
 import { useAuth } from '../../lib/AuthContext';
-import logo from '../../assets/ccs-logo.png';
+import logo from '../../assets/ccs-logo.webp';
 import './LoginPage.css';
 
 const MIN_PASSWORD = 6;

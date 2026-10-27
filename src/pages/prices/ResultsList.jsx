@@ -1,5 +1,5 @@
 import { itemKey } from '../../lib/search';
-import fifo from '../../assets/fifo.png';
+import fifo from '../../assets/fifo.webp';
 
 function groupByCompany(results) {
   const groups = [];

@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { SECTION_GROUPS, GAMES_SECTION } from '../sections';
-import logo from '../assets/ccs-logo.png';
-import fifo from '../assets/fifo.png';
+import logo from '../assets/ccs-logo.webp';
+import fifo from '../assets/fifo.webp';
 import AgentCard from './AgentCard';
 import { useOpenRemindersCount } from '../lib/reminders';
 import { useProtocol } from '../lib/protocol';

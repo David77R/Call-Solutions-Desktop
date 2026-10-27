@@ -1,73 +1,93 @@
+import { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
-import LoginPage from './pages/login/LoginPage';
 import { AuthProvider, useAuth } from './lib/AuthContext';
-import logo from './assets/ccs-logo.png';
+import logo from './assets/ccs-logo.webp';
 import ComingSoon from './pages/ComingSoon';
-import PricesPage from './pages/prices/PricesPage';
-import CallFlowPage from './pages/callflow/CallFlowPage';
-import FavoritesPage from './pages/favorites/FavoritesPage';
-import DailySummaryPage from './pages/summary/DailySummaryPage';
-import TotalsPage from './pages/summary/TotalsPage';
-import RemindersPage from './pages/reminders/RemindersPage';
-import ProtocolPage from './pages/protocol/ProtocolPage';
 import ProtocolAlerts from './components/ProtocolAlerts';
 import ReminderAlerts from './components/ReminderAlerts';
 import Topbar from './components/Topbar';
-import AssistantPage from './pages/assistant/AssistantPage';
-import QualityPage from './pages/qc/QualityPage';
-import RemarketingPage from './pages/remarketing/RemarketingPage';
-import AdminPage from './pages/admin/AdminPage';
-import GamesPage from './pages/games/GamesPage';
-import StatsPage from './pages/stats/StatsPage';
 import { ALL_SECTIONS } from './sections';
 import './App.css';
 
-const PAGES = {
-  '/precios': PricesPage,
-  '/flujo-de-llamada': CallFlowPage,
-  '/favoritos': FavoritesPage,
-  '/resumen-del-dia': DailySummaryPage,
-  '/resumenes': TotalsPage,
-  '/recordatorios': RemindersPage,
-  '/protocolo': ProtocolPage,
-  '/asistente': AssistantPage,
-  '/control-de-calidad': QualityPage,
-  '/remarketing': RemarketingPage,
-  '/admin': AdminPage,
-  '/juegos': GamesPage,
-  '/estadisticas': StatsPage,
+const PREFETCH_DELAY_MS = 2500;
+
+const LoginPage = lazy(() => import('./pages/login/LoginPage'));
+
+const LOADERS = {
+  '/precios': () => import('./pages/prices/PricesPage'),
+  '/flujo-de-llamada': () => import('./pages/callflow/CallFlowPage'),
+  '/favoritos': () => import('./pages/favorites/FavoritesPage'),
+  '/resumen-del-dia': () => import('./pages/summary/DailySummaryPage'),
+  '/resumenes': () => import('./pages/summary/TotalsPage'),
+  '/recordatorios': () => import('./pages/reminders/RemindersPage'),
+  '/protocolo': () => import('./pages/protocol/ProtocolPage'),
+  '/asistente': () => import('./pages/assistant/AssistantPage'),
+  '/control-de-calidad': () => import('./pages/qc/QualityPage'),
+  '/remarketing': () => import('./pages/remarketing/RemarketingPage'),
+  '/admin': () => import('./pages/admin/AdminPage'),
+  '/juegos': () => import('./pages/games/GamesPage'),
+  '/estadisticas': () => import('./pages/stats/StatsPage'),
 };
+
+const PAGES = Object.fromEntries(Object.entries(LOADERS).map(([path, load]) => [path, lazy(load)]));
+
+function usePrefetchPages() {
+  useEffect(() => {
+    const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 1200));
+    const cancel = window.cancelIdleCallback || clearTimeout;
+    const queue = Object.values(LOADERS);
+    let handle = null;
+    let delay = null;
+    const next = () => {
+      const load = queue.shift();
+      if (!load) return;
+      load()
+        .catch(() => {})
+        .finally(() => {
+          handle = idle(next);
+        });
+    };
+    delay = setTimeout(() => {
+      handle = idle(next);
+    }, PREFETCH_DELAY_MS);
+    return () => {
+      clearTimeout(delay);
+      cancel(handle);
+    };
+  }, []);
+}
+
+function PageLoader() {
+  return (
+    <div className="page-loader" role="status" aria-label="Cargando">
+      <span />
+      <span />
+      <span />
+    </div>
+  );
+}
 
 function AnimatedRoutes() {
   const location = useLocation();
   return (
     <div className="route-stage" key={location.pathname}>
-      <Routes location={location}>
-        <Route path="/" element={<Navigate to="/precios" replace />} />
-        {ALL_SECTIONS.map((section) => {
-          const Page = PAGES[section.path];
-          return <Route key={section.path} path={section.path} element={Page ? <Page /> : <ComingSoon title={section.label} />} />;
-        })}
-        <Route path="*" element={<Navigate to="/precios" replace />} />
-      </Routes>
+      <Suspense fallback={<PageLoader />}>
+        <Routes location={location}>
+          <Route path="/" element={<Navigate to="/precios" replace />} />
+          {ALL_SECTIONS.map((section) => {
+            const Page = PAGES[section.path];
+            return <Route key={section.path} path={section.path} element={Page ? <Page /> : <ComingSoon title={section.label} />} />;
+          })}
+          <Route path="*" element={<Navigate to="/precios" replace />} />
+        </Routes>
+      </Suspense>
     </div>
   );
 }
 
-function Gate() {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="splash">
-        <img src={logo} alt="CC+CS Solutions" className="splash__logo" />
-      </div>
-    );
-  }
-
-  if (!user) return <LoginPage />;
-
+function Shell() {
+  usePrefetchPages();
   return (
     <BrowserRouter>
       <ProtocolAlerts />
@@ -81,6 +101,30 @@ function Gate() {
       </div>
     </BrowserRouter>
   );
+}
+
+function Splash() {
+  return (
+    <div className="splash">
+      <img src={logo} alt="CC+CS Solutions" className="splash__logo" />
+    </div>
+  );
+}
+
+function Gate() {
+  const { user, loading } = useAuth();
+
+  if (loading) return <Splash />;
+
+  if (!user) {
+    return (
+      <Suspense fallback={<Splash />}>
+        <LoginPage />
+      </Suspense>
+    );
+  }
+
+  return <Shell />;
 }
 
 export default function App() {

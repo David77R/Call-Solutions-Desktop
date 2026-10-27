@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getFavorites, getHistory, toggleFavorite } from '../../lib/favorites';
 import { itemKey } from '../../lib/search';
 import { StarIcon } from '../../components/Icons';
-import fifo from '../../assets/fifo.png';
+import fifo from '../../assets/fifo.webp';
 import './FavoritesPage.css';
 
 function Card({ item, index, onOpen, onRemove }) {

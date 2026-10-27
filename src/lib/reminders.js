@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 import { collection, deleteDoc, doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
 
@@ -12,23 +12,35 @@ export const STATUS = {
 
 export const STATUS_ORDER = ['pending', 'en_proceso', 'listo'];
 
+let remindersSnapshot = { items: [], loading: true };
+let remindersStarted = false;
+const remindersListeners = new Set();
+
+function emitReminders(next) {
+  remindersSnapshot = next;
+  remindersListeners.forEach((listener) => listener());
+}
+
+function subscribeReminders(listener) {
+  if (!remindersStarted) {
+    remindersStarted = true;
+    onSnapshot(
+      collection(db, COLLECTION),
+      (snap) => {
+        const items = snap.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+        emitReminders({ items, loading: false });
+      },
+      () => emitReminders({ ...remindersSnapshot, loading: false })
+    );
+  }
+  remindersListeners.add(listener);
+  return () => remindersListeners.delete(listener);
+}
+
+const getRemindersSnapshot = () => remindersSnapshot;
+
 export function useReminders() {
-  const [state, setState] = useState({ items: [], loading: true });
-
-  useEffect(
-    () =>
-      onSnapshot(
-        collection(db, COLLECTION),
-        (snap) => {
-          const items = snap.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
-          setState({ items, loading: false });
-        },
-        () => setState((s) => ({ ...s, loading: false }))
-      ),
-    []
-  );
-
-  return state;
+  return useSyncExternalStore(subscribeReminders, getRemindersSnapshot);
 }
 
 export function useOpenRemindersCount() {

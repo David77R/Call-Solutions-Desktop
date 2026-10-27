@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import AgentLine from './AgentLine';
-import fifo from '../../assets/fifo.png';
+import fifo from '../../assets/fifo.webp';
 
 function shuffle(list) {
   const arr = [...list];

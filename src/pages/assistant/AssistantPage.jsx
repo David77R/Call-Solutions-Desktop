@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../lib/AuthContext';
 import { CheckIcon, CopyIcon } from '../../components/Icons';
-import fifo from '../../assets/fifo.png';
+import fifo from '../../assets/fifo.webp';
 import './AssistantPage.css';
 
 const API_URL = import.meta.env.VITE_AI_URL || 'https://cccs-ai-backend.vercel.app/api/chat';

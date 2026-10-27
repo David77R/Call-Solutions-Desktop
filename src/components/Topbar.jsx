@@ -6,7 +6,7 @@ import { useAuth } from '../lib/AuthContext';
 import { useCatalog } from '../lib/useCatalog';
 import { useNow, useProtocol } from '../lib/protocol';
 import { STATUS, formatDateTime, updateReminder, useReminders } from '../lib/reminders';
-import fifo from '../assets/fifo.png';
+import fifo from '../assets/fifo.webp';
 import './Topbar.css';
 
 function greeting(hour) {

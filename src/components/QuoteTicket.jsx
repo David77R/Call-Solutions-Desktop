@@ -7,7 +7,7 @@ import { getServiceDescription } from '../data/serviceDescriptions';
 import { isDiscountEligible, itemKey, parsePrice } from '../lib/search';
 import { isFavorite, toggleFavorite } from '../lib/favorites';
 import { buildBreedSuggestion, buildQuoteMessage } from '../lib/quoteMessage';
-import fifo from '../assets/fifo.png';
+import fifo from '../assets/fifo.webp';
 import './QuoteTicket.css';
 
 const money = (n) => `$${n.toFixed(2)}`;
