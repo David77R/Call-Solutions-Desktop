@@ -177,22 +177,14 @@ function FilledTicket({ item, descriptions, rows, breedFromQuery, lang, onLangCh
 
       <div className="ticket__perforation" aria-hidden="true" />
 
-      <div className="ticket__description">
-        <div className="lang-toggle" role="group" aria-label="Idioma del mensaje">
-          <span className="lang-toggle__thumb" style={{ transform: lang === 'en' ? 'translateX(100%)' : 'none' }} aria-hidden="true" />
-          <button type="button" aria-pressed={lang === 'es'} onClick={() => setLang('es')}>
-            ES
-          </button>
-          <button type="button" aria-pressed={lang === 'en'} onClick={() => setLang('en')}>
-            EN
-          </button>
-        </div>
-        {description && (
-          <p key={lang} className="ticket__description-text">
+      {description && (
+        <div className="ticket__description">
+          <span className="ticket__description-label">{lang === 'en' ? 'Includes' : 'Incluye'}</span>
+          <p key={`${lang}-${description}`} className="ticket__description-text">
             {description}
           </p>
-        )}
-      </div>
+        </div>
+      )}
 
       {item.company_slug === 'cruzin' && !isBundle && <ZonePicker zone={zone} onChange={setZone} />}
 
@@ -254,6 +246,19 @@ function FilledTicket({ item, descriptions, rows, breedFromQuery, lang, onLangCh
           </p>
         )}
         {item.service_note && <p className="ticket__alert ticket__alert--info">{item.service_note}</p>}
+      </div>
+
+      <div className="ticket__lang">
+        <span className="ticket__lang-label">Idioma del mensaje</span>
+        <div className="lang-toggle" role="group" aria-label="Idioma del mensaje">
+          <span className="lang-toggle__thumb" style={{ transform: lang === 'en' ? 'translateX(100%)' : 'none' }} aria-hidden="true" />
+          <button type="button" aria-pressed={lang === 'es'} onClick={() => setLang('es')}>
+            Español
+          </button>
+          <button type="button" aria-pressed={lang === 'en'} onClick={() => setLang('en')}>
+            English
+          </button>
+        </div>
       </div>
 
       <details className="ticket__preview">

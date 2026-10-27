@@ -44,6 +44,24 @@ export const defaultCompanyDescriptions = {
       en: 'Ultrasound dental prophylaxis for cats, removing plaque and tartar without causing any harm.',
     },
   },
+  cruzin: {
+    "cruzin' splash": {
+      es: 'Baño, corte de uñas, limpieza de oídos y recorte sanitario. Mantiene el pelaje limpio sin corte de pelo.',
+      en: 'Bath, nail trim, ear cleaning, and sanitary trim. Keeps the coat clean without a haircut.',
+    },
+    "cruzin' furfection": {
+      es: "Todo lo del Cruzin' Splash (baño, corte de uñas, limpieza de oídos y recorte sanitario) más corte de pelo o deslanado.",
+      en: "Everything from the Cruzin' Splash (bath, nail trim, ear cleaning, and sanitary trim) plus a haircut or deshedding treatment.",
+    },
+    "cruzin' smile": {
+      es: 'Limpieza dental cosmética que remueve la placa de la superficie de los dientes de la mascota.',
+      en: "Cosmetic dental cleaning that removes plaque from the surface of the pet's teeth.",
+    },
+    'limpieza dental': {
+      es: 'Limpieza dental cosmética que remueve la placa de la superficie de los dientes de la mascota.',
+      en: "Cosmetic dental cleaning that removes plaque from the surface of the pet's teeth.",
+    },
+  },
   tinis: {
     bath: {
       es: 'Baño con shampoo especializado y acondicionador, secado y cepillado a mano, corte de uñas, limpieza de oídos, cepillado dental y afeitado sanitario.',

@@ -5,6 +5,14 @@ import { defaultCompanyDescriptions, defaultGlobalDescriptions } from '../data/s
 
 const DEFAULTS = { global: defaultGlobalDescriptions, byCompany: defaultCompanyDescriptions };
 
+function withDefaults(data) {
+  const byCompany = { ...DEFAULTS.byCompany };
+  for (const [slug, entries] of Object.entries(data.byCompany || {})) {
+    byCompany[slug] = { ...byCompany[slug], ...entries };
+  }
+  return { global: { ...DEFAULTS.global, ...data.global }, byCompany };
+}
+
 export function useServiceDescriptions() {
   const [descriptions, setDescriptions] = useState(DEFAULTS);
 
@@ -14,8 +22,7 @@ export function useServiceDescriptions() {
         doc(db, 'serviceDescriptions', 'main'),
         (snap) => {
           if (!snap.exists()) return;
-          const data = snap.data();
-          setDescriptions({ global: data.global || {}, byCompany: data.byCompany || {} });
+          setDescriptions(withDefaults(snap.data()));
         },
         () => {}
       ),

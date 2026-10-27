@@ -222,7 +222,15 @@
 .ticket__description {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
+}
+
+.ticket__description-label {
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.72;
 }
 
 .ticket__description-text {
@@ -232,11 +240,23 @@
   animation: rise-in 320ms ease both;
 }
 
+.ticket__lang {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.ticket__lang-label {
+  font-size: 13px;
+  font-weight: 800;
+}
+
 .lang-toggle {
   position: relative;
   display: inline-grid;
   grid-template-columns: 1fr 1fr;
-  align-self: flex-start;
   padding: 3px;
   border-radius: 999px;
   background: rgba(5, 3, 32, 0.12);
@@ -256,7 +276,8 @@
 .lang-toggle button {
   position: relative;
   min-width: 44px;
-  height: 30px;
+  height: 32px;
+  padding: 0 14px;
   border: 0;
   background: transparent;
   color: var(--night);
