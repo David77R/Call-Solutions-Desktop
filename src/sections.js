@@ -20,6 +20,7 @@ export const SECTION_GROUPS = [
     label: 'Supervisión',
     items: [
       { path: '/resumenes', label: 'Resúmenes totales' },
+      { path: '/estadisticas', label: 'Estadísticas' },
       { path: '/control-de-calidad', label: 'Control de calidad' },
       { path: '/remarketing', label: 'Remarketing' },
       { path: '/admin', label: 'Administración' },

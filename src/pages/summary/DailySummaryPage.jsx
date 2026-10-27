@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import CompanyTabs from '../../components/CompanyTabs';
 import { TrendBars } from '../../components/Charts';
 import SummaryForm from './SummaryForm';
@@ -137,7 +138,13 @@ export default function DailySummaryPage() {
         <section className="summary__history">
           <div className="summary__history-head">
             <h2 className="summary__h2">Historial de {company?.name}</h2>
-            <TrendBars data={trend} color={company?.color_primary || '#7f97e8'} title="Citas nuevas en los últimos registros" />
+            <div className="summary__trend">
+              <TrendBars data={trend} color={company?.color_primary || '#7f97e8'} title="Citas nuevas en los últimos registros" />
+              <Link to="/estadisticas" className="stats-link">
+                Ver estadísticas completas
+                <span aria-hidden="true">→</span>
+              </Link>
+            </div>
           </div>
           {items.length ? (
             <ul className="history-list">

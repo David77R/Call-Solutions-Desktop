@@ -18,6 +18,7 @@ import QualityPage from './pages/qc/QualityPage';
 import RemarketingPage from './pages/remarketing/RemarketingPage';
 import AdminPage from './pages/admin/AdminPage';
 import GamesPage from './pages/games/GamesPage';
+import StatsPage from './pages/stats/StatsPage';
 import { ALL_SECTIONS } from './sections';
 import './App.css';
 
@@ -34,6 +35,7 @@ const PAGES = {
   '/remarketing': RemarketingPage,
   '/admin': AdminPage,
   '/juegos': GamesPage,
+  '/estadisticas': StatsPage,
 };
 
 function AnimatedRoutes() {
