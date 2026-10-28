@@ -3,13 +3,18 @@ import { CheckIcon, CloseIcon, CopyIcon, SearchIcon } from './Icons';
 import { shortCompanyName } from './CompanyTabs';
 import { useCatalog } from '../lib/useCatalog';
 import { useAuth } from '../lib/AuthContext';
+import { useGroomerRosters } from '../lib/useGroomerRosters';
 import { accentTokens } from '../lib/color';
 import { AUTO_FIELDS, FIELD_LABELS, TEMPLATE_GROUPS } from '../data/messageTemplates';
 import {
   OPEN_EVENT,
   countUsage,
+  capitalize,
   fillTemplate,
+  groomerPhrase,
+  guessGender,
   placeholders,
+  startsSentence,
   readMessageLang,
   readUsage,
   saveMessageLang,
@@ -24,14 +29,18 @@ const fieldLabel = (key) => FIELD_LABELS[key] || AUTO_FIELDS[key] || key;
 
 function Preview({ text, values }) {
   const parts = text.split(/(\{[a-z_]+\})/g);
+  const segments = parts.map((part, i) => {
+    const key = part.match(/^\{([a-z_]+)\}$/)?.[1];
+    return { part, key, atStart: startsSentence(parts.slice(0, i).join('')) };
+  });
   return (
     <p className="msg-card__text">
-      {parts.map((part, i) => {
-        const key = part.match(/^\{([a-z_]+)\}$/)?.[1];
+      {segments.map(({ part, key, atStart }, i) => {
         if (!key) return <span key={i}>{part}</span>;
-        return values[key] ? (
+        const value = values[key];
+        return value ? (
           <mark key={i} className="msg-card__filled">
-            {values[key]}
+            {atStart ? capitalize(value) : value}
           </mark>
         ) : (
           <mark key={i} className="msg-card__hole">
@@ -43,13 +52,44 @@ function Preview({ text, values }) {
   );
 }
 
-function MessageCard({ template, lang, auto, index, flash, onCopied }) {
+function GroomerField({ name, gender, lang, roster, onName, onGender }) {
+  return (
+    <div className="msg-field msg-field--groomer">
+      <span>Groomer</span>
+      <div className="msg-groomer">
+        <input value={name} onChange={(e) => onName(e.target.value)} placeholder="Nombre" />
+        {lang === 'es' && (
+          <div className="msg-groomer__gender" role="group" aria-label="El o la groomer">
+            <button type="button" aria-pressed={gender === 'm'} onClick={() => onGender('m')}>
+              El
+            </button>
+            <button type="button" aria-pressed={gender === 'f'} onClick={() => onGender('f')}>
+              La
+            </button>
+          </div>
+        )}
+      </div>
+      {roster.length > 0 && (
+        <div className="msg-groomer__roster">
+          {roster.map((n) => (
+            <button key={n} type="button" aria-pressed={name === n} onClick={() => onName(n)}>
+              {n}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MessageCard({ template, lang, auto, roster, index, flash, onCopied }) {
   const text = template[lang] || template.es || '';
   const fields = placeholders(text).filter((k) => !(k in AUTO_FIELDS));
   const [values, setValues] = useState({});
   const [copied, setCopied] = useState(false);
   const ref = useRef(null);
-  const all = { ...auto, ...values };
+  const gender = values.groomer_gender || guessGender(values.groomer);
+  const all = { ...auto, ...values, groomer: groomerPhrase(values.groomer, gender, lang) };
 
   useEffect(() => {
     if (!flash) return;
@@ -85,12 +125,24 @@ function MessageCard({ template, lang, auto, index, flash, onCopied }) {
       <Preview text={text} values={all} />
       {fields.length > 0 && (
         <div className="msg-card__fields">
-          {fields.map((key) => (
-            <label key={key} className="msg-field">
-              <span>{fieldLabel(key)}</span>
-              <input value={values[key] || ''} onChange={(e) => setValues((v) => ({ ...v, [key]: e.target.value }))} />
-            </label>
-          ))}
+          {fields.map((key) =>
+            key === 'groomer' ? (
+              <GroomerField
+                key={key}
+                name={values.groomer || ''}
+                gender={gender}
+                lang={lang}
+                roster={roster}
+                onName={(n) => setValues((v) => ({ ...v, groomer: n, groomer_gender: v.groomer === n ? v.groomer_gender : undefined }))}
+                onGender={(g) => setValues((v) => ({ ...v, groomer_gender: g }))}
+              />
+            ) : (
+              <label key={key} className="msg-field">
+                <span>{fieldLabel(key)}</span>
+                <input value={values[key] || ''} onChange={(e) => setValues((v) => ({ ...v, [key]: e.target.value }))} />
+              </label>
+            ),
+          )}
         </div>
       )}
     </li>
@@ -101,6 +153,7 @@ export default function MessagesDrawer() {
   const { items } = useMessageTemplates();
   const { companies } = useCatalog();
   const { user } = useAuth();
+  const rosters = useGroomerRosters();
   const [open, setOpen] = useState(false);
   const [lang, setLang] = useState(readMessageLang);
   const [slug, setSlug] = useState(null);
@@ -161,6 +214,7 @@ export default function MessagesDrawer() {
 
   const company = companies.find((c) => c.slug === slug) || null;
   const auto = { empresa: company?.name || '', agente: (user?.displayName || '').split(' ')[0] };
+  const roster = company ? rosters[company.slug] || [] : [...new Set(Object.values(rosters).flat())];
 
   const groups = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -213,13 +267,7 @@ export default function MessagesDrawer() {
 
         <div className="msgs__companies" role="group" aria-label="Empresa del mensaje">
           {companies.map((c) => (
-            <button
-              key={c.slug}
-              type="button"
-              aria-pressed={slug === c.slug}
-              style={{ '--co': c.color_primary }}
-              onClick={() => setSlug((s) => (s === c.slug ? null : c.slug))}
-            >
+            <button key={c.slug} type="button" aria-pressed={slug === c.slug} style={{ '--co': c.color_primary }} onClick={() => setSlug((s) => (s === c.slug ? null : c.slug))}>
               <span aria-hidden="true" />
               {shortCompanyName(c.name)}
             </button>
@@ -237,6 +285,7 @@ export default function MessagesDrawer() {
                     template={t}
                     lang={lang}
                     auto={auto}
+                    roster={roster}
                     index={index++}
                     flash={open && flashId === t.id}
                     onCopied={(id) => setUsage(countUsage(id))}

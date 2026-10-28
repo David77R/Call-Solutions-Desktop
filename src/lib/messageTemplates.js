@@ -39,8 +39,33 @@ export function placeholders(text) {
   return [...new Set([...(text || '').matchAll(PLACEHOLDER)].map((m) => m[1]))];
 }
 
+const SENTENCE_START = /(^|[.!?]\s+|\n\s*)$/;
+
+export function startsSentence(before) {
+  return SENTENCE_START.test(before);
+}
+
+export function capitalize(text) {
+  return text ? text.charAt(0).toUpperCase() + text.slice(1) : text;
+}
+
 export function fillTemplate(text, values) {
-  return (text || '').replace(PLACEHOLDER, (match, key) => (values[key] ? values[key] : match));
+  return (text || '')
+    .replace(PLACEHOLDER, (match, key, offset, whole) => {
+      if (!values[key]) return match;
+      return startsSentence(whole.slice(0, offset)) ? capitalize(values[key]) : values[key];
+    })
+    .replace(/([a-záéíóúñ])\.\.(?=\s|$)/gi, '$1.');
+}
+
+export function guessGender(name) {
+  return /a\s*$/i.test(name || '') ? 'f' : 'm';
+}
+
+export function groomerPhrase(name, gender, lang) {
+  if (!name) return '';
+  if (lang === 'en') return `your groomer ${name}`;
+  return `${gender === 'f' ? 'la' : 'el'} groomer ${name}`;
 }
 
 function readJson(key, fallback) {
