@@ -4,6 +4,7 @@ import { shortCompanyName } from './CompanyTabs';
 import { useCatalog } from '../lib/useCatalog';
 import { useAuth } from '../lib/AuthContext';
 import { useGroomerRosters } from '../lib/useGroomerRosters';
+import RemarketingComposer from './RemarketingComposer';
 import { accentTokens } from '../lib/color';
 import { AUTO_FIELDS, FIELD_LABELS, TEMPLATE_GROUPS } from '../data/messageTemplates';
 import {
@@ -151,7 +152,8 @@ function MessageCard({ template, lang, auto, roster, index, flash, onCopied }) {
 
 export default function MessagesDrawer() {
   const { items } = useMessageTemplates();
-  const { companies } = useCatalog();
+  const { companies, rows } = useCatalog();
+  const [mode, setMode] = useState('mensajes');
   const { user } = useAuth();
   const rosters = useGroomerRosters();
   const [open, setOpen] = useState(false);
@@ -172,6 +174,7 @@ export default function MessagesDrawer() {
       const detail = e.detail || {};
       if (detail.companySlug) setSlug(detail.companySlug);
       if (detail.lang) setLang(detail.lang);
+      setMode(detail.mode || 'mensajes');
       setQuery('');
       setFlashId(detail.focusId || null);
       setUsage(readUsage());
@@ -248,12 +251,24 @@ export default function MessagesDrawer() {
           </button>
         </header>
 
+        <div className="msgs__tabs" role="tablist" aria-label="Tipo de mensajes">
+          <span className="msgs__tabs-thumb" style={{ transform: mode === 'remarketing' ? 'translateX(100%)' : 'none' }} aria-hidden="true" />
+          <button type="button" role="tab" aria-selected={mode === 'mensajes'} onClick={() => setMode('mensajes')}>
+            Mensajes
+          </button>
+          <button type="button" role="tab" aria-selected={mode === 'remarketing'} onClick={() => setMode('remarketing')}>
+            Remarketing
+          </button>
+        </div>
+
         <div className="msgs__tools">
-          <label className="msgs__search">
-            <SearchIcon size={18} />
-            <span className="sf-sr">Buscar mensaje</span>
-            <input ref={searchRef} value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar mensaje" />
-          </label>
+          {mode === 'mensajes' && (
+            <label className="msgs__search">
+              <SearchIcon size={18} />
+              <span className="sf-sr">Buscar mensaje</span>
+              <input ref={searchRef} value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar mensaje" />
+            </label>
+          )}
           <div className="lang-toggle msgs__lang" role="group" aria-label="Idioma">
             <span className="lang-toggle__thumb" style={{ transform: lang === 'en' ? 'translateX(100%)' : 'none' }} aria-hidden="true" />
             <button type="button" aria-pressed={lang === 'es'} onClick={() => changeLang('es')}>
@@ -274,28 +289,34 @@ export default function MessagesDrawer() {
           ))}
         </div>
 
-        <div className="msgs__list">
-          {groups.map((g) => (
-            <section key={g.key} className="msgs__group">
-              <h3>{g.label}</h3>
-              <ul>
-                {g.items.map((t) => (
-                  <MessageCard
-                    key={`${t.id}-${lang}`}
-                    template={t}
-                    lang={lang}
-                    auto={auto}
-                    roster={roster}
-                    index={index++}
-                    flash={open && flashId === t.id}
-                    onCopied={(id) => setUsage(countUsage(id))}
-                  />
-                ))}
-              </ul>
-            </section>
-          ))}
-          {!groups.length && <p className="msgs__empty">No hay mensajes que coincidan con "{query}".</p>}
-        </div>
+        {mode === 'remarketing' ? (
+          <div className="msgs__list" key="remarketing">
+            <RemarketingComposer lang={lang} company={company} rows={rows} />
+          </div>
+        ) : (
+          <div className="msgs__list" key="mensajes">
+            {groups.map((g) => (
+              <section key={g.key} className="msgs__group">
+                <h3>{g.label}</h3>
+                <ul>
+                  {g.items.map((t) => (
+                    <MessageCard
+                      key={`${t.id}-${lang}`}
+                      template={t}
+                      lang={lang}
+                      auto={auto}
+                      roster={roster}
+                      index={index++}
+                      flash={open && flashId === t.id}
+                      onCopied={(id) => setUsage(countUsage(id))}
+                    />
+                  ))}
+                </ul>
+              </section>
+            ))}
+            {!groups.length && <p className="msgs__empty">No hay mensajes que coincidan con "{query}".</p>}
+          </div>
+        )}
       </aside>
     </div>
   );
