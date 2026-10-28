@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { CheckIcon, CopyIcon } from './Icons';
-import { CAMPAIGNS, CTAS, DISCOUNTS, GIFTS, buildRemarketing, dentalOffer } from '../lib/remarketingMessage';
+import { CAMPAIGNS, CTAS, DISCOUNTS, GIFTS, SMS_SEGMENT, buildRemarketing, dentalOffer } from '../lib/remarketingMessage';
 
 const COPIED_MS = 1800;
 
@@ -140,6 +140,7 @@ export default function RemarketingComposer({ lang, company, rows }) {
       <div className={`rmkt__preview${copied ? ' is-copied' : ''}${previewOpen ? '' : ' is-min'}`}>
         <button type="button" className="rmkt__preview-head" onClick={() => setPreviewOpen((o) => !o)} aria-expanded={previewOpen}>
           <span>Vista previa del mensaje</span>
+          <span className={message.length > SMS_SEGMENT * 2 ? 'rmkt__count is-long' : 'rmkt__count'}>{message.length} caracteres</span>
           <span className="rmkt__preview-chev" aria-hidden="true" />
         </button>
         <div className="rmkt__preview-body">

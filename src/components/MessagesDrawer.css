@@ -918,3 +918,15 @@
   height: 24px;
   background: var(--panel);
 }
+
+.rmkt__count {
+  margin-left: auto;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--text-muted);
+}
+
+.rmkt__count.is-long {
+  color: var(--warn-text);
+}
