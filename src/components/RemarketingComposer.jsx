@@ -49,6 +49,7 @@ export default function RemarketingComposer({ lang, company, rows }) {
   const [phone, setPhone] = useState('');
   const [showPrice, setShowPrice] = useState(true);
   const [stop, setStop] = useState(true);
+  const [previewOpen, setPreviewOpen] = useState(true);
   const [copied, setCopied] = useState(false);
 
   const offer = useMemo(() => dentalOffer(rows, company?.slug), [rows, company?.slug]);
@@ -136,8 +137,14 @@ export default function RemarketingComposer({ lang, company, rows }) {
         </label>
       )}
 
-      <div className={copied ? 'rmkt__preview is-copied' : 'rmkt__preview'}>
-        <p key={message}>{message}</p>
+      <div className={`rmkt__preview${copied ? ' is-copied' : ''}${previewOpen ? '' : ' is-min'}`}>
+        <button type="button" className="rmkt__preview-head" onClick={() => setPreviewOpen((o) => !o)} aria-expanded={previewOpen}>
+          <span>Vista previa del mensaje</span>
+          <span className="rmkt__preview-chev" aria-hidden="true" />
+        </button>
+        <div className="rmkt__preview-body">
+          <p key={message}>{message}</p>
+        </div>
         <button type="button" className="rmkt__copy" onClick={copy}>
           {copied ? <CheckIcon size={18} /> : <CopyIcon size={18} />}
           {copied ? 'Mensaje copiado' : 'Copiar mensaje de remarketing'}

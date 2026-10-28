@@ -83,6 +83,65 @@ function GroomerField({ name, gender, lang, roster, onName, onGender }) {
   );
 }
 
+const SCROLL_STEP = 180;
+
+function CompanyScroller({ companies, slug, open, onPick }) {
+  const ref = useRef(null);
+  const [edges, setEdges] = useState({ left: false, right: false });
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return undefined;
+    const update = () => setEdges({ left: el.scrollLeft > 4, right: el.scrollLeft + el.clientWidth < el.scrollWidth - 4 });
+    update();
+    el.addEventListener('scroll', update, { passive: true });
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => {
+      el.removeEventListener('scroll', update);
+      observer.disconnect();
+    };
+  }, [companies.length, open]);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return undefined;
+    const onWheel = (e) => {
+      if (Math.abs(e.deltaY) <= Math.abs(e.deltaX) || el.scrollWidth <= el.clientWidth) return;
+      e.preventDefault();
+      el.scrollBy({ left: e.deltaY, behavior: 'auto' });
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, []);
+
+  useEffect(() => {
+    if (!slug || !open) return;
+    ref.current?.querySelector(`[data-slug="${slug}"]`)?.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'smooth' });
+  }, [slug, open]);
+
+  const scroll = (dir) => ref.current?.scrollBy({ left: dir * SCROLL_STEP, behavior: 'smooth' });
+
+  return (
+    <div className={`msgs__companies-wrap${edges.left ? ' has-left' : ''}${edges.right ? ' has-right' : ''}`}>
+      <button type="button" className="msgs__arrow msgs__arrow--left" onClick={() => scroll(-1)} aria-label="Ver empresas anteriores" tabIndex={edges.left ? 0 : -1}>
+        ‹
+      </button>
+      <div ref={ref} className="msgs__companies" role="group" aria-label="Empresa del mensaje">
+        {companies.map((c) => (
+          <button key={c.slug} data-slug={c.slug} type="button" aria-pressed={slug === c.slug} style={{ '--co': c.color_primary }} onClick={() => onPick(c.slug)}>
+            <span aria-hidden="true" />
+            {shortCompanyName(c.name)}
+          </button>
+        ))}
+      </div>
+      <button type="button" className="msgs__arrow msgs__arrow--right" onClick={() => scroll(1)} aria-label="Ver más empresas" tabIndex={edges.right ? 0 : -1}>
+        ›
+      </button>
+    </div>
+  );
+}
+
 function MessageCard({ template, lang, auto, roster, index, flash, onCopied }) {
   const text = template[lang] || template.es || '';
   const fields = placeholders(text).filter((k) => !(k in AUTO_FIELDS));
@@ -280,14 +339,7 @@ export default function MessagesDrawer() {
           </div>
         </div>
 
-        <div className="msgs__companies" role="group" aria-label="Empresa del mensaje">
-          {companies.map((c) => (
-            <button key={c.slug} type="button" aria-pressed={slug === c.slug} style={{ '--co': c.color_primary }} onClick={() => setSlug((s) => (s === c.slug ? null : c.slug))}>
-              <span aria-hidden="true" />
-              {shortCompanyName(c.name)}
-            </button>
-          ))}
-        </div>
+        <CompanyScroller companies={companies} slug={slug} open={open} onPick={(c) => setSlug((s) => (s === c ? null : c))} />
 
         {mode === 'remarketing' ? (
           <div className="msgs__list" key="remarketing">
