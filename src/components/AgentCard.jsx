@@ -1,12 +1,12 @@
 import { useRef, useState } from 'react';
 import { useAuth } from '../lib/AuthContext';
 import { agentDisplayName, agentInitials } from '../lib/agents';
-import { saveAgentPhoto, useAgentProfile } from '../lib/useAgentProfile';
+import { isHeic, saveAgentPhoto, useAgentProfile } from '../lib/useAgentProfile';
 import './AgentCard.css';
 
 const PHOTO_ERRORS = {
   'permission-denied': 'Firebase no deja guardar la foto. Revisa que la regla de "agents" esté publicada.',
-  unreadable: 'Esa imagen no se pudo abrir. Prueba con una foto en JPG o PNG (las HEIC del iPhone a veces fallan).',
+  unreadable: 'Esa imagen no se pudo abrir. Prueba con otra foto.',
   timeout: 'La conexión está lenta y la foto no terminó de subir. Inténtalo de nuevo.',
 };
 
@@ -22,7 +22,7 @@ export default function AgentCard() {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
-    if (file.type && !file.type.startsWith('image/')) {
+    if (file.type && !file.type.startsWith('image/') && !isHeic(file)) {
       setError('Elige una imagen (JPG o PNG).');
       return;
     }
@@ -58,7 +58,7 @@ export default function AgentCard() {
             </svg>
           </span>
         </button>
-        <input ref={inputRef} type="file" accept="image/*" hidden onChange={onFile} />
+        <input ref={inputRef} type="file" accept="image/*,.heic,.heif" hidden onChange={onFile} />
         <span className="agent-card__text">
           <span className="agent-card__name">{name}</span>
           <span className="agent-card__role">Agente</span>

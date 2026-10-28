@@ -67,8 +67,23 @@ function withTimeout(promise) {
   return Promise.race([promise, new Promise((_, reject) => setTimeout(() => reject(fail('timeout')), SAVE_TIMEOUT_MS))]);
 }
 
+const HEIC = /\.(heic|heif)$/i;
+
+export const isHeic = (file) => /image\/hei[cf]/i.test(file.type) || HEIC.test(file.name || '');
+
+async function toJpeg(file) {
+  if (!isHeic(file)) return file;
+  try {
+    const { default: heic2any } = await import('heic2any');
+    const out = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.9 });
+    return Array.isArray(out) ? out[0] : out;
+  } catch {
+    throw fail('unreadable');
+  }
+}
+
 export async function saveAgentPhoto(user, file) {
-  const img = await decode(file);
+  const img = await decode(await toJpeg(file));
   const width = img.naturalWidth || img.width;
   const height = img.naturalHeight || img.height;
   if (!width || !height) throw fail('unreadable');
