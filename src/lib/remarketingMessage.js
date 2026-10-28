@@ -29,7 +29,7 @@ const COPY = {
   es: {
     hello: (name) => (name ? `Hola, ${name}.` : ''),
     pet: (name) => name || 'su mascota',
-    regreso: (pet) => `¡Extrañamos a ${pet}! Consiéntalo de nuevo con un grooming a domicilio.`,
+    regreso: (pet) => `¡Extrañamos a ${pet}! Agende su grooming a domicilio y vuelva a consentirle.`,
     mantenimiento: (pet) => `Ya le toca el grooming a ${pet} y tenemos cupos esta semana.`,
     zona: (pet) => `Estamos en su zona esta semana y quedan pocos cupos para ${pet}.`,
     dental: (pet, price) => `Promo dental para ${pet}: limpieza con ultrasonido, sin anestesia${price ? `, desde ${price}` : ''}.`,
