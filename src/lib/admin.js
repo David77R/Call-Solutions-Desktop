@@ -34,6 +34,10 @@ export function saveCallFlow(flow) {
   return setAndVerify(doc(db, 'callFlowScript', 'main'), { greeting: flow.greeting, branches: flow.branches, closing: flow.closing });
 }
 
+export function saveMessageTemplates(items) {
+  return setAndVerify(doc(db, 'messageTemplates', 'main'), { items });
+}
+
 export function saveRoster(slug, names) {
   return setAndVerify(doc(db, 'groomerRosters', slug), { names });
 }

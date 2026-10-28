@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { BellIcon, ClockIcon, NoteIcon, SearchIcon } from './Icons';
+import { BellIcon, ChatIcon, ClockIcon, NoteIcon, SearchIcon } from './Icons';
+import { openMessages } from '../lib/messageTemplates';
 import { shortCompanyName } from './CompanyTabs';
 import { useAuth } from '../lib/AuthContext';
 import { useCatalog } from '../lib/useCatalog';
@@ -128,6 +129,12 @@ export default function Topbar() {
           <SearchIcon size={18} />
           <span>Buscar precio</span>
           <kbd>/</kbd>
+        </button>
+
+        <button type="button" className="topbar__msgs" onClick={() => openMessages()} aria-label="Mensajes listos para copiar">
+          <ChatIcon size={19} />
+          <span>Mensajes</span>
+          <kbd>M</kbd>
         </button>
 
         <button type="button" className="topbar__btn" onClick={() => navigate('/resumen-del-dia')} aria-label="Resumen del día" data-tip="Resumen del día">

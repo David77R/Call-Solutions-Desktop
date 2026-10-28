@@ -1,12 +1,13 @@
 import { useEffect, useId, useState } from 'react';
 import AnimatedPrice from './AnimatedPrice';
 import ZonePicker from './ZonePicker';
-import { AlertIcon, CheckIcon, CloseIcon, CopyIcon, PawIcon, StarIcon } from './Icons';
+import { AlertIcon, ChatIcon, CheckIcon, CloseIcon, CopyIcon, PawIcon, StarIcon } from './Icons';
 import { coatDescriptions } from '../data/coats';
 import { getServiceDescription } from '../data/serviceDescriptions';
 import { breedCoat, isDiscountEligible, itemKey, labelWithRange, parsePrice } from '../lib/search';
 import { isFavorite, toggleFavorite } from '../lib/favorites';
 import { buildBreedSuggestion, buildQuoteMessage, hasBreedSuggestion } from '../lib/quoteMessage';
+import { countUsage, fillTemplate, openMessages, templateById, useMessageTemplates } from '../lib/messageTemplates';
 import fifo from '../assets/fifo.webp';
 import './QuoteTicket.css';
 
@@ -55,6 +56,8 @@ function FilledTicket({ item, descriptions, rows, breedFromQuery, lang, onLangCh
   const [copied, setCopied] = useState(false);
   const [suggestionCopied, setSuggestionCopied] = useState(false);
   const [suggestionOpen, setSuggestionOpen] = useState(false);
+  const [zipCopied, setZipCopied] = useState(false);
+  const { items: templates } = useMessageTemplates();
   const [zone, setZone] = useState(null);
   const [discountText, setDiscountText] = useState('');
   const discountId = useId();
@@ -115,6 +118,24 @@ function FilledTicket({ item, descriptions, rows, breedFromQuery, lang, onLangCh
       setSuggestionCopied(true);
     } catch {
       setSuggestionCopied(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!zipCopied) return undefined;
+    const t = setTimeout(() => setZipCopied(false), 1800);
+    return () => clearTimeout(t);
+  }, [zipCopied]);
+
+  const handleCopyZip = async () => {
+    const template = templateById(templates, 'pedir-zip');
+    if (!template) return;
+    try {
+      await navigator.clipboard.writeText(fillTemplate(template[lang] || template.es, { empresa: item.company_name }));
+      countUsage('pedir-zip');
+      setZipCopied(true);
+    } catch {
+      setZipCopied(false);
     }
   };
 
@@ -284,6 +305,17 @@ function FilledTicket({ item, descriptions, rows, breedFromQuery, lang, onLangCh
         <span className="ticket__copy-icon">{copied ? <CheckIcon /> : <CopyIcon />}</span>
         {copied ? 'Mensaje copiado' : 'Copiar mensaje para el cliente'}
       </button>
+
+      <div className="ticket__quick">
+        <button type="button" className={zipCopied ? 'ticket__quick-btn is-done' : 'ticket__quick-btn'} onClick={handleCopyZip}>
+          {zipCopied ? <CheckIcon size={16} /> : <CopyIcon size={16} />}
+          {zipCopied ? 'ZIP copiado' : 'Pedir ZIP'}
+        </button>
+        <button type="button" className="ticket__quick-btn" onClick={() => openMessages({ companySlug: item.company_slug, lang })}>
+          <ChatIcon size={16} />
+          Más mensajes
+        </button>
+      </div>
 
       {suggestionAvailable && (
         <button type="button" className={suggestionOpen ? 'suggestion-toggle is-open' : 'suggestion-toggle'} aria-expanded={suggestionOpen} onClick={() => setSuggestionOpen((o) => !o)}>

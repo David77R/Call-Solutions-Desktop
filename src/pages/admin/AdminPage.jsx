@@ -3,11 +3,13 @@ import PricesEditor from './PricesEditor';
 import DescriptionsEditor from './DescriptionsEditor';
 import ScriptEditor from './ScriptEditor';
 import RostersEditor from './RostersEditor';
+import MessagesEditor from './MessagesEditor';
 import CompanyTabs from '../../components/CompanyTabs';
 import { useCatalog } from '../../lib/useCatalog';
-import { useServiceDescriptions } from '../../lib/useServiceDescriptions';
+import { useServiceDescriptionsSync } from '../../lib/useServiceDescriptions';
 import { useCallFlow } from '../../lib/useCallFlow';
 import { useGroomerRosters } from '../../lib/useGroomerRosters';
+import { useMessageTemplates } from '../../lib/messageTemplates';
 import { useAgents } from '../../lib/admin';
 import { accentTokens } from '../../lib/color';
 import { agentInitials } from '../../lib/agents';
@@ -21,6 +23,7 @@ const TABS = [
   { key: 'prices', label: 'Precios' },
   { key: 'descriptions', label: 'Descripciones' },
   { key: 'script', label: 'Guion de llamada' },
+  { key: 'messages', label: 'Mensajes' },
   { key: 'rosters', label: 'Groomers' },
   { key: 'agents', label: 'Agentes' },
 ];
@@ -123,9 +126,10 @@ export default function AdminPage() {
   const [tab, setTab] = useState('prices');
   const [slug, setSlug] = useState(null);
   const { companies } = useCatalog();
-  const descriptions = useServiceDescriptions();
+  const { descriptions, missing } = useServiceDescriptionsSync();
   const flow = useCallFlow();
   const rosters = useGroomerRosters();
+  const { items: templates } = useMessageTemplates();
   const company = companies.find((c) => c.slug === slug) || companies[0] || null;
 
   if (!unlocked) return <PinGate onUnlock={() => setUnlocked(true)} />;
@@ -164,8 +168,9 @@ export default function AdminPage() {
 
       <div className="admin__panel" key={`${tab}-${needsCompany ? company?.slug : ''}`}>
         {tab === 'prices' && company && <PricesEditor key={company.slug + JSON.stringify(company).length} company={company} />}
-        {tab === 'descriptions' && <DescriptionsEditor key={JSON.stringify(descriptions).length} descriptions={descriptions} companies={companies} />}
+        {tab === 'descriptions' && <DescriptionsEditor key={JSON.stringify(descriptions).length} descriptions={descriptions} missing={missing} companies={companies} />}
         {tab === 'script' && <ScriptEditor key={JSON.stringify(flow).length} flow={flow} />}
+        {tab === 'messages' && <MessagesEditor key={JSON.stringify(templates).length} items={templates} />}
         {tab === 'rosters' && company && <RostersEditor key={company.slug + (rosters[company.slug] || []).join()} company={company} names={rosters[company.slug] || []} />}
         {tab === 'agents' && <Agents />}
       </div>

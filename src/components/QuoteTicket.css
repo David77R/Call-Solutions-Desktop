@@ -771,3 +771,50 @@
   font-size: 12px;
   font-weight: 800;
 }
+
+.ticket__quick {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: -4px;
+}
+
+.ticket__quick-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1.5px solid rgba(5, 3, 32, 0.28);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--night);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background-color 220ms ease,
+    border-color 220ms ease,
+    transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.ticket__quick-btn:hover {
+  border-color: var(--night);
+  background: rgba(5, 3, 32, 0.08);
+  transform: translateY(-1px);
+}
+
+.ticket__quick-btn:active {
+  transform: scale(0.95);
+}
+
+.ticket__quick-btn.is-done {
+  border-color: var(--night);
+  background: var(--night);
+  color: #ffffff;
+}
+
+.ticket__quick-btn.is-done svg {
+  animation: pop-in 360ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}

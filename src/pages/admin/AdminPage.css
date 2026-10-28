@@ -440,3 +440,63 @@
 .pin__submit:disabled {
   opacity: 0.4;
 }
+
+.desc-sync {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 18px;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--warn) 55%, transparent);
+  border-radius: var(--radius-md);
+  background: var(--warn-bg);
+  color: var(--warn-text);
+  animation: rise-in 320ms ease both;
+}
+
+.desc-sync p {
+  flex: 1 1 320px;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.msg-ed {
+  animation: rise-in 320ms ease calc(var(--i) * 30ms) both;
+}
+
+.msg-ed__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px 14px;
+}
+
+.msg-ed__title {
+  flex: 1 1 220px;
+}
+
+.msg-ed__title span {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.msg-ed__confirm {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.msg-ed__token {
+  margin: 0 3px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--raised);
+  color: var(--text);
+  font-size: 12px;
+}
+
+.msg-ed__add {
+  align-self: flex-start;
+}

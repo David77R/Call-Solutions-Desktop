@@ -20,7 +20,7 @@ function EntryEditor({ name, entry, onChange }) {
   );
 }
 
-export default function DescriptionsEditor({ descriptions, companies }) {
+export default function DescriptionsEditor({ descriptions, missing, companies }) {
   const [draft, setDraft] = useState(() => clone(descriptions));
   const [scope, setScope] = useState('global');
   const [status, setStatus] = useState('idle');
@@ -39,6 +39,17 @@ export default function DescriptionsEditor({ descriptions, companies }) {
 
   return (
     <div className="admin-block">
+      {missing > 0 && !dirty && (
+        <div className="desc-sync">
+          <p>
+            Hay {missing} {missing === 1 ? 'descripción' : 'descripciones'} que la app ya muestra pero Fifo todavía no conoce (por ejemplo las de Cruzin). Envíalas para que Fifo explique esos
+            servicios igual que el ticket.
+          </p>
+          <button type="button" className="savebar__save" disabled={status === 'saving'} onClick={() => save(setStatus, setError, draft)}>
+            {status === 'saving' ? 'Enviando…' : 'Enviar a Fifo'}
+          </button>
+        </div>
+      )}
       <div className="admin-scope" role="group" aria-label="Alcance">
         <button type="button" className="sf-chip" aria-pressed={scope === 'global'} onClick={() => setScope('global')}>
           Generales

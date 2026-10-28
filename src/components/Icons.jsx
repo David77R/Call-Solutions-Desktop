@@ -106,3 +106,12 @@ export function NoteIcon(props) {
     </Svg>
   );
 }
+
+export function ChatIcon(props) {
+  return (
+    <Svg {...props}>
+      <path d="M5 5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-6l-4.5 3.5V17H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z" />
+      <path d="M8 10h8M8 13h5" />
+    </Svg>
+  );
+}

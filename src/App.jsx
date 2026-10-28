@@ -7,6 +7,7 @@ import ComingSoon from './pages/ComingSoon';
 import ProtocolAlerts from './components/ProtocolAlerts';
 import ReminderAlerts from './components/ReminderAlerts';
 import Topbar from './components/Topbar';
+import MessagesDrawer from './components/MessagesDrawer';
 import { ALL_SECTIONS } from './sections';
 import './App.css';
 
@@ -92,6 +93,7 @@ function Shell() {
     <BrowserRouter>
       <ProtocolAlerts />
       <ReminderAlerts />
+      <MessagesDrawer />
       <div className="shell">
         <Sidebar />
         <main className="shell__main">
