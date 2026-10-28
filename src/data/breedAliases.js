@@ -32,21 +32,156 @@ export const BREED_ALIASES = {
   'san bernardo': 'saint bernard',
   'dalmata': 'dalmata',
   'dálmata': 'dalmata',
+  'bully': 'american bully',
+  'bully americano': 'american bully',
+  'american bully standard': 'american bully',
+  'bully standard': 'american bully',
+  'bully clasico': 'american bully',
+  'bully clásico': 'american bully',
+  'bully xl': 'xl bully',
+  'american bully xl': 'xl bully',
+  'xl american bully': 'xl bully',
+  'bully pocket': 'pocket bully',
+  'pocket': 'pocket bully',
+  'american bully pocket': 'pocket bully',
+  'bully exotico': 'exotic bully',
+  'bully exótico': 'exotic bully',
+  'exotic': 'exotic bully',
+  'micro bully': 'micro bully',
+  'bully micro': 'micro bully',
+  'pitbull': 'american pitbull terrier',
+  'pit bull': 'american pitbull terrier',
+  'pitbul': 'american pitbull terrier',
+  'pitt bull': 'american pitbull terrier',
+  'amstaff': 'american staffordshire terrier',
+  'stafford': 'american staffordshire terrier',
+  'staffy': 'staffordshire bull terrier',
+  'staffordshire': 'staffordshire bull terrier',
+  'bulldog americano': 'american bulldog',
+  'bulldog': 'english bulldog',
+  'frenchie': 'french bulldog',
+  'presa': 'presa canario',
+  'dogo canario': 'presa canario',
+  'sharpei': 'shar pei',
+  'shar-pei': 'shar pei',
+  'braco de weimar': 'weimaraner',
+  'pointer': 'german shorthaired pointer',
+  'braco aleman': 'german shorthaired pointer',
+  'braco alemán': 'german shorthaired pointer',
+  'galgo': 'greyhound',
+  'galgo italiano': 'italian greyhound',
+  'sabueso': 'bloodhound',
+  'jack russell': 'jack russell terrier',
+  'jack russel': 'jack russell terrier',
+  'pinscher': 'miniature pinscher',
+  'min pin': 'miniature pinscher',
+  'pinscher miniatura': 'miniature pinscher',
+  'doberman pinscher': 'doberman',
+  'shiba': 'shiba inu',
+  'samoyedo': 'samoyed',
+  'eskimo': 'american eskimo dog',
+  'esquimal americano': 'american eskimo dog',
+  'sheltie': 'shetland sheepdog',
+  'pastor de shetland': 'shetland sheepdog',
+  'blue heeler': 'australian cattle dog',
+  'heeler': 'australian cattle dog',
+  'boyero australiano': 'australian cattle dog',
+  'pastor ingles': 'old english sheepdog',
+  'pastor inglés': 'old english sheepdog',
+  'bobtail': 'old english sheepdog',
+  'mastin tibetano': 'tibetan mastiff',
+  'mastín tibetano': 'tibetan mastiff',
+  'mastin': 'mastiff',
+  'mastín': 'mastiff',
+  'mastin napolitano': 'mastiff',
+  'terranova': 'newfoundland',
+  'akita inu': 'akita',
+  'klee kai': 'alaskan klee kai',
+  'mini aussie': 'miniature american shepherd',
+  'mini australian shepherd': 'miniature american shepherd',
+  'australian shepherd': 'australian shepherd l',
+  'pastor australiano': 'australian shepherd l',
+  'aussie': 'australian shepherd l',
+  'border collie': 'border collie large',
+  'bichon': 'bichon frise',
+  'bichón': 'bichon frise',
+  'bichon frisé': 'bichon frise',
+  'bichón frisé': 'bichon frise',
+  'maltipu': 'maltipoo',
+  'shihpoo': 'shih poo',
+  'shih-poo': 'shih poo',
+  'yorkipoo': 'yorkie poo',
+  'yorkie-poo': 'yorkie poo',
+  'habanero': 'havanese',
+  'bichon habanero': 'havanese',
+  'bichón habanero': 'havanese',
+  'lhasa': 'lhasa apso',
+  'pekines': 'pekingese',
+  'pekinés': 'pekingese',
+  'pequines': 'pekingese',
+  'pequinés': 'pekingese',
+  'afgano': 'afghan hound',
+  'galgo afgano': 'afghan hound',
+  'coton': 'coton de tulear',
+  'airedale': 'airedale terrier',
+  'scottie': 'scottish terrier',
+  'scottish': 'scottish terrier',
+  'cairn': 'cairn terrier',
+  'springer': 'english springer spaniel',
+  'breton': 'brittany',
+  'bretón': 'brittany',
+  'yorkie': 'yorkshire terrier',
+  'maltes': 'maltese',
+  'maltés': 'maltese',
+  'bichon maltes': 'maltese',
+  'bichón maltés': 'maltese',
+  'pomerania': 'pomeranian',
+  'pomerano': 'pomeranian',
+  'shitzu': 'shih tzu',
+  'shih-tzu': 'shih tzu',
+  'shitsu': 'shih tzu',
+  'teckel': 'dachshund',
+  'perro salchicha': 'dachshund',
+  'salchicha de pelo duro': 'wirehaired dachshund',
+  'rottweiler': 'rottweiler large',
+  'rottie': 'rottweiler large',
+  'pastor belga malinois': 'belgian malinois',
+  'malinois': 'belgian malinois',
+  'siberian husky': 'husky',
+  'malamute': 'alaskan malamute',
+  'chow': 'chow chow',
+  'poodle estandar': 'standard poodle',
+  'poodle estándar': 'standard poodle',
+  'schnauzer gigante': 'giant schnauzer',
+  'perro de agua portugues': 'portuguese water dog',
+  'perro de agua portugués': 'portuguese water dog',
+  'boston': 'boston terrier',
+  'cavalier': 'cavalier king charles',
+  'corgi galés': 'corgi',
+  'welsh corgi': 'corgi',
 };
+
+const MIN_PREFIX = 3;
+const escape = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+function containsWord(text, word) {
+  return new RegExp(`(^|[^a-záéíóúñ])${escape(word)}($|[^a-záéíóúñ])`, 'i').test(text);
+}
 
 export function resolveBreedAliases(text) {
   const needle = text.trim().toLowerCase();
   if (!needle) return [];
 
+  const entries = Object.entries(BREED_ALIASES);
+  const exact = entries.filter(([alias]) => needle === alias || containsWord(needle, alias));
+  const hits = (exact.length ? exact : entries.filter(([alias]) => needle.length >= MIN_PREFIX && alias.startsWith(needle))).sort(
+    (a, b) => (b[0] === needle) - (a[0] === needle) || b[0].length - a[0].length
+  );
+
   const matches = [];
-  for (const [alias, canonical] of Object.entries(BREED_ALIASES)) {
-    if (needle === alias || needle.includes(alias) || alias.includes(needle)) {
-      if (Array.isArray(canonical)) {
-        matches.push(...canonical);
-      } else {
-        matches.push(canonical);
-      }
-    }
+  for (const [, canonical] of hits) {
+    if (Array.isArray(canonical)) matches.push(...canonical);
+    else matches.push(canonical);
   }
   return [...new Set(matches)];
 }

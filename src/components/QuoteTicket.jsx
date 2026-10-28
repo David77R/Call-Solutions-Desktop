@@ -4,7 +4,7 @@ import ZonePicker from './ZonePicker';
 import { AlertIcon, CheckIcon, CloseIcon, CopyIcon, PawIcon, StarIcon } from './Icons';
 import { coatDescriptions } from '../data/coats';
 import { getServiceDescription } from '../data/serviceDescriptions';
-import { isDiscountEligible, itemKey, parsePrice } from '../lib/search';
+import { breedCoat, isDiscountEligible, itemKey, parsePrice } from '../lib/search';
 import { isFavorite, toggleFavorite } from '../lib/favorites';
 import { buildBreedSuggestion, buildQuoteMessage } from '../lib/quoteMessage';
 import fifo from '../assets/fifo.webp';
@@ -77,6 +77,7 @@ function FilledTicket({ item, descriptions, rows, breedFromQuery, lang, onLangCh
       ? `${item.weight_min_lbs}-${item.weight_max_lbs} lbs`
       : null
     : item.category_name;
+  const coat = item.coat || breedCoat(breedFromQuery);
   const priceText = isBundle ? option?.price : item.price_display;
   const needsReview = isBundle ? option?.needs_review : item.needs_review;
   const serviceName = isBundle ? option?.name : item.pill_label || item.category_name;
@@ -158,7 +159,7 @@ function FilledTicket({ item, descriptions, rows, breedFromQuery, lang, onLangCh
       <div className="ticket__titles">
         <h2 className="ticket__title">{title}</h2>
         {subtitle && <p className="ticket__subtitle">{subtitle}</p>}
-        {item.coat && coatDescriptions[item.coat] && <p className="ticket__coat">{coatDescriptions[item.coat]}</p>}
+        {coat && coatDescriptions[coat] && <p className="ticket__coat">{coatDescriptions[coat]}</p>}
       </div>
 
       {isBundle && item.options?.length > 1 && (

@@ -238,7 +238,8 @@ export function searchPriceItems({ companies, rows }, queryText, slug) {
     });
   }
 
-  const breedFound = explicitWeight == null ? findBreed(textPart) : null;
+  const breedInfo = textPart.length >= MIN_BREED_TEXT ? findBreed(textPart) || breedFromCatalog(textResults) : null;
+  const breedFound = explicitWeight == null ? breedInfo : null;
   const breedRange = breedFound ? { min: breedFound.min, max: breedFound.max } : null;
 
   if (explicitWeight == null && breedRange == null) {
@@ -260,11 +261,60 @@ export function searchPriceItems({ companies, rows }, queryText, slug) {
       ? weightPointSearch(rows, explicitWeight, slug)
       : weightRangeSearch(rows, breedRange.min, breedRange.max, slug);
 
-  const fallback = weightRows
-    .filter((r) => !coveredSlugs.has(r.company_slug))
+  const candidates = weightRows.filter((r) => !coveredSlugs.has(r.company_slug));
+  const fallback = (breedInfo ? packagesForBreed(candidates, breedInfo) : candidates)
+    .sort(
+      (a, b) =>
+        compare(a.company_name, b.company_name) ||
+        isDentalService(a) - isDentalService(b) ||
+        a.category_order - b.category_order ||
+        a.weight_min_lbs - b.weight_min_lbs
+    )
     .map((r) => ({ ...r, weight_match: true, suggested: true }));
 
   return finish([...keepFlagged, ...fallback]);
+}
+
+const MIN_BREED_TEXT = 3;
+const EXTRA_CATEGORY = /adicional|add-on/i;
+const MIXED_BREED = /^mixed breed/i;
+
+const SPECIALTY_PACKAGES = [
+  { category: /raza especial.*husky/i, fits: (b) => b.coat === 'doble_capa' },
+  { category: /raza especial.*(poodle|sheepdog)/i, fits: (b) => b.coat === 'rizado' || /sheep/.test(b.breed) },
+  { category: /raza especial.*cavalier/i, fits: (b) => /cavalier/.test(b.breed) },
+  { category: /raza especial.*cocker/i, fits: (b) => /cocker|spaniel/.test(b.breed) },
+  { category: /double-coated/i, fits: (b) => b.coat === 'doble_capa' },
+];
+
+function specialtyFor(row) {
+  return SPECIALTY_PACKAGES.find((s) => s.category.test(row.category_name)) || null;
+}
+
+function breedFromCatalog(textResults) {
+  const found = textResults.filter((r) => isBreedCategory(r.category_name) && hasWeights(r) && !MIXED_BREED.test(r.label));
+  if (!found.length) return null;
+  return {
+    breed: lower(found[0].label),
+    min: Math.min(...found.map((r) => r.weight_min_lbs)),
+    max: Math.max(...found.map((r) => r.weight_max_lbs)),
+    coat: found[0].coat,
+  };
+}
+
+function packagesForBreed(rows, breed) {
+  const usable = rows.filter((r) => {
+    if (EXTRA_CATEGORY.test(r.category_name)) return false;
+    if (isBreedCategory(r.category_name)) return MIXED_BREED.test(r.label);
+    const specialty = specialtyFor(r);
+    return !specialty || specialty.fits(breed);
+  });
+  const withSpecialty = new Set(usable.filter((r) => specialtyFor(r)).map((r) => r.company_slug));
+  return usable.filter((r) => !withSpecialty.has(r.company_slug) || specialtyFor(r) || isDentalService(r));
+}
+
+export function breedCoat(name) {
+  return name ? findBreed(name)?.coat || null : null;
 }
 
 function parseBathFullOptions(display) {

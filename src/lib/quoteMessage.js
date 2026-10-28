@@ -1,5 +1,5 @@
 import { getServiceDescription } from '../data/serviceDescriptions';
-import { isBreedCategory } from './search';
+import { breedCoat, isBreedCategory } from './search';
 
 const DENTAL = /dental|smile|placa|diente/i;
 const EXTRA = /adicional|add-on/i;
@@ -207,7 +207,7 @@ function coatFor(item, rows, breed) {
   if (!breed) return null;
   const needle = lower(breed);
   const match = rows.find((r) => r.coat && lower(r.label).includes(needle));
-  return match ? match.coat : null;
+  return match ? match.coat : breedCoat(breed);
 }
 
 export function buildBreedSuggestion({ item, rows, lang, breedFromQuery, optionIndex }) {

@@ -110,12 +110,14 @@ export default function QualityPage() {
   const { companies } = useCatalog();
   const { user } = useAuth();
   const rosters = useGroomerRosters();
-  const [slug, setSlug] = useState(null);
+  const [slug, setSlug] = useState(undefined);
   const [dateKey, setDateKey] = useState(todayKey());
   const [confirming, setConfirming] = useState(null);
   const entries = useQualityEntries(dateKey);
-  const company = companies.find((c) => c.slug === slug) || companies[0] || null;
-  const list = entries.filter((e) => e.company_slug === company?.slug);
+  const showingAll = slug === null;
+  const company = showingAll ? null : companies.find((c) => c.slug === slug) || companies[0] || null;
+  const list = showingAll ? entries : entries.filter((e) => e.company_slug === company?.slug);
+  const companyOf = (s) => companies.find((c) => c.slug === s);
   const counts = Object.keys(SATISFACTION).map((k) => ({ key: k, n: list.filter((e) => e.satisfaction === k).length }));
   const total = list.length || 1;
   const isToday = dateKey === todayKey();
@@ -135,7 +137,9 @@ export default function QualityPage() {
         </div>
       </div>
 
-      <CompanyTabs companies={companies} activeSlug={company?.slug ?? null} onChange={(s) => s && setSlug(s)} showAll={false} />
+      <CompanyTabs companies={companies} activeSlug={company?.slug ?? null} onChange={setSlug} />
+
+      {showingAll && <p className="qc-hint">Viendo los controles de todas las empresas. Elige una empresa para registrar uno nuevo.</p>}
 
       {company && <Composer key={`${company.slug}-${dateKey}`} company={company} roster={rosters[company.slug] || []} agentName={user?.displayName || 'Agente'} dateKey={dateKey} />}
 
@@ -163,6 +167,11 @@ export default function QualityPage() {
               <Face kind={e.satisfaction || 'neutral'} />
             </span>
             <div className="qc-item__body">
+              {showingAll && companyOf(e.company_slug) && (
+                <span className="qc-item__company" style={{ '--co': companyOf(e.company_slug).color_primary }}>
+                  {companyOf(e.company_slug).name}
+                </span>
+              )}
               <p className="qc-item__title">
                 Cliente {e.client_ordinal}
                 {e.groomer_name ? ` de ${e.groomer_name}` : ''}, por {e.contact_method}
@@ -190,7 +199,7 @@ export default function QualityPage() {
             )}
           </li>
         ))}
-        {!list.length && <li className="qc-empty">Sin controles registrados para {company?.name} en este día.</li>}
+        {!list.length && <li className="qc-empty">Sin controles registrados {showingAll ? 'en ninguna empresa' : `para ${company?.name}`} en este día.</li>}
       </ul>
     </div>
   );
