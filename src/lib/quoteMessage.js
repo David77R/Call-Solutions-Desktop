@@ -21,12 +21,6 @@ const COPY = {
     noZoneFee: (zone) => `Para ${zone} no hay cargo adicional por distancia.`,
     discount: (pct, total) => `Con el descuento de ${pct}%, el precio queda en ${total}.`,
     review: 'El precio está sujeto a confirmación según la condición y el pelaje de la mascota.',
-    recommend: (pet, reason, name, price, includes) => `Para ${pet}, ${reason}, le recomendamos el servicio ${name} (${price}), ${includes}.`,
-    includesFull: 'que incluye corte de pelo o deslanado',
-    includesBasic: 'que mantiene su pelaje limpio sin necesidad de corte',
-    addons: (list) => `Como complemento, le sugerimos ${list}.`,
-    addon: (name, price) => `${name} por ${price}`,
-    and: ' y ',
   },
   en: {
     pet: 'your pet',
@@ -40,12 +34,6 @@ const COPY = {
     noZoneFee: (zone) => `There is no additional distance fee for ${zone}.`,
     discount: (pct, total) => `With the ${pct}% discount, the price comes to ${total}.`,
     review: "The price is subject to confirmation depending on the pet's condition and coat.",
-    recommend: (pet, reason, name, price, includes) => `For ${pet}, ${reason}, we recommend our ${name} service (${price}), ${includes}.`,
-    includesFull: 'which includes a haircut or deshedding',
-    includesBasic: 'which keeps the coat clean without a haircut',
-    addons: (list) => `As an add-on, we suggest ${list}.`,
-    addon: (name, price) => `${name} for ${price}`,
-    and: ' and ',
   },
 };
 
@@ -54,37 +42,31 @@ const COAT_PLANS = {
     es: 'por ser una raza de doble manto que muda bastante pelo',
     en: 'since it is a double-coated breed that sheds heavily',
     full: true,
-    addons: [/deshed|deslan|undercoat/i, /nail|uña/i],
   },
   rizado: {
     es: 'por su pelaje rizado, que se enreda con facilidad',
     en: 'because its curly coat tangles easily',
     full: true,
-    addons: [/detangl|knot|nudo|dematt/i, /teeth|dient/i],
   },
   liso_largo: {
     es: 'por su pelaje largo, que se enreda con facilidad',
     en: 'because its long coat tangles easily',
     full: true,
-    addons: [/detangl|knot|nudo|dematt/i, /huella|paw|pad/i, /teeth|dient/i],
   },
   sedoso: {
     es: 'por su pelaje sedoso y fino',
     en: 'because of its fine, silky coat',
     full: true,
-    addons: [/detangl|knot|nudo|dematt/i, /teeth|dient/i],
   },
   alambrado: {
     es: 'por su pelaje de textura áspera',
     en: 'because of its wiry coat',
     full: true,
-    addons: [/nail|uña/i, /teeth|dient/i],
   },
   corto_denso: {
     es: 'por su pelaje corto y denso',
     en: 'because of its short, dense coat',
     full: false,
-    addons: [/deshed|deslan/i, /nail|uña/i, /special shampoo|shampoo especial/i],
   },
 };
 
@@ -106,10 +88,6 @@ function sentence(text) {
   return /[.!?]$/.test(t) ? t : `${t}.`;
 }
 
-function joinList(items, t) {
-  if (items.length <= 1) return items.join('');
-  return `${items.slice(0, -1).join(', ')}${t.and}${items[items.length - 1]}`;
-}
 
 export function breedName(item, breedFromQuery) {
   const raw = breedFromQuery || (item.type === 'breed_bundle' ? item.breed : null);
@@ -121,9 +99,16 @@ function petLabel(breed, lang) {
   return lang === 'en' ? `your ${breed}` : `su ${breed}`;
 }
 
+const SPECIALTY = /raza especial|double-coated|special breed/i;
+
+function specialtyName(row) {
+  return (row.label || '').split(' - ')[0].split(' (')[0].trim();
+}
+
 function siblingServices(item, rows) {
+  const isSpecialty = SPECIALTY.test(item.category_name || '');
   const base = {
-    name: item.pill_label || serviceName(item.category_name),
+    name: isSpecialty ? specialtyName(item) : item.pill_label || serviceName(item.category_name),
     category: item.category_name,
     price: item.price_display,
     needs_review: item.needs_review,
@@ -140,13 +125,14 @@ function siblingServices(item, rows) {
         r.weight_min_lbs === item.weight_min_lbs &&
         r.weight_max_lbs === item.weight_max_lbs &&
         !isBreedCategory(r.category_name) &&
+        (isSpecialty ? r.category_name === item.category_name : !SPECIALTY.test(r.category_name)) &&
         !DENTAL.test(r.category_name) &&
         !EXTRA.test(r.category_name) &&
         !(item.only_gold_alert && r.category_name.startsWith('Silver'))
     )
     .sort((a, b) => a.category_order - b.category_order)
     .map((r) => ({
-      name: r.pill_label || serviceName(r.category_name),
+      name: isSpecialty ? specialtyName(r) : r.pill_label || serviceName(r.category_name),
       category: r.category_name,
       price: bumpPrice(r.price_display, amount),
       needs_review: r.needs_review,
@@ -210,26 +196,96 @@ function coatFor(item, rows, breed) {
   return match ? match.coat : breedCoat(breed);
 }
 
-export function buildBreedSuggestion({ item, rows, lang, breedFromQuery, optionIndex }) {
-  const t = COPY[lang] || COPY.es;
+const PLAN_COPY = {
+  es: {
+    intro: (pet, reason, name) => `Para ${pet}${reason ? `, ${reason},` : ''} le recomendamos el servicio ${name}.`,
+    includes: (name, desc, price) => `El servicio ${name} incluye: ${desc} Precio: ${price}.`,
+    price: (name, price) => `Precio del servicio ${name}: ${price}.`,
+    addonsTitle: 'Para complementar el servicio, le sugerimos:',
+    addon: (name, price) => `• ${name}: ${price}`,
+    frequency: (range, goal) => `Recomendamos repetir el servicio cada ${range} para ${goal}.`,
+    review: 'El precio final se confirma según la condición y el pelaje de la mascota el día del servicio.',
+  },
+  en: {
+    intro: (pet, reason, name) => `For ${pet}${reason ? `, ${reason},` : ''} we recommend our ${name} service.`,
+    includes: (name, desc, price) => `The ${name} service includes: ${desc} Price: ${price}.`,
+    price: (name, price) => `${name} service price: ${price}.`,
+    addonsTitle: 'To complement the service, we suggest:',
+    addon: (name, price) => `• ${name}: ${price}`,
+    frequency: (range, goal) => `We recommend repeating the service every ${range} to ${goal}.`,
+    review: "The final price is confirmed on the day of the service based on the pet's condition and coat.",
+  },
+};
+
+const FREQUENCY = {
+  doble_capa: { es: ['6 a 8 semanas', 'mantener su pelaje sano y controlar la muda'], en: ['6 to 8 weeks', 'keep the coat healthy and control shedding'] },
+  rizado: { es: ['4 a 6 semanas', 'evitar nudos y mantener la forma del corte'], en: ['4 to 6 weeks', 'prevent matting and keep the haircut in shape'] },
+  liso_largo: { es: ['4 a 6 semanas', 'evitar nudos y mantener el pelaje suave'], en: ['4 to 6 weeks', 'prevent tangles and keep the coat soft'] },
+  sedoso: { es: ['4 a 6 semanas', 'mantener su pelaje fino libre de nudos'], en: ['4 to 6 weeks', 'keep the fine coat free of tangles'] },
+  alambrado: { es: ['6 a 8 semanas', 'mantener la textura y la forma de su pelaje'], en: ['6 to 8 weeks', 'keep the coat texture and shape'] },
+  corto_denso: { es: ['6 a 8 semanas', 'mantener su piel y pelaje limpios y sanos'], en: ['6 to 8 weeks', 'keep the skin and coat clean and healthy'] },
+};
+
+const ADDON_PATTERNS = {
+  doble_capa: [/deshed|deslan/i, /nail|uña/i, /huella|paw|balm/i],
+  rizado: [/detangl|knot|nudo|dematt/i, /teeth|dient/i, /huella|paw|balm/i],
+  liso_largo: [/detangl|knot|nudo|dematt/i, /huella|paw|balm/i, /teeth|dient/i],
+  sedoso: [/detangl|knot|nudo|dematt/i, /teeth|dient/i, /special shampoo|shampoo especial/i],
+  alambrado: [/nail|uña/i, /teeth|dient/i, /special shampoo|shampoo especial/i],
+  corto_denso: [/special shampoo|shampoo especial|hydra/i, /nail|uña/i, /teeth|dient/i],
+};
+
+const ADDON_LIMIT = 3;
+
+function addonFits(row, item) {
+  if (row.weight_min_lbs == null || item.weight_min_lbs == null) return true;
+  return row.weight_min_lbs <= item.weight_max_lbs && row.weight_max_lbs >= item.weight_min_lbs;
+}
+
+function pickAddons(item, rows, coat) {
+  const extras = rows.filter((r) => r.company_slug === item.company_slug && EXTRA.test(r.category_name) && addonFits(r, item));
+  const chosen = [];
+  for (const pattern of ADDON_PATTERNS[coat] || []) {
+    const found = extras.find((r) => pattern.test(r.label) && !chosen.includes(r));
+    if (found) chosen.push(found);
+    if (chosen.length === ADDON_LIMIT) break;
+  }
+  return chosen;
+}
+
+export function hasBreedSuggestion({ item, rows, breedFromQuery, optionIndex }) {
   const breed = breedName(item, breedFromQuery);
-  const plan = COAT_PLANS[coatFor(item, rows, breed)];
-  if (!breed || !plan) return null;
+  if (!breed) return false;
+  const services = getQuoteServices(item, rows, optionIndex);
+  return services.length > 0 && !isDentalQuote(services);
+}
+
+export function buildBreedSuggestion({ item, rows, descriptions, lang, breedFromQuery, optionIndex }) {
+  const t = PLAN_COPY[lang] || PLAN_COPY.es;
+  const base = COPY[lang] || COPY.es;
+  const breed = breedName(item, breedFromQuery);
+  if (!breed) return null;
 
   const services = getQuoteServices(item, rows, optionIndex);
   if (!services.length || isDentalQuote(services)) return null;
 
-  const pick = services.find((s) => (plan.full ? FULL_SERVICE : BASIC_SERVICE).test(s.name)) || services[services.length - 1];
+  const coat = coatFor(item, rows, breed);
+  const plan = COAT_PLANS[coat];
+  const wantsFull = plan ? plan.full : true;
+  const pick = services.find((s) => (wantsFull ? FULL_SERVICE : BASIC_SERVICE).test(s.name)) || services[services.length - 1];
+  const price = pick.price || base.tbd;
+  const pet = petLabel(breed, lang);
+  const desc =
+    getServiceDescription(descriptions || {}, pick.name, item.company_slug, lang) || getServiceDescription(descriptions || {}, pick.category, item.company_slug, lang);
 
-  const extras = rows.filter((r) => r.company_slug === item.company_slug && EXTRA.test(r.category_name));
-  const chosen = [];
-  for (const pattern of plan.addons) {
-    const found = extras.find((r) => pattern.test(r.label) && !chosen.includes(r));
-    if (found) chosen.push(found);
-    if (chosen.length === 2) break;
-  }
+  const blocks = [t.intro(pet, plan ? plan[lang] : '', pick.name), desc ? t.includes(pick.name, sentence(desc), price) : t.price(pick.name, price)];
 
-  const lines = [t.recommend(petLabel(breed, lang), plan[lang], pick.name, pick.price || t.tbd, plan.full ? t.includesFull : t.includesBasic)];
-  if (chosen.length) lines.push(t.addons(joinList(chosen.map((r) => t.addon(r.label, r.price_display || t.tbd)), t)));
-  return lines.join(' ');
+  const addons = pickAddons(item, rows, coat);
+  if (addons.length) blocks.push([t.addonsTitle, ...addons.map((r) => t.addon(r.label, r.price_display || base.tbd))].join('\n'));
+
+  const frequency = FREQUENCY[coat]?.[lang];
+  if (frequency) blocks.push(t.frequency(frequency[0], frequency[1]));
+  if (pick.needs_review) blocks.push(t.review);
+
+  return blocks.join('\n\n');
 }

@@ -1,4 +1,4 @@
-import { itemKey } from '../../lib/search';
+import { itemKey, labelWithRange } from '../../lib/search';
 import { readableOn } from '../../lib/color';
 import { getFavorites, getHistory } from '../../lib/favorites';
 
@@ -11,7 +11,7 @@ function QuickList({ title, items, onSelect }) {
         {items.slice(0, 8).map((item, i) => (
           <button key={itemKey(item)} type="button" className="quick__card" style={{ '--row-color': item.color_primary, '--i': i }} onClick={() => onSelect(item)}>
             <span className="quick__company">{item.company_name}</span>
-            <span className="quick__label">{item.breed || item.label}</span>
+            <span className="quick__label">{labelWithRange(item)}</span>
             <span className="quick__price">{item.price_display || 'Por confirmar'}</span>
           </button>
         ))}
@@ -78,7 +78,7 @@ export default function CompanyOverview({ companies, company, onPickCompany, onS
                 return (
                   <li key={key}>
                     <button type="button" className={selectedKey === key ? 'category__item is-selected' : 'category__item'} onClick={() => onSelect(row)}>
-                      <span>{item.label}</span>
+                      <span>{labelWithRange(item)}</span>
                       <span className="category__price">{item.price_display || 'Por confirmar'}</span>
                     </button>
                   </li>

@@ -414,6 +414,16 @@ export function itemKey(item) {
   return `${item.company_slug}::${item.category_name || ''}::${item.label || item.breed || ''}`;
 }
 
+const OPEN_MAX_LBS = 150;
+
+export function labelWithRange(row) {
+  const label = row.breed || row.label || '';
+  if (row.breed || /\d/.test(label) || row.weight_min_lbs == null || row.weight_max_lbs == null) return label;
+  const min = Math.round(row.weight_min_lbs);
+  const max = Math.round(row.weight_max_lbs);
+  return max >= OPEN_MAX_LBS ? `${label} (${min}+ lbs)` : `${label} (${min}-${max} lbs)`;
+}
+
 export function titleCase(text) {
   return text.replace(/\b\w/g, (c) => c.toUpperCase());
 }

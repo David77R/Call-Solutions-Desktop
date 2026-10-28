@@ -4,9 +4,9 @@ import ZonePicker from './ZonePicker';
 import { AlertIcon, CheckIcon, CloseIcon, CopyIcon, PawIcon, StarIcon } from './Icons';
 import { coatDescriptions } from '../data/coats';
 import { getServiceDescription } from '../data/serviceDescriptions';
-import { breedCoat, isDiscountEligible, itemKey, parsePrice } from '../lib/search';
+import { breedCoat, isDiscountEligible, itemKey, labelWithRange, parsePrice } from '../lib/search';
 import { isFavorite, toggleFavorite } from '../lib/favorites';
-import { buildBreedSuggestion, buildQuoteMessage } from '../lib/quoteMessage';
+import { buildBreedSuggestion, buildQuoteMessage, hasBreedSuggestion } from '../lib/quoteMessage';
 import fifo from '../assets/fifo.webp';
 import './QuoteTicket.css';
 
@@ -54,6 +54,7 @@ function FilledTicket({ item, descriptions, rows, breedFromQuery, lang, onLangCh
   const [favPulse, setFavPulse] = useState(0);
   const [copied, setCopied] = useState(false);
   const [suggestionCopied, setSuggestionCopied] = useState(false);
+  const [suggestionOpen, setSuggestionOpen] = useState(false);
   const [zone, setZone] = useState(null);
   const [discountText, setDiscountText] = useState('');
   const discountId = useId();
@@ -71,7 +72,7 @@ function FilledTicket({ item, descriptions, rows, breedFromQuery, lang, onLangCh
   }, [suggestionCopied]);
 
   const option = isBundle ? item.options?.[optionIndex] : null;
-  const title = isBundle ? item.breed : item.label;
+  const title = isBundle ? item.breed : labelWithRange(item);
   const subtitle = isBundle
     ? item.weight_min_lbs != null
       ? `${item.weight_min_lbs}-${item.weight_max_lbs} lbs`
@@ -105,7 +106,8 @@ function FilledTicket({ item, descriptions, rows, breedFromQuery, lang, onLangCh
     discountTotal: afterDiscount != null ? money(afterDiscount) : null,
   });
 
-  const suggestion = buildBreedSuggestion({ item, rows, lang, breedFromQuery, optionIndex });
+  const suggestionAvailable = hasBreedSuggestion({ item, rows, breedFromQuery, optionIndex });
+  const suggestion = suggestionAvailable && suggestionOpen ? buildBreedSuggestion({ item, rows, descriptions, lang, breedFromQuery, optionIndex }) : null;
 
   const handleCopySuggestion = async () => {
     try {
@@ -283,12 +285,20 @@ function FilledTicket({ item, descriptions, rows, breedFromQuery, lang, onLangCh
         {copied ? 'Mensaje copiado' : 'Copiar mensaje para el cliente'}
       </button>
 
+      {suggestionAvailable && (
+        <button type="button" className={suggestionOpen ? 'suggestion-toggle is-open' : 'suggestion-toggle'} aria-expanded={suggestionOpen} onClick={() => setSuggestionOpen((o) => !o)}>
+          <PawIcon size={18} />
+          <span>Sugerencia para {breedFromQuery || 'esta raza'}</span>
+          <span className="suggestion-toggle__chev" aria-hidden="true" />
+        </button>
+      )}
+
       {suggestion && (
         <section className="suggestion" aria-label="Sugerencia para esta raza">
           <header className="suggestion__head">
             <span className="suggestion__title">
               <PawIcon size={18} />
-              Sugerencia para esta raza
+              Recomendación completa
             </span>
             <button type="button" className={suggestionCopied ? 'suggestion__copy is-done' : 'suggestion__copy'} onClick={handleCopySuggestion}>
               {suggestionCopied ? <CheckIcon size={16} /> : <CopyIcon size={16} />}

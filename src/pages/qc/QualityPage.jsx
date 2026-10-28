@@ -46,17 +46,26 @@ function Composer({ company, roster, agentName, dateKey }) {
     <form className="qc-composer" onSubmit={save}>
       <div className="qc-composer__scan" aria-hidden="true" />
       <div className="qc-row">
-        <div className="sf-field">
-          <label htmlFor={`${id}-g`}>Groomer</label>
-          <select id={`${id}-g`} className="sf-input" value={form.groomer_name} onChange={(e) => set('groomer_name', e.target.value)}>
-            <option value="">Sin especificar</option>
-            {roster.map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
+        <fieldset className="qc-groomers">
+          <legend>Groomer</legend>
+          <div className="qc-groomers__list">
+            {['', ...roster].map((n, i) => (
+              <button
+                key={n || 'none'}
+                type="button"
+                className="qc-groomer"
+                aria-pressed={form.groomer_name === n}
+                style={{ '--i': i }}
+                onClick={() => set('groomer_name', n)}
+              >
+                <span className="qc-groomer__avatar" aria-hidden="true">
+                  {n ? n.trim().charAt(0).toUpperCase() : '?'}
+                </span>
+                {n || 'Sin especificar'}
+              </button>
             ))}
-          </select>
-        </div>
+          </div>
+        </fieldset>
         <div className="sf-field">
           <label htmlFor={`${id}-o`}>Cliente número</label>
           <input id={`${id}-o`} className="sf-input" inputMode="numeric" value={form.client_ordinal} onChange={(e) => set('client_ordinal', e.target.value.replace(/[^0-9]/g, ''))} />

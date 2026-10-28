@@ -1,4 +1,4 @@
-import { itemKey } from '../../lib/search';
+import { itemKey, labelWithRange } from '../../lib/search';
 import fifo from '../../assets/fifo.webp';
 
 function groupByCompany(results) {
@@ -60,7 +60,7 @@ export default function ResultsList({ results, query, selectedKey, onSelect }) {
                 <li key={key} style={{ '--i': Math.min(i, 14) }}>
                   <button type="button" className={selectedKey === key ? 'result is-selected' : 'result'} onClick={() => onSelect(row)}>
                     <span className="result__text">
-                      <span className="result__label">{row.label}</span>
+                      <span className="result__label">{labelWithRange(row)}</span>
                       <span className="result__category">{row.category_name}</span>
                       <Badges row={row} />
                     </span>
