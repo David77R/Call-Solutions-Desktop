@@ -56,6 +56,7 @@ export function createReminder(text, companySlug, agentName, alarm = null) {
     company_slug: companySlug || null,
     created_by: agentName || 'Agente',
     created_at: new Date().toISOString(),
+    order: -Date.now(),
     status: 'pending',
     updated_by: null,
     updated_at: null,
@@ -64,6 +65,17 @@ export function createReminder(text, companySlug, agentName, alarm = null) {
 
 export function updateReminder(id, fields, agentName) {
   return setDoc(doc(db, COLLECTION, id), { ...fields, updated_by: agentName || 'Agente', updated_at: new Date().toISOString() }, { merge: true });
+}
+
+export function reminderOrder(reminder) {
+  if (typeof reminder.order === 'number') return reminder.order;
+  const created = Date.parse(reminder.created_at || '');
+  return Number.isNaN(created) ? 0 : -created;
+}
+
+export function moveReminder(id, status, order, statusChanged, agentName) {
+  const fields = statusChanged ? { status, order, updated_by: agentName || 'Agente', updated_at: new Date().toISOString() } : { order };
+  return setDoc(doc(db, COLLECTION, id), fields, { merge: true });
 }
 
 export function removeReminder(id) {
