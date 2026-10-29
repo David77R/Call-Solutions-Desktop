@@ -4,7 +4,7 @@ export const SECTION_GROUPS = [
     items: [
       { path: '/precios', label: 'Precios' },
       { path: '/flujo-de-llamada', label: 'Flujo de llamada' },
-      { path: '/asistente', label: 'Asistente IA' },
+      { path: '/asistente', label: 'Pregúntale a Fifo' },
       { path: '/favoritos', label: 'Favoritos' },
     ],
   },

@@ -206,13 +206,73 @@
   }
 }
 
-.assistant__error {
+.assistant__standby {
   margin: 0;
   padding: 10px 14px;
   border-radius: var(--radius-sm);
   background: var(--warn-bg);
   color: var(--warn-text);
   font-size: 13.5px;
+  animation: rise-in 300ms ease both;
+}
+
+.msg.is-waiting {
+  flex-wrap: wrap;
+}
+
+.msg.is-waiting .msg__bubble {
+  opacity: 0.75;
+  border: 1.5px dashed color-mix(in srgb, var(--warn) 70%, transparent);
+}
+
+.msg__standby {
+  display: flex;
+  flex-basis: 100%;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--warn-text);
+  animation: rise-in 260ms ease both;
+}
+
+.msg__standby-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--warn);
+  animation: standby-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes standby-pulse {
+  50% {
+    opacity: 0.3;
+    transform: scale(0.7);
+  }
+}
+
+.msg__standby button {
+  min-height: 26px;
+  padding: 0 10px;
+  border: 1px solid color-mix(in srgb, var(--warn) 60%, transparent);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--warn-text);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background-color 200ms ease,
+    transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.msg__standby button:hover {
+  background: var(--warn-bg);
+}
+
+.msg__standby button:active {
+  transform: scale(0.94);
 }
 
 .assistant__composer {
