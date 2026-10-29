@@ -3,13 +3,13 @@ import { BREED_WIKI } from '../data/breedWiki';
 import { BREED_WEIGHTS } from '../data/breedWeights';
 import { findBreed, isBreedCategory, parsePrice, searchPriceItems } from './search';
 
-const PHOTO_KEY = 'ccs_breed_photos_v2';
+const PHOTO_KEY = 'ccs_breed_photos_v3';
 const MISSING_TTL_MS = 2 * 24 * 60 * 60 * 1000;
-const CARD_WIDTH = 520;
-const LARGE_WIDTH = 1100;
+const CARD_WIDTH = 500;
+const LARGE_WIDTH = 960;
 const PHOTO_TTL_MS = 14 * 24 * 60 * 60 * 1000;
 const WIKI_API = 'https://en.wikipedia.org/api/rest_v1/page/summary/';
-const WIKI_SEARCH = 'https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrlimit=3&prop=pageimages&piprop=thumbnail|original&pithumbsize=520&gsrsearch=';
+const WIKI_SEARCH = 'https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrlimit=3&prop=pageimages&piprop=thumbnail|original&pithumbsize=500&gsrsearch=';
 const DOG_CEO = 'https://dog.ceo/api/breed/';
 
 const DOG_CEO_BREEDS = {
@@ -171,7 +171,8 @@ function fromWiki(thumb, original) {
   const base = thumb?.source || original.source;
   const card = original && origWidth && origWidth <= CARD_WIDTH ? original.source : sized(base, CARD_WIDTH);
   const large = original && origWidth && origWidth <= LARGE_WIDTH ? original.source : sized(base, LARGE_WIDTH);
-  return { src: card, large, source: 'Wikipedia' };
+  const backups = [thumb?.source, original && origWidth <= 2000 ? original.source : null].filter(Boolean);
+  return { src: card, large, backups, source: 'Wikipedia' };
 }
 
 async function fetchSummary(title) {
@@ -199,6 +200,16 @@ async function fetchSearch(breed) {
   const pages = Object.values(data.query?.pages || {}).sort((a, b) => (a.index || 0) - (b.index || 0));
   const page = pages.find((p) => p.thumbnail || p.original);
   return page ? fromWiki(page.thumbnail, page.original ? { source: page.original.source, width: page.original.width } : null) : null;
+}
+
+export async function loadBackupPhoto(breed) {
+  try {
+    const found = (await fetchDogCeo(breed.key)) || null;
+    if (found) writeCache(breed.key, found);
+    return found;
+  } catch {
+    return null;
+  }
 }
 
 export function loadBreedPhoto(breed) {

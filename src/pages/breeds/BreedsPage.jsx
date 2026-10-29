@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { CloseIcon, PawIcon, SearchIcon } from '../../components/Icons';
 import { coatDescriptions } from '../../data/coats';
 import { useCatalog } from '../../lib/useCatalog';
-import { BREEDS, COAT_LABELS, SIZE_LABELS, recommendServices, useBreedPhoto } from '../../lib/breedWiki';
+import { BREEDS, COAT_LABELS, SIZE_LABELS, loadBackupPhoto, recommendServices, useBreedPhoto } from '../../lib/breedWiki';
 import './BreedsPage.css';
 
 const plain = (text) =>
@@ -33,14 +33,54 @@ function useInView(ref) {
 function Photo({ breed, enabled, large = false }) {
   const { photo, state } = useBreedPhoto(breed, enabled);
   const [loaded, setLoaded] = useState(false);
-  const src = photo ? (large ? photo.large : photo.src) : null;
+  const [attempt, setAttempt] = useState(0);
+  const [backup, setBackup] = useState(null);
+  const [failed, setFailed] = useState(false);
+  const source = backup || photo;
+  const candidates = source ? [...new Set([large ? source.large : source.src, ...(source.backups || [])].filter(Boolean))] : [];
+  const src = failed ? null : candidates[attempt] || null;
+
+  const onError = () => {
+    if (attempt + 1 < candidates.length) {
+      setAttempt(attempt + 1);
+      return;
+    }
+    if (!backup) {
+      loadBackupPhoto(breed).then((found) => {
+        if (found && found.src !== candidates[attempt]) {
+          setBackup(found);
+          setAttempt(0);
+        } else {
+          setFailed(true);
+        }
+      });
+      return;
+    }
+    setFailed(true);
+  };
+
+  const missing = failed || state === 'missing';
   return (
-    <div className={`breed-photo${large ? ' breed-photo--large' : ''}${loaded ? ' is-loaded' : ''}${state === 'missing' ? ' is-missing' : ''}`}>
-      {src && large ? <img className="breed-photo__blur" src={src} alt="" aria-hidden="true" /> : null}
-      {src ? <img className="breed-photo__img" src={src} alt={`Foto de ${breed.name}`} loading="lazy" onLoad={() => setLoaded(true)} onError={() => setLoaded(true)} /> : null}
+    <div className={`breed-photo${large ? ' breed-photo--large' : ''}${loaded && src ? ' is-loaded' : ''}${missing ? ' is-missing' : ''}`}>
+      {src && large && loaded ? <img className="breed-photo__blur" src={src} alt="" aria-hidden="true" /> : null}
+      {src ? (
+        <img
+          key={src}
+          className="breed-photo__img"
+          src={src}
+          alt=""
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          onLoad={() => setLoaded(true)}
+          onError={() => {
+            setLoaded(false);
+            onError();
+          }}
+        />
+      ) : null}
       {(!src || !loaded) && (
         <span className="breed-photo__ph" aria-hidden="true">
-          {state === 'missing' ? <PawIcon size={34} /> : <span className="breed-photo__shimmer" />}
+          {missing ? <PawIcon size={34} /> : <span className="breed-photo__shimmer" />}
         </span>
       )}
     </div>
