@@ -103,6 +103,25 @@ function petLabel(breed, lang) {
 }
 
 const SPECIALTY = /raza especial|double-coated|special breed/i;
+const CAT_DENTAL = /dental|diente|smile/i;
+const CAT_FULL = /gold|full|completo/i;
+const BATH_FIRST = /bath|baño|silver|splash/i;
+
+export function catEquivalent(item, rows) {
+  const text = `${item.category_name || ''} ${item.label || ''}`;
+  const type = CAT_DENTAL.test(text) ? 'dental' : CAT_FULL.test(text) ? 'full' : 'bath';
+  const dogRows = rows.filter(
+    (r) => r.company_slug === item.company_slug && !r.is_cat && !EXTRA.test(r.category_name) && !isBreedCategory(r.category_name) && !SPECIALTY.test(r.category_name)
+  );
+  const label = (r) => `${r.category_name} ${r.pill_label || ''}`;
+  const pool =
+    type === 'dental'
+      ? dogRows.filter((r) => DENTAL.test(r.category_name) && !/promo/i.test(r.category_name))
+      : dogRows.filter((r) => !DENTAL.test(r.category_name) && (type === 'full' ? FULL_SERVICE : BASIC_SERVICE).test(label(r)));
+  const sorted = [...pool].sort((a, b) => (type === 'bath' ? BATH_FIRST.test(label(b)) - BATH_FIRST.test(label(a)) : 0) || a.category_order - b.category_order);
+  if (sorted[0]) return sorted[0].pill_label || serviceName(sorted[0].category_name);
+  return type === 'dental' ? 'Limpieza Dental' : type === 'full' ? 'Full Grooming' : 'Bath';
+}
 
 function specialtyName(row) {
   return (row.label || '').split(' - ')[0].split(' (')[0].trim();
@@ -162,7 +181,9 @@ export function buildQuoteMessage({ item, rows, descriptions, lang, breedFromQue
   const t = COPY[lang] || COPY.es;
   const pet = petLabel(breedName(item, breedFromQuery), lang);
   const describe = (s) =>
-    getServiceDescription(descriptions, s.name, item.company_slug, lang) || (item.is_cat ? null : getServiceDescription(descriptions, s.category, item.company_slug, lang));
+    item.is_cat
+      ? getServiceDescription(descriptions, catEquivalent(item, rows), item.company_slug, lang)
+      : getServiceDescription(descriptions, s.name, item.company_slug, lang) || getServiceDescription(descriptions, s.category, item.company_slug, lang);
 
   const services = getQuoteServices(item, rows, optionIndex);
   const dental = isDentalQuote(services);

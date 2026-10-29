@@ -3,6 +3,7 @@ import { SECTION_GROUPS, GAMES_SECTION } from '../sections';
 import logo from '../assets/ccs-logo.webp';
 import fifo from '../assets/fifo.webp';
 import AgentCard from './AgentCard';
+import NavIcon from './NavIcons';
 import { useOpenRemindersCount } from '../lib/reminders';
 import { useProtocol } from '../lib/protocol';
 import './Sidebar.css';
@@ -26,7 +27,10 @@ export default function Sidebar() {
               to={item.path}
               className={({ isActive }) => (isActive ? 'sidebar__link is-active' : 'sidebar__link')}
             >
-              <span>{item.label}</span>
+              <span className="sidebar__icon">
+                <NavIcon path={item.path} />
+              </span>
+              <span className="sidebar__label">{item.label}</span>
               {badges[item.path] > 0 && (
                 <span key={badges[item.path]} className={item.path === '/protocolo' ? 'sidebar__badge sidebar__badge--warn' : 'sidebar__badge'}>
                   {badges[item.path]}

@@ -24,6 +24,7 @@ const LOADERS = {
   '/recordatorios': () => import('./pages/reminders/RemindersPage'),
   '/protocolo': () => import('./pages/protocol/ProtocolPage'),
   '/asistente': () => import('./pages/assistant/AssistantPage'),
+  '/razas': () => import('./pages/breeds/BreedsPage'),
   '/control-de-calidad': () => import('./pages/qc/QualityPage'),
   '/remarketing': () => import('./pages/remarketing/RemarketingPage'),
   '/admin': () => import('./pages/admin/AdminPage'),

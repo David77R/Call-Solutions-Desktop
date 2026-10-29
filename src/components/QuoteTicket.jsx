@@ -1,4 +1,6 @@
 import { useEffect, useId, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { wikiForBreedName } from '../lib/breedWiki';
 import AnimatedPrice from './AnimatedPrice';
 import ZonePicker from './ZonePicker';
 import { AlertIcon, CatIcon, ChatIcon, CheckIcon, CloseIcon, CopyIcon, PawIcon, StarIcon } from './Icons';
@@ -6,7 +8,7 @@ import { coatDescriptions } from '../data/coats';
 import { getServiceDescription } from '../data/serviceDescriptions';
 import { breedCoat, isDiscountEligible, itemKey, labelWithRange, parsePrice } from '../lib/search';
 import { isFavorite, toggleFavorite } from '../lib/favorites';
-import { buildBreedSuggestion, buildQuoteMessage, hasBreedSuggestion } from '../lib/quoteMessage';
+import { buildBreedSuggestion, buildQuoteMessage, catEquivalent, hasBreedSuggestion } from '../lib/quoteMessage';
 import { countUsage, fillTemplate, openMessages, templateById, useMessageTemplates } from '../lib/messageTemplates';
 import fifo from '../assets/fifo.webp';
 import './QuoteTicket.css';
@@ -58,6 +60,8 @@ function FilledTicket({ item, descriptions, rows, breedFromQuery, lang, onLangCh
   const [suggestionOpen, setSuggestionOpen] = useState(false);
   const [zipCopied, setZipCopied] = useState(false);
   const { items: templates } = useMessageTemplates();
+  const navigate = useNavigate();
+  const wikiBreed = item.is_cat ? null : wikiForBreedName(breedFromQuery || (isBundle ? item.breed : null));
   const [zone, setZone] = useState(null);
   const [discountText, setDiscountText] = useState('');
   const discountId = useId();
@@ -84,7 +88,7 @@ function FilledTicket({ item, descriptions, rows, breedFromQuery, lang, onLangCh
   const coat = item.coat || breedCoat(breedFromQuery);
   const priceText = isBundle ? option?.price : item.price_display;
   const needsReview = isBundle ? option?.needs_review : item.needs_review;
-  const serviceName = isBundle ? option?.name : item.is_cat ? item.category_name.split(' (')[0] : item.pill_label || item.category_name;
+  const serviceName = isBundle ? option?.name : item.is_cat ? catEquivalent(item, rows) : item.pill_label || item.category_name;
   const description = getServiceDescription(descriptions, serviceName, item.company_slug, lang);
   const surchargeApplied = !isBundle && item.surcharge_amount_applied && item.original_price_display;
 
@@ -189,6 +193,12 @@ function FilledTicket({ item, descriptions, rows, breedFromQuery, lang, onLangCh
         <h2 className="ticket__title">{title}</h2>
         {subtitle && <p className="ticket__subtitle">{subtitle}</p>}
         {coat && coatDescriptions[coat] && <p className="ticket__coat">{coatDescriptions[coat]}</p>}
+        {wikiBreed && (
+          <button type="button" className="ticket__wiki" onClick={() => navigate('/razas', { state: { breed: wikiBreed.key } })}>
+            <PawIcon size={14} />
+            Ver ficha de {wikiBreed.name}
+          </button>
+        )}
       </div>
 
       {isBundle && item.options?.length > 1 && (

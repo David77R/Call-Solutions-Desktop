@@ -37,12 +37,12 @@ export default function PricesPage() {
   const catalog = useCatalog();
   const descriptions = useServiceDescriptions();
   const [activeSlug, setActiveSlug] = useState(null);
-  const [query, setQuery] = useState('');
+  const location = useLocation();
+  const [query, setQuery] = useState(() => location.state?.query || '');
   const [selected, setSelected] = useState(null);
   const [selectedBreed, setSelectedBreed] = useState(null);
   const [lang, setLang] = useState('es');
   const inputRef = useRef(null);
-  const location = useLocation();
   const openedFromState = useRef(false);
 
   const trimmed = query.trim();

@@ -5,6 +5,7 @@ export const SECTION_GROUPS = [
       { path: '/precios', label: 'Precios' },
       { path: '/flujo-de-llamada', label: 'Flujo de llamada' },
       { path: '/asistente', label: 'Pregúntale a Fifo' },
+      { path: '/razas', label: 'Razas' },
       { path: '/favoritos', label: 'Favoritos' },
     ],
   },
