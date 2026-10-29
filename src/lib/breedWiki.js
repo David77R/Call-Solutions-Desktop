@@ -205,18 +205,38 @@ async function fetchSearch(breed) {
 
 const squash = (text) => (text || '').toLowerCase().replace(/[^a-z]/g, '');
 
-async function fetchCommons(breed) {
-  const res = await fetch(`${COMMONS_SEARCH}${encodeURIComponent(`${breed.en} dog filetype:bitmap`)}`);
-  if (!res.ok) return null;
+const PHOTO_OVERRIDES = {
+  aussiedoodle: 'Thor, 2021 (51256377380).jpg',
+};
+
+function fromCommonsFile(file) {
+  const base = `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file.replace(/ /g, '_'))}`;
+  return { src: `${base}?width=${CARD_WIDTH}`, large: `${base}?width=${LARGE_WIDTH}`, backups: [base], source: 'Wikimedia Commons' };
+}
+
+async function searchCommons(query) {
+  const res = await fetch(`${COMMONS_SEARCH}${encodeURIComponent(`${query} filetype:bitmap`)}`);
+  if (!res.ok) return [];
   const data = await res.json();
-  const name = squash(breed.en);
-  const files = Object.values(data.query?.pages || {})
+  return Object.values(data.query?.pages || {})
     .sort((a, b) => (a.index || 0) - (b.index || 0))
-    .filter((p) => /jpeg|png|webp/.test(p.imageinfo?.[0]?.mime || '') && squash(p.title).includes(name));
-  const info = files[0]?.imageinfo?.[0];
+    .filter((p) => /jpeg|png|webp/.test(p.imageinfo?.[0]?.mime || ''));
+}
+
+function fromCommonsPage(page) {
+  const info = page?.imageinfo?.[0];
   if (!info) return null;
   const card = info.thumburl || info.url;
   return { src: card, large: sized(card, LARGE_WIDTH), backups: [info.url], source: 'Wikimedia Commons' };
+}
+
+async function fetchCommons(breed) {
+  const name = squash(breed.en);
+  const files = await searchCommons(`${breed.en} dog`);
+  const titled = files.find((p) => squash(p.title).includes(name));
+  if (titled) return fromCommonsPage(titled);
+  const exact = await searchCommons(`"${breed.en}"`);
+  return fromCommonsPage(exact.find((p) => squash(p.title).includes(name)) || exact[0]);
 }
 
 export async function loadBackupPhoto(breed) {
@@ -230,6 +250,7 @@ export async function loadBackupPhoto(breed) {
 }
 
 export function loadBreedPhoto(breed) {
+  if (PHOTO_OVERRIDES[breed.key]) return Promise.resolve(fromCommonsFile(PHOTO_OVERRIDES[breed.key]));
   const cached = readCache()[breed.key];
   if (cached && Date.now() - cached.at < (cached.src ? PHOTO_TTL_MS : MISSING_TTL_MS)) return Promise.resolve(cached.src ? cached : null);
   if (pending.has(breed.key)) return pending.get(breed.key);
