@@ -3,7 +3,7 @@ import { BREED_WIKI } from '../data/breedWiki';
 import { BREED_WEIGHTS } from '../data/breedWeights';
 import { findBreed, isBreedCategory, parsePrice, searchPriceItems } from './search';
 
-const PHOTO_KEY = 'ccs_breed_photos_v3';
+const PHOTO_KEY = 'ccs_breed_photos_v4';
 const MISSING_TTL_MS = 2 * 24 * 60 * 60 * 1000;
 const CARD_WIDTH = 500;
 const LARGE_WIDTH = 960;
@@ -11,6 +11,7 @@ const PHOTO_TTL_MS = 14 * 24 * 60 * 60 * 1000;
 const WIKI_API = 'https://en.wikipedia.org/api/rest_v1/page/summary/';
 const WIKI_SEARCH = 'https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrlimit=3&prop=pageimages&piprop=thumbnail|original&pithumbsize=500&gsrsearch=';
 const DOG_CEO = 'https://dog.ceo/api/breed/';
+const COMMONS_SEARCH = 'https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=12&prop=imageinfo&iiprop=url|mime&iiurlwidth=500&gsrsearch=';
 
 const DOG_CEO_BREEDS = {
   akita: 'akita',
@@ -202,9 +203,25 @@ async function fetchSearch(breed) {
   return page ? fromWiki(page.thumbnail, page.original ? { source: page.original.source, width: page.original.width } : null) : null;
 }
 
+const squash = (text) => (text || '').toLowerCase().replace(/[^a-z]/g, '');
+
+async function fetchCommons(breed) {
+  const res = await fetch(`${COMMONS_SEARCH}${encodeURIComponent(`${breed.en} dog filetype:bitmap`)}`);
+  if (!res.ok) return null;
+  const data = await res.json();
+  const name = squash(breed.en);
+  const files = Object.values(data.query?.pages || {})
+    .sort((a, b) => (a.index || 0) - (b.index || 0))
+    .filter((p) => /jpeg|png|webp/.test(p.imageinfo?.[0]?.mime || '') && squash(p.title).includes(name));
+  const info = files[0]?.imageinfo?.[0];
+  if (!info) return null;
+  const card = info.thumburl || info.url;
+  return { src: card, large: sized(card, LARGE_WIDTH), backups: [info.url], source: 'Wikimedia Commons' };
+}
+
 export async function loadBackupPhoto(breed) {
   try {
-    const found = (await fetchDogCeo(breed.key)) || null;
+    const found = (await fetchDogCeo(breed.key)) || (await fetchCommons(breed)) || null;
     if (found) writeCache(breed.key, found);
     return found;
   } catch {
@@ -217,7 +234,7 @@ export function loadBreedPhoto(breed) {
   if (cached && Date.now() - cached.at < (cached.src ? PHOTO_TTL_MS : MISSING_TTL_MS)) return Promise.resolve(cached.src ? cached : null);
   if (pending.has(breed.key)) return pending.get(breed.key);
   const titles = [...new Set([breed.wiki, breed.en, `${breed.en} dog`])];
-  const steps = [...titles.map((t) => () => fetchSummary(t)), () => fetchDogCeo(breed.key), () => fetchSearch(breed)];
+  const steps = [...titles.map((t) => () => fetchSummary(t)), () => fetchDogCeo(breed.key), () => fetchCommons(breed), () => fetchSearch(breed)];
   const job = (async () => {
     let offline = true;
     for (const step of steps) {
