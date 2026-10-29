@@ -3,9 +3,103 @@ import { BREED_WIKI } from '../data/breedWiki';
 import { BREED_WEIGHTS } from '../data/breedWeights';
 import { findBreed, isBreedCategory, parsePrice, searchPriceItems } from './search';
 
-const PHOTO_KEY = 'ccs_breed_photos_v1';
+const PHOTO_KEY = 'ccs_breed_photos_v2';
+const MISSING_TTL_MS = 2 * 24 * 60 * 60 * 1000;
+const CARD_WIDTH = 520;
+const LARGE_WIDTH = 1100;
 const PHOTO_TTL_MS = 14 * 24 * 60 * 60 * 1000;
 const WIKI_API = 'https://en.wikipedia.org/api/rest_v1/page/summary/';
+const WIKI_SEARCH = 'https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrlimit=3&prop=pageimages&piprop=thumbnail|original&pithumbsize=520&gsrsearch=';
+const DOG_CEO = 'https://dog.ceo/api/breed/';
+
+const DOG_CEO_BREEDS = {
+  akita: 'akita',
+  'alaskan malamute': 'malamute',
+  'australian shepherd l': 'australian/shepherd',
+  'basset hound': 'hound/basset',
+  beagle: 'beagle',
+  'belgian malinois': 'malinois',
+  'bernese mountain dog': 'mountain/bernese',
+  'border collie large': 'collie/border',
+  'boston terrier': 'bulldog/boston',
+  boxer: 'boxer',
+  'carlino / pug': 'pug',
+  'cavalier king charles': 'spaniel/blenheim',
+  chihuahua: 'chihuahua',
+  'chow chow': 'chow',
+  'cocker spaniel': 'spaniel/cocker',
+  corgi: 'pembroke',
+  doberman: 'doberman',
+  'english bulldog': 'bulldog/english',
+  'french bulldog': 'bulldog/french',
+  'german shepherd': 'germanshepherd',
+  'golden retriever': 'retriever/golden',
+  'great dane': 'dane/great',
+  'great pyrenees': 'pyrenees',
+  husky: 'husky',
+  'labrador retriever': 'labrador',
+  maltese: 'maltese',
+  mastiff: 'mastiff/english',
+  newfoundland: 'newfoundland',
+  'american pitbull terrier': 'pitbull',
+  pomeranian: 'pomeranian',
+  'rottweiler large': 'rottweiler',
+  'saint bernard': 'stbernard',
+  schnauzer: 'schnauzer',
+  'schnauzer mini': 'schnauzer/miniature',
+  'giant schnauzer': 'schnauzer/giant',
+  'shih tzu': 'shihtzu',
+  'standard poodle': 'poodle/standard',
+  'miniature poodle': 'poodle/miniature',
+  'toy poodle': 'poodle/toy',
+  'wheaten terrier': 'terrier/wheaten',
+  'yorkshire terrier': 'terrier/yorkshire',
+  labradoodle: 'labradoodle',
+  cockapoo: 'cockapoo',
+  cavapoo: 'cavapoo',
+  dalmata: 'dalmatian',
+  dachshund: 'dachshund',
+  'american staffordshire terrier': 'terrier/american',
+  'staffordshire bull terrier': 'bullterrier/staffordshire',
+  'bull terrier': 'terrier/bull',
+  'shar pei': 'sharpei',
+  'rhodesian ridgeback': 'ridgeback/rhodesian',
+  weimaraner: 'weimaraner',
+  vizsla: 'vizsla',
+  'german shorthaired pointer': 'pointer/germanlonghair',
+  'italian greyhound': 'greyhound/italian',
+  whippet: 'whippet',
+  bloodhound: 'hound/blood',
+  basenji: 'basenji',
+  'jack russell terrier': 'terrier/russell',
+  'miniature pinscher': 'pinscher/miniature',
+  'shiba inu': 'shiba',
+  samoyed: 'samoyed',
+  'norwegian elkhound': 'elkhound/norwegian',
+  'american eskimo dog': 'eskimo',
+  'shetland sheepdog': 'sheepdog/shetland',
+  collie: 'collie',
+  keeshond: 'keeshond',
+  'australian cattle dog': 'cattledog/australian',
+  'old english sheepdog': 'sheepdog/english',
+  leonberger: 'leonberg',
+  'tibetan mastiff': 'mastiff/tibetan',
+  'bichon frise': 'frise/bichon',
+  havanese: 'havanese',
+  papillon: 'papillon',
+  'japanese chin': 'spaniel/japanese',
+  'english springer spaniel': 'springer/english',
+  brittany: 'spaniel/brittany',
+  'lhasa apso': 'lhasa',
+  pekingese: 'pekinese',
+  'afghan hound': 'hound/afghan',
+  'coton de tulear': 'cotondetulear',
+  'west highland white terrier': 'terrier/westhighland',
+  'airedale terrier': 'airedale',
+  'scottish terrier': 'terrier/scottish',
+  'cairn terrier': 'terrier/cairn',
+  'american bulldog': 'bulldog/american',
+};
 const DENTAL = /dental|smile|placa/i;
 const EXTRA = /adicional|add-on/i;
 const FULL = /gold|full|furfection|completo/i;
@@ -67,32 +161,67 @@ function writeCache(key, value) {
 
 const pending = new Map();
 
+function sized(src, width) {
+  return /\/\d+px-/.test(src) ? src.replace(/\/\d+px-/, `/${width}px-`) : src;
+}
+
+function fromWiki(thumb, original) {
+  if (!thumb && !original) return null;
+  const origWidth = original?.width || 0;
+  const base = thumb?.source || original.source;
+  const card = original && origWidth && origWidth <= CARD_WIDTH ? original.source : sized(base, CARD_WIDTH);
+  const large = original && origWidth && origWidth <= LARGE_WIDTH ? original.source : sized(base, LARGE_WIDTH);
+  return { src: card, large, source: 'Wikipedia' };
+}
+
 async function fetchSummary(title) {
   const res = await fetch(`${WIKI_API}${encodeURIComponent(title.replace(/ /g, '_'))}`);
   if (!res.ok) return null;
   const data = await res.json();
-  if (data.type === 'disambiguation' || !data.thumbnail?.source) return null;
-  return { src: data.thumbnail.source, large: data.originalimage?.source || data.thumbnail.source, page: data.content_urls?.desktop?.page || null };
+  if (data.type === 'disambiguation') return null;
+  return fromWiki(data.thumbnail, data.originalimage);
+}
+
+async function fetchDogCeo(key) {
+  const path = DOG_CEO_BREEDS[key];
+  if (!path) return null;
+  const res = await fetch(`${DOG_CEO}${path}/images/random`);
+  if (!res.ok) return null;
+  const data = await res.json();
+  if (data.status !== 'success' || !data.message) return null;
+  return { src: data.message, large: data.message, source: 'Dog CEO' };
+}
+
+async function fetchSearch(breed) {
+  const res = await fetch(`${WIKI_SEARCH}${encodeURIComponent(`${breed.en} dog breed`)}`);
+  if (!res.ok) return null;
+  const data = await res.json();
+  const pages = Object.values(data.query?.pages || {}).sort((a, b) => (a.index || 0) - (b.index || 0));
+  const page = pages.find((p) => p.thumbnail || p.original);
+  return page ? fromWiki(page.thumbnail, page.original ? { source: page.original.source, width: page.original.width } : null) : null;
 }
 
 export function loadBreedPhoto(breed) {
   const cached = readCache()[breed.key];
-  if (cached && Date.now() - cached.at < PHOTO_TTL_MS) return Promise.resolve(cached.src ? cached : null);
+  if (cached && Date.now() - cached.at < (cached.src ? PHOTO_TTL_MS : MISSING_TTL_MS)) return Promise.resolve(cached.src ? cached : null);
   if (pending.has(breed.key)) return pending.get(breed.key);
   const titles = [...new Set([breed.wiki, breed.en, `${breed.en} dog`])];
+  const steps = [...titles.map((t) => () => fetchSummary(t)), () => fetchDogCeo(breed.key), () => fetchSearch(breed)];
   const job = (async () => {
-    for (const title of titles) {
+    let offline = true;
+    for (const step of steps) {
       try {
-        const found = await fetchSummary(title);
+        const found = await step();
+        offline = false;
         if (found) {
           writeCache(breed.key, found);
           return found;
         }
       } catch {
-        return null;
+        continue;
       }
     }
-    writeCache(breed.key, { src: null });
+    if (!offline) writeCache(breed.key, { src: null });
     return null;
   })();
   pending.set(breed.key, job);

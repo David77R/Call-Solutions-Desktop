@@ -35,8 +35,9 @@ function Photo({ breed, enabled, large = false }) {
   const [loaded, setLoaded] = useState(false);
   const src = photo ? (large ? photo.large : photo.src) : null;
   return (
-    <div className={`breed-photo${loaded ? ' is-loaded' : ''}${state === 'missing' ? ' is-missing' : ''}`}>
-      {src ? <img src={src} alt={`Foto de ${breed.name}`} loading="lazy" onLoad={() => setLoaded(true)} /> : null}
+    <div className={`breed-photo${large ? ' breed-photo--large' : ''}${loaded ? ' is-loaded' : ''}${state === 'missing' ? ' is-missing' : ''}`}>
+      {src && large ? <img className="breed-photo__blur" src={src} alt="" aria-hidden="true" /> : null}
+      {src ? <img className="breed-photo__img" src={src} alt={`Foto de ${breed.name}`} loading="lazy" onLoad={() => setLoaded(true)} onError={() => setLoaded(true)} /> : null}
       {(!src || !loaded) && (
         <span className="breed-photo__ph" aria-hidden="true">
           {state === 'missing' ? <PawIcon size={34} /> : <span className="breed-photo__shimmer" />}
@@ -44,6 +45,12 @@ function Photo({ breed, enabled, large = false }) {
       )}
     </div>
   );
+}
+
+function PhotoCredit({ breed }) {
+  const { photo } = useBreedPhoto(breed, true);
+  if (!photo) return null;
+  return <span className="breed-modal__credit">Foto: {photo.source || 'Wikipedia'}</span>;
 }
 
 function BreedCard({ breed, index, onOpen }) {
@@ -88,7 +95,7 @@ function BreedDetail({ breed, onClose }) {
         </button>
         <div className="breed-modal__hero">
           <Photo breed={breed} enabled large />
-          <span className="breed-modal__credit">Foto: Wikipedia</span>
+          <PhotoCredit breed={breed} />
         </div>
         <div className="breed-modal__content">
           <header>
