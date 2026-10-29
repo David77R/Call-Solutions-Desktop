@@ -31,8 +31,8 @@ export const DEFAULT_TEMPLATES = [
     id: 'datos-agendar',
     group: 'antes',
     title: 'Pedir datos para agendar',
-    es: 'Para agendar su cita, por favor envíenos los siguientes datos:\n• Nombre completo\n• Dirección del servicio (gate code, apt)\n• Nombre de su mascota\n• Día y horario de preferencia',
-    en: 'To book your appointment, please send us the following:\n• Full name\n• Service address (gate code, apt)\n• Your pet\'s name\n• Preferred day and time',
+    es: 'Para agendar su cita, por favor envíenos los siguientes datos:\n• Nombre completo\n• Dirección del servicio (gate code, apt)\n• Nombre de su mascota',
+    en: 'To book your appointment, please send us the following:\n• Full name\n• Service address (gate code, apt)\n• Your pet\'s name',
   },
   {
     id: 'fuera-de-zona',
