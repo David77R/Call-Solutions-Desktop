@@ -3,7 +3,7 @@ import { deleteField, doc, onSnapshot, setDoc, updateDoc } from 'firebase/firest
 import { db } from './firebase';
 
 const COLLECTION = 'remarketingProgress';
-export const REMARKETING_SLUGS = ['famous', 'mayami', 'abbie'];
+export const REMARKETING_SLUGS = ['famous', 'mayami', 'abbie', 'tinis'];
 
 export function useZoneProgress(slug, dateKey) {
   const [zips, setZips] = useState({});

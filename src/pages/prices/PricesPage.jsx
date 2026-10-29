@@ -11,7 +11,9 @@ import { useServiceDescriptions } from '../../lib/useServiceDescriptions';
 import { accentTokens } from '../../lib/color';
 import { addToHistory } from '../../lib/favorites';
 import {
+  catCoverage,
   extractWeightLbs,
+  isCatQuery,
   findBreed,
   getBreedBundle,
   getSizeBands,
@@ -51,7 +53,9 @@ export default function PricesPage() {
 
   const weight = trimmed ? extractWeightLbs(trimmed) : null;
   const breedText = trimmed ? stripWeight(trimmed) : '';
-  const breed = breedText.length >= MIN_BREED_CHARS ? findBreed(breedText) : null;
+  const catQuery = trimmed ? isCatQuery(trimmed) : false;
+  const breed = !catQuery && breedText.length >= MIN_BREED_CHARS ? findBreed(breedText) : null;
+  const catMissing = useMemo(() => (catQuery ? catCoverage(catalog.companies.filter((c) => !activeSlug || c.slug === activeSlug)) : []), [catQuery, catalog.companies, activeSlug]);
 
   const activeCompany = catalog.companies.find((c) => c.slug === activeSlug) || null;
   const dialSlug = activeSlug || selected?.company_slug || results?.[0]?.company_slug || null;
@@ -73,9 +77,9 @@ export default function PricesPage() {
       }
       addToHistory(next);
       setSelected(next);
-      setSelectedBreed(breed ? titleCase(breed.breed) : null);
+      setSelectedBreed(catQuery || item.is_cat ? 'Gato' : breed ? titleCase(breed.breed) : null);
     },
-    [catalog, breed]
+    [catalog, breed, catQuery]
   );
 
   const clearSelected = useCallback(() => {
@@ -164,7 +168,7 @@ export default function PricesPage() {
           )}
 
           {results ? (
-            <ResultsList results={results} query={trimmed} selectedKey={itemKey(selected)} onSelect={handleSelect} />
+            <ResultsList results={results} query={trimmed} selectedKey={itemKey(selected)} onSelect={handleSelect} catMissing={catMissing} />
           ) : (
             <CompanyOverview
               companies={catalog.companies}

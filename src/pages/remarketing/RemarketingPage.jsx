@@ -3,7 +3,7 @@ import CompanyTabs from '../../components/CompanyTabs';
 import { useCatalog } from '../../lib/useCatalog';
 import { useAuth } from '../../lib/AuthContext';
 import { accentTokens } from '../../lib/color';
-import { REMARKETING_ZONES } from '../../data/remarketingZones';
+import { REMARKETING_MAPS, mapForCompany } from '../../data/remarketingZones';
 import ZoneMap from './ZoneMap';
 import { REMARKETING_SLUGS, resetZones, toggleZone, useZoneProgress } from '../../lib/remarketing';
 import { labelFromDateKey, shiftDateKey, todayKey } from '../../lib/summaries';
@@ -35,6 +35,8 @@ export default function RemarketingPage() {
   const [hover, setHover] = useState(null);
   const [confirmReset, setConfirmReset] = useState(false);
   const company = options.find((c) => c.slug === slug) || options[0] || null;
+  const mapId = mapForCompany(company?.slug);
+  const ZONES = REMARKETING_MAPS[mapId].zones;
   const [zips, setZips] = useZoneProgress(company?.slug, dateKey);
   const [focus, setFocus] = useState(null);
   const [expanded, setExpanded] = useState(false);
@@ -48,17 +50,17 @@ export default function RemarketingPage() {
   const color = company?.color_primary || '#7f97e8';
   const isToday = dateKey === todayKey();
 
-  const doneCount = REMARKETING_ZONES.filter((z) => zips[z.zip]?.done).length;
+  const doneCount = ZONES.filter((z) => zips[z.zip]?.done).length;
   const list = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return REMARKETING_ZONES.filter((z) => {
+    return ZONES.filter((z) => {
       const done = !!zips[z.zip]?.done;
       if (filter === 'done' && !done) return false;
       if (filter === 'pending' && done) return false;
       if (region !== 'all' && z.region !== region) return false;
       return !q || z.zip.startsWith(q) || z.name.toLowerCase().includes(q);
     }).sort((a, b) => a.name.localeCompare(b.name));
-  }, [zips, filter, region, search]);
+  }, [zips, filter, region, search, ZONES]);
 
   const toggle = useCallback(
     (z) => {
@@ -67,7 +69,7 @@ export default function RemarketingPage() {
       zipsRef.current = { ...zipsRef.current, [z.zip]: entry };
       setZips((prev) => ({ ...prev, [z.zip]: entry }));
     },
-    [company, dateKey, user?.displayName, setZips]
+    [company, dateKey, user?.displayName, setZips],
   );
 
   useEffect(() => {
@@ -89,7 +91,7 @@ export default function RemarketingPage() {
         <div>
           <h1 className="rmk__title">Remarketing</h1>
           <p className="rmk__sub">
-            {doneCount} de {REMARKETING_ZONES.length} zonas trabajadas. Haz clic en una zona para marcarla y usa la rueda del mouse para acercarte.
+            {REMARKETING_MAPS[mapId].label}: {doneCount} de {ZONES.length} zonas trabajadas. Haz clic en una zona para marcarla y usa la rueda del mouse para acercarte.
           </p>
         </div>
         <div className="date-nav">
@@ -103,10 +105,23 @@ export default function RemarketingPage() {
         </div>
       </div>
 
-      <CompanyTabs companies={options} activeSlug={company?.slug ?? null} onChange={(s) => s && setSlug(s)} showAll={false} />
+      <CompanyTabs
+        companies={options}
+        activeSlug={company?.slug ?? null}
+        onChange={(s) => {
+          if (!s) return;
+          if (mapForCompany(s) !== mapId) {
+            setRegion('all');
+            setHover(null);
+            setFocus(null);
+          }
+          setSlug(s);
+        }}
+        showAll={false}
+      />
 
       <div className="rmk__progress" aria-hidden="true">
-        <span style={{ transform: `scaleX(${doneCount / REMARKETING_ZONES.length})` }} />
+        <span style={{ transform: `scaleX(${doneCount / ZONES.length})` }} />
       </div>
 
       <div className="rmk__layout">
@@ -123,22 +138,18 @@ export default function RemarketingPage() {
               {expanded ? 'Salir de pantalla completa' : 'Pantalla completa'}
             </button>
           </div>
-          <ZoneMap zips={zips} region={region} focus={focus} hoverZip={hover?.zip ?? null} onToggle={toggle} onHover={setHover} />
+          <ZoneMap key={mapId} mapId={mapId} zips={zips} region={region} focus={focus} hoverZip={hover?.zip ?? null} onToggle={toggle} onHover={setHover} />
           {hover && (
             <div className="rmk__tip" key={hover.zip}>
               <strong>{hover.name}</strong>
               <span>{hover.zip}</span>
-              {zips[hover.zip]?.done ? (
-                <span className="rmk__tip-by">Marcada por {zips[hover.zip].doneBy}</span>
-              ) : (
-                <span className="rmk__tip-by">Sin marcar</span>
-              )}
+              {zips[hover.zip]?.done ? <span className="rmk__tip-by">Marcada por {zips[hover.zip].doneBy}</span> : <span className="rmk__tip-by">Sin marcar</span>}
             </div>
           )}
           {expanded && (
-            <div className="rmk__float-count" style={{ '--p': doneCount / REMARKETING_ZONES.length }}>
+            <div className="rmk__float-count" style={{ '--p': doneCount / ZONES.length }}>
               <span className="rmk__float-dot" aria-hidden="true" />
-              {company?.name} · {doneCount} de {REMARKETING_ZONES.length}
+              {company?.name} · {doneCount} de {ZONES.length}
             </div>
           )}
         </div>
@@ -165,7 +176,13 @@ export default function RemarketingPage() {
                     <span className="rmk__item-name">{z.name}</span>
                     <span className="rmk__item-zip">{z.zip}</span>
                   </button>
-                  <button type="button" className="rmk__locate" aria-label={`Ver ${z.name} ${z.zip} en el mapa`} title="Ver en el mapa" onClick={() => setFocus({ zip: z.zip, at: Date.now() })}>
+                  <button
+                    type="button"
+                    className="rmk__locate"
+                    aria-label={`Ver ${z.name} ${z.zip} en el mapa`}
+                    title="Ver en el mapa"
+                    onClick={() => setFocus({ zip: z.zip, at: Date.now() })}
+                  >
                     <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
                       <circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" strokeWidth="2" />
                       <circle cx="12" cy="12" r="2.5" fill="currentColor" />

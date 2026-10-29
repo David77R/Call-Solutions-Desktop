@@ -818,3 +818,39 @@
 .ticket__quick-btn.is-done svg {
   animation: pop-in 360ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+
+.ticket__cat {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  padding: 4px 10px 4px 8px;
+  border-radius: 999px;
+  background: var(--night);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  animation: pop-in 360ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.ticket__cat svg {
+  animation: cat-wiggle 2.8s ease-in-out 600ms infinite;
+  transform-origin: 50% 80%;
+}
+
+@keyframes cat-wiggle {
+  0%,
+  80%,
+  100% {
+    transform: rotate(0);
+  }
+
+  85% {
+    transform: rotate(-12deg);
+  }
+
+  92% {
+    transform: rotate(10deg);
+  }
+}

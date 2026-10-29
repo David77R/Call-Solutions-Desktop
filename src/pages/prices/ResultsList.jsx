@@ -1,5 +1,6 @@
 import { itemKey, labelWithRange } from '../../lib/search';
 import fifo from '../../assets/fifo.webp';
+import { CatIcon } from '../../components/Icons';
 
 function groupByCompany(results) {
   const groups = [];
@@ -17,6 +18,12 @@ function groupByCompany(results) {
 function Badges({ row }) {
   return (
     <span className="result__badges">
+      {row.is_cat && (
+        <span className="result__badge result__badge--cat">
+          <CatIcon size={13} />
+          Gato
+        </span>
+      )}
       {row.needs_review && <span className="result__badge result__badge--warn">Verificar</span>}
       {row.suggested && <span className="result__badge">Por peso</span>}
       {row.surcharge_alert && <span className="result__badge result__badge--warn">Cargo especial</span>}
@@ -26,7 +33,7 @@ function Badges({ row }) {
   );
 }
 
-export default function ResultsList({ results, query, selectedKey, onSelect }) {
+export default function ResultsList({ results, query, selectedKey, onSelect, catMissing = [] }) {
   if (!results.length) {
     return (
       <div className="results-empty">
@@ -46,6 +53,12 @@ export default function ResultsList({ results, query, selectedKey, onSelect }) {
       <p className="results__count">
         {results.length} {results.length === 1 ? 'resultado' : 'resultados'}
       </p>
+      {catMissing.length > 0 && (
+        <p className="results__cat-note">
+          <CatIcon size={16} />
+          Sin servicio para gatos: {catMissing.map((c) => c.name).join(', ')}.
+        </p>
+      )}
       {groupByCompany(results).map((group) => (
         <section key={group.slug} className="results__group" style={{ '--row-color': group.color }}>
           <h3 className="results__group-title">

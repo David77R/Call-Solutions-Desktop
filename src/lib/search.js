@@ -22,6 +22,29 @@ const byCatalogOrder = (a, b) =>
   compare(a.category_name, b.category_name) ||
   a.sort_order - b.sort_order;
 
+const CAT_QUERY = /(^|[^a-z])(gat[oa]s?|gatit[oa]s?|cats?|kittens?|kitty|felin[oa]s?|michis?|minin[oa]s?)([^a-z]|$)/;
+const CAT_ROW = /gato|(^|[^a-z])cats?([^a-z]|$)|feline/i;
+
+const plain = (text) => lower(text).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+export function isCatQuery(text) {
+  return CAT_QUERY.test(plain(text));
+}
+
+export function isCatRow(row) {
+  return CAT_ROW.test(`${row.category_name || ''} ${row.label || ''}`);
+}
+
+export function catCoverage(companies) {
+  const withCats = new Set();
+  for (const company of companies) {
+    for (const cat of company.categories || []) {
+      if ((cat.items || []).some((item) => CAT_ROW.test(`${cat.name} ${item.label}`))) withCats.add(company.slug);
+    }
+  }
+  return companies.filter((c) => !withCats.has(c.slug));
+}
+
 export function isBreedCategory(name) {
   return lower(name).startsWith(BREED_CATEGORY_PREFIX);
 }
@@ -46,6 +69,7 @@ export function flattenCatalog(companies) {
           service_note: item.service_note ?? null,
           weight_min_lbs: item.weight_min_lbs ?? null,
           weight_max_lbs: item.weight_max_lbs ?? null,
+          is_cat: CAT_ROW.test(`${cat.name} ${item.label}`),
         });
       });
     });
@@ -216,6 +240,14 @@ function weightRangeSearch(rows, min, max, slug) {
 }
 
 export function searchPriceItems({ companies, rows }, queryText, slug) {
+  if (isCatQuery(queryText)) {
+    return rows
+      .filter(inCompany(slug))
+      .filter((r) => r.is_cat)
+      .sort((a, b) => compare(a.company_name, b.company_name) || a.category_order - b.category_order || a.sort_order - b.sort_order)
+      .map((r) => ({ ...r, weight_match: null, suggested: false }));
+  }
+
   const explicitWeight = extractWeightLbs(queryText);
   const textPart = (explicitWeight != null ? queryText.replace(WEIGHT_REGEX, '') : queryText).trim();
 

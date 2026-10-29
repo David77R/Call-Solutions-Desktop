@@ -94,8 +94,11 @@ export function breedName(item, breedFromQuery) {
   return raw ? raw.replace(SIZE_SUFFIX, '').trim() : null;
 }
 
+const CAT_NAME = /^(gato|cat)$/i;
+
 function petLabel(breed, lang) {
   if (!breed) return COPY[lang].pet;
+  if (CAT_NAME.test(breed)) return lang === 'en' ? 'your cat' : 'su gato';
   return lang === 'en' ? `your ${breed}` : `su ${breed}`;
 }
 
@@ -108,7 +111,7 @@ function specialtyName(row) {
 function siblingServices(item, rows) {
   const isSpecialty = SPECIALTY.test(item.category_name || '');
   const base = {
-    name: isSpecialty ? specialtyName(item) : item.pill_label || serviceName(item.category_name),
+    name: isSpecialty ? specialtyName(item) : item.is_cat ? serviceName(item.category_name) : item.pill_label || serviceName(item.category_name),
     category: item.category_name,
     price: item.price_display,
     needs_review: item.needs_review,
@@ -159,7 +162,7 @@ export function buildQuoteMessage({ item, rows, descriptions, lang, breedFromQue
   const t = COPY[lang] || COPY.es;
   const pet = petLabel(breedName(item, breedFromQuery), lang);
   const describe = (s) =>
-    getServiceDescription(descriptions, s.name, item.company_slug, lang) || getServiceDescription(descriptions, s.category, item.company_slug, lang);
+    getServiceDescription(descriptions, s.name, item.company_slug, lang) || (item.is_cat ? null : getServiceDescription(descriptions, s.category, item.company_slug, lang));
 
   const services = getQuoteServices(item, rows, optionIndex);
   const dental = isDentalQuote(services);
@@ -255,7 +258,7 @@ function pickAddons(item, rows, coat) {
 
 export function hasBreedSuggestion({ item, rows, breedFromQuery, optionIndex }) {
   const breed = breedName(item, breedFromQuery);
-  if (!breed) return false;
+  if (!breed || CAT_NAME.test(breed) || item.is_cat) return false;
   const services = getQuoteServices(item, rows, optionIndex);
   return services.length > 0 && !isDentalQuote(services);
 }

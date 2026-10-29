@@ -1,7 +1,7 @@
 import { useEffect, useId, useState } from 'react';
 import AnimatedPrice from './AnimatedPrice';
 import ZonePicker from './ZonePicker';
-import { AlertIcon, ChatIcon, CheckIcon, CloseIcon, CopyIcon, PawIcon, StarIcon } from './Icons';
+import { AlertIcon, CatIcon, ChatIcon, CheckIcon, CloseIcon, CopyIcon, PawIcon, StarIcon } from './Icons';
 import { coatDescriptions } from '../data/coats';
 import { getServiceDescription } from '../data/serviceDescriptions';
 import { breedCoat, isDiscountEligible, itemKey, labelWithRange, parsePrice } from '../lib/search';
@@ -84,7 +84,7 @@ function FilledTicket({ item, descriptions, rows, breedFromQuery, lang, onLangCh
   const coat = item.coat || breedCoat(breedFromQuery);
   const priceText = isBundle ? option?.price : item.price_display;
   const needsReview = isBundle ? option?.needs_review : item.needs_review;
-  const serviceName = isBundle ? option?.name : item.pill_label || item.category_name;
+  const serviceName = isBundle ? option?.name : item.is_cat ? item.category_name.split(' (')[0] : item.pill_label || item.category_name;
   const description = getServiceDescription(descriptions, serviceName, item.company_slug, lang);
   const surchargeApplied = !isBundle && item.surcharge_amount_applied && item.original_price_display;
 
@@ -180,6 +180,12 @@ function FilledTicket({ item, descriptions, rows, breedFromQuery, lang, onLangCh
       </header>
 
       <div className="ticket__titles">
+        {item.is_cat && (
+          <span className="ticket__cat">
+            <CatIcon size={16} />
+            Servicio para gatos
+          </span>
+        )}
         <h2 className="ticket__title">{title}</h2>
         {subtitle && <p className="ticket__subtitle">{subtitle}</p>}
         {coat && coatDescriptions[coat] && <p className="ticket__coat">{coatDescriptions[coat]}</p>}

@@ -115,3 +115,15 @@ export function ChatIcon(props) {
     </Svg>
   );
 }
+
+export function CatIcon(props) {
+  return (
+    <Svg {...props}>
+      <path d="M5 4l3 4.5M19 4l-3 4.5" />
+      <path d="M5 4v7a7 7 0 0 0 14 0V4" />
+      <path d="M9.5 12.5h.01M14.5 12.5h.01" />
+      <path d="M11 15.5l1 .8 1-.8" />
+      <path d="M3 14.5l4-.5M3 17l4-1M21 14.5l-4-.5M21 17l-4-1" />
+    </Svg>
+  );
+}

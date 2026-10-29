@@ -324,6 +324,24 @@
   color: var(--warn-text);
 }
 
+.result__badge--cat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: color-mix(in srgb, var(--moon) 25%, transparent);
+  color: var(--text);
+}
+
+.results__cat-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: -4px 0 4px;
+  font-size: 13px;
+  color: var(--text-muted);
+  animation: rise-in 300ms ease both;
+}
+
 .result__price {
   flex: none;
   max-width: 45%;

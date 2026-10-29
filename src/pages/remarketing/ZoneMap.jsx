@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { REMARKETING_ZONES } from '../../data/remarketingZones';
+import { REMARKETING_MAPS } from '../../data/remarketingZones';
 
 const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/{layer}/MapServer/tile/{z}/{y}/{x}';
 const ESRI_ATTRIBUTION = 'Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors';
@@ -9,16 +9,23 @@ const OSM = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 const OSM_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
 const MAX_TILE_ERRORS = 4;
 const LABEL_ZOOM = 11.5;
-const META = Object.fromEntries(REMARKETING_ZONES.map((z) => [z.zip, z]));
-const ALL_BOUNDS = L.latLngBounds(REMARKETING_ZONES.map((z) => [z.lat, z.lng]));
+const GEO = {};
 
-function regionBounds(layers, region) {
-  const picked = Object.entries(layers).filter(([zip]) => region === 'all' || META[zip]?.region === region);
-  if (!picked.length) return ALL_BOUNDS;
+function geoFor(mapId) {
+  if (!GEO[mapId]) {
+    const { zones, geojson } = REMARKETING_MAPS[mapId] || REMARKETING_MAPS.miami;
+    GEO[mapId] = { zones, url: geojson, meta: Object.fromEntries(zones.map((z) => [z.zip, z])), bounds: L.latLngBounds(zones.map((z) => [z.lat, z.lng])) };
+  }
+  return GEO[mapId];
+}
+
+function regionBounds(layers, region, geo) {
+  const picked = Object.entries(layers).filter(([zip]) => region === 'all' || geo.meta[zip]?.region === region);
+  if (!picked.length) return geo.bounds;
   return picked.reduce((b, [, layer]) => b.extend(layer.getBounds()), L.latLngBounds(picked[0][1].getBounds()));
 }
 
-export default function ZoneMap({ zips, region, focus, hoverZip, onToggle, onHover }) {
+export default function ZoneMap({ mapId = 'miami', zips, region, focus, hoverZip, onToggle, onHover }) {
   const el = useRef(null);
   const mapRef = useRef(null);
   const layers = useRef({});
@@ -30,6 +37,7 @@ export default function ZoneMap({ zips, region, focus, hoverZip, onToggle, onHov
   }, [onToggle, onHover]);
 
   useEffect(() => {
+    const geo = geoFor(mapId);
     const map = L.map(el.current, {
       zoomControl: false,
       minZoom: 8,
@@ -39,7 +47,7 @@ export default function ZoneMap({ zips, region, focus, hoverZip, onToggle, onHov
       wheelPxPerZoomLevel: 110,
     });
     mapRef.current = map;
-    map.fitBounds(ALL_BOUNDS, { padding: [24, 24] });
+    map.fitBounds(geo.bounds, { padding: [24, 24] });
     map.attributionControl.setPrefix(false);
     L.control.zoom({ position: 'topright', zoomInTitle: 'Acercar', zoomOutTitle: 'Alejar' }).addTo(map);
 
@@ -63,7 +71,7 @@ export default function ZoneMap({ zips, region, focus, hoverZip, onToggle, onHov
     });
 
     const zipLabels = L.layerGroup(
-      REMARKETING_ZONES.map((z) =>
+      geo.zones.map((z) =>
         L.marker([z.lat, z.lng], {
           pane: 'zipLabels',
           interactive: false,
@@ -80,7 +88,7 @@ export default function ZoneMap({ zips, region, focus, hoverZip, onToggle, onHov
     syncLabels();
 
     let cancelled = false;
-    fetch('/zonas-remarketing.geojson')
+    fetch(geo.url)
       .then((r) => r.json())
       .then((data) => {
         if (cancelled) return;
@@ -88,7 +96,7 @@ export default function ZoneMap({ zips, region, focus, hoverZip, onToggle, onHov
           pane: 'zones',
           style: () => ({ className: 'rmk-zone', weight: 1.4 }),
           onEachFeature: (feature, layer) => {
-            const zone = META[feature.properties.zip];
+            const zone = geo.meta[feature.properties.zip];
             if (!zone) return;
             layers.current[zone.zip] = layer;
             layer.on({
@@ -116,22 +124,22 @@ export default function ZoneMap({ zips, region, focus, hoverZip, onToggle, onHov
       layers.current = {};
       setReady(false);
     };
-  }, []);
+  }, [mapId]);
 
   useEffect(() => {
     for (const [zip, layer] of Object.entries(layers.current)) {
       const path = layer.getElement();
       if (!path) continue;
       path.classList.toggle('is-done', !!zips[zip]?.done);
-      path.classList.toggle('is-dim', region !== 'all' && META[zip]?.region !== region);
+      path.classList.toggle('is-dim', region !== 'all' && geoFor(mapId).meta[zip]?.region !== region);
     }
-  }, [zips, region, ready]);
+  }, [zips, region, ready, mapId]);
 
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !ready) return;
-    map.flyToBounds(regionBounds(layers.current, region), { padding: [28, 28], duration: 0.9 });
-  }, [region, ready]);
+    map.flyToBounds(regionBounds(layers.current, region, geoFor(mapId)), { padding: [28, 28], duration: 0.9 });
+  }, [region, ready, mapId]);
 
   useEffect(() => {
     const layer = hoverZip && layers.current[hoverZip];
