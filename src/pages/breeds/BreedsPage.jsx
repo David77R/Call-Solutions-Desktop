@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { CloseIcon, PawIcon, SearchIcon } from '../../components/Icons';
+import { CheckIcon, CloseIcon, CopyIcon, PawIcon, SearchIcon } from '../../components/Icons';
 import { coatDescriptions } from '../../data/coats';
 import { useCatalog } from '../../lib/useCatalog';
-import { BREEDS, COAT_LABELS, SIZE_LABELS, loadBackupPhoto, recommendServices, useBreedPhoto } from '../../lib/breedWiki';
+import { useServiceDescriptions } from '../../lib/useServiceDescriptions';
+import { BREEDS, COAT_LABELS, SIZE_LABELS, breedPitch, loadBackupPhoto, recommendServices, useBreedPhoto } from '../../lib/breedWiki';
 import './BreedsPage.css';
 
 const plain = (text) =>
@@ -114,8 +115,22 @@ function BreedCard({ breed, index, onOpen }) {
 function BreedDetail({ breed, onClose }) {
   const navigate = useNavigate();
   const catalog = useCatalog();
+  const descriptions = useServiceDescriptions();
   const services = useMemo(() => recommendServices(breed, catalog), [breed, catalog]);
   const closeRef = useRef(null);
+  const [lang, setLang] = useState('es');
+  const [openSlug, setOpenSlug] = useState(null);
+  const [copied, setCopied] = useState(null);
+
+  const copy = async (slug, text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(slug);
+      setTimeout(() => setCopied((c) => (c === slug ? null : c)), 1800);
+    } catch {
+      setCopied(null);
+    }
+  };
 
   useEffect(() => {
     closeRef.current?.focus();
@@ -174,16 +189,46 @@ function BreedDetail({ breed, onClose }) {
           </div>
 
           <section className="breed-services" aria-label="Servicio recomendado por empresa">
-            <h3>Servicio recomendado por empresa</h3>
+            <div className="breed-services__head">
+              <h3>Servicio recomendado por empresa</h3>
+              <div className="breed-lang" role="group" aria-label="Idioma del mensaje">
+                <span className="breed-lang__thumb" style={{ transform: lang === 'en' ? 'translateX(100%)' : 'none' }} aria-hidden="true" />
+                <button type="button" aria-pressed={lang === 'es'} onClick={() => setLang('es')}>
+                  ES
+                </button>
+                <button type="button" aria-pressed={lang === 'en'} onClick={() => setLang('en')}>
+                  EN
+                </button>
+              </div>
+            </div>
+            {services.length > 0 && <p className="breed-services__hint">Toca una empresa para ver el mensaje listo para copiar.</p>}
             <ul>
-              {services.map((s, i) => (
-                <li key={s.slug} style={{ '--co': s.color, '--i': i }}>
-                  <span className="breed-services__dot" aria-hidden="true" />
-                  <span className="breed-services__co">{s.name}</span>
-                  <span className="breed-services__svc">{s.service}</span>
-                  <span className="breed-services__price">{s.price || '—'}</span>
-                </li>
-              ))}
+              {services.map((s, i) => {
+                const expanded = openSlug === s.slug;
+                const text = expanded ? breedPitch(breed, s, catalog.rows, descriptions, lang) : '';
+                return (
+                  <li key={s.slug} className={expanded ? 'is-open' : ''} style={{ '--co': s.color, '--i': i }}>
+                    <button type="button" className="breed-services__row" aria-expanded={expanded} onClick={() => setOpenSlug(expanded ? null : s.slug)}>
+                      <span className="breed-services__dot" aria-hidden="true" />
+                      <span className="breed-services__co">{s.name}</span>
+                      <span className="breed-services__svc">{s.service}</span>
+                      <span className="breed-services__price">{s.price || '—'}</span>
+                      <svg className="breed-services__chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="m6 9 6 6 6-6" />
+                      </svg>
+                    </button>
+                    {expanded && (
+                      <div className="breed-services__pitch">
+                        <p>{text}</p>
+                        <button type="button" className={copied === s.slug ? 'breed-services__copy is-done' : 'breed-services__copy'} onClick={() => copy(s.slug, text)}>
+                          {copied === s.slug ? <CheckIcon size={16} /> : <CopyIcon size={16} />}
+                          {copied === s.slug ? 'Copiado' : 'Copiar mensaje'}
+                        </button>
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
               {!services.length && <li className="breed-services__empty">Cargando precios…</li>}
             </ul>
           </section>

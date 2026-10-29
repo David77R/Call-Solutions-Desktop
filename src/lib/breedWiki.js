@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { BREED_WIKI } from '../data/breedWiki';
 import { BREED_WEIGHTS } from '../data/breedWeights';
+import { buildBreedSuggestion } from './quoteMessage';
 import { findBreed, isBreedCategory, parsePrice, searchPriceItems } from './search';
 
 const PHOTO_KEY = 'ccs_breed_photos_v4';
@@ -356,6 +357,15 @@ export function recommendServices(breed, catalog) {
           color: company.color_primary,
           service: `${wantFull ? 'Full Grooming' : 'Bath'} · ${best.label}`,
           price: priceRange([bundlePrice(best.price_display, wantFull)]),
+          row: {
+            ...best,
+            type: 'service',
+            category_name: wantFull ? 'Full Grooming' : 'Bath',
+            pill_label: wantFull ? 'Full Grooming' : 'Bath',
+            price_display: priceRange([bundlePrice(best.price_display, wantFull)]),
+            weight_min_lbs: null,
+            weight_max_lbs: null,
+          },
         };
       }
       const preferred = rows.filter((r) => (wantFull ? FULL : BASIC).test(`${r.original_category_name || r.category_name} ${r.pill_label || ''} ${r.label}`));
@@ -368,7 +378,25 @@ export function recommendServices(breed, catalog) {
         color: company.color_primary,
         service: label,
         price: priceRange(same.map((r) => parsePrice(r.price_display))),
+        row: chosen[0],
       };
     })
     .filter(Boolean);
+}
+
+export function breedPitch(breed, service, rows, descriptions, lang = 'es') {
+  const name = lang === 'en' ? breed.en : breed.name;
+  let text = null;
+  try {
+    const ranged = service.price && service.price.includes('–');
+    const price = ranged ? `${service.price} ${lang === 'en' ? 'depending on weight' : 'según el peso'}` : service.price || service.row.price_display;
+    text = buildBreedSuggestion({ item: { ...service.row, price_display: price }, rows, descriptions, lang, breedFromQuery: name });
+  } catch {
+    text = null;
+  }
+  if (text) return text;
+  const price = service.price || (lang === 'en' ? 'to be confirmed' : 'por confirmar');
+  return lang === 'en'
+    ? `For your ${name} we offer our ${service.service} service. Price: ${price}.`
+    : `Para su ${name} ofrecemos el servicio ${service.service}. Precio: ${price}.`;
 }
