@@ -74,20 +74,20 @@ export const defaultCompanyDescriptions = {
   },
   cutepaws: {
     'full grooming': {
-      es: 'Shampoo y enjuague doble, acondicionador, secado a mano, corte y limado de uñas, limpieza de oídos, y glándulas anales si es necesario. Incluye corte de pelo O deslanado. No incluye desenredado de nudos.',
-      en: 'Shampoos & Rinse 2X, conditioner, hand blow dried, nails trimmed and filed, ears cleaned, and anal glands expressed if needed. Hair cut OR deshedding. Does not include dematting.',
+      es: 'Shampoo y enjuague doble, acondicionador, secado a mano, corte y limado de uñas y limpieza de oídos. Incluye corte de pelo O deslanado. No incluye desenredado de nudos.',
+      en: 'Shampoos & Rinse 2X, conditioner, hand blow dried, nails trimmed and filed, and ears cleaned. Hair cut OR deshedding. Does not include dematting.',
     },
     'basic grooming': {
-      es: 'Dos shampoos, acondicionador, secado a mano, corte y limado de uñas, limpieza de oídos, y glándulas anales si es necesario. El corte de pelo es solo en áreas sanitarias (ojos, oídos, canales auditivos, patas, almohadillas, zona trasera y genital). No incluye deslanado ni desenredado de nudos.',
-      en: '2 shampoos, conditioner, hand blow dried, nails trimmed and filed, ears cleaned, and anal glands expressed if needed. Hair trimmed only in sanitary areas (eyes, ears, ear canals, paws, pads, butt, and genital area). Does not include deshedding or dematting.',
+      es: 'Dos shampoos, acondicionador, secado a mano, corte y limado de uñas y limpieza de oídos. El corte de pelo es solo en áreas sanitarias (ojos, oídos, canales auditivos, patas, almohadillas, zona trasera y genital). No incluye deslanado ni desenredado de nudos.',
+      en: '2 shampoos, conditioner, hand blow dried, nails trimmed and filed, and ears cleaned. Hair trimmed only in sanitary areas (eyes, ears, ear canals, paws, pads, butt, and genital area). Does not include deshedding or dematting.',
     },
     'bath and tidy': {
-      es: 'Dos shampoos, acondicionador, secado a mano, corte y limado de uñas, limpieza de oídos, y glándulas anales si es necesario. No incluye deslanado ni desenredado de nudos.',
-      en: '2 shampoos, conditioner, hand blow dried, nails trimmed and filed, ears cleaned, and anal glands expressed if needed. Does not include deshedding or dematting.',
+      es: 'Dos shampoos, acondicionador, secado a mano, corte y limado de uñas y limpieza de oídos. No incluye deslanado ni desenredado de nudos.',
+      en: '2 shampoos, conditioner, hand blow dried, nails trimmed and filed, and ears cleaned. Does not include deshedding or dematting.',
     },
     'double-coated hair': {
-      es: 'Incluye el servicio de Full Grooming completo (baño doble, secado, corte y limado de uñas, limpieza de oídos, glándulas anales) más un tratamiento de deslanado profundo, recomendado para razas de doble capa que sueltan mucho pelo.',
-      en: 'Includes the complete Full Grooming service (double bath, drying, nail trim and file, ear cleaning, anal glands) plus a deep deshedding treatment, recommended for double-coated breeds that shed heavily.',
+      es: 'Incluye el servicio de Full Grooming completo (baño doble, secado, corte y limado de uñas, limpieza de oídos) más un tratamiento de deslanado profundo, recomendado para razas de doble capa que sueltan mucho pelo.',
+      en: 'Includes the complete Full Grooming service (double bath, drying, nail trim and file, ear cleaning) plus a deep deshedding treatment, recommended for double-coated breeds that shed heavily.',
     },
     'special breed small': {
       es: 'Servicio especial para razas con pelaje más demandante (Pomeranian, PomSky, Spaniel, Doodle) — incluye baño, corte y limado de uñas, limpieza de oídos, y corte de pelo o deslanado según el tipo de pelaje de la raza.',

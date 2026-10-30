@@ -42,8 +42,8 @@ export default function DescriptionsEditor({ descriptions, missing, companies })
       {missing > 0 && !dirty && (
         <div className="desc-sync">
           <p>
-            Hay {missing} {missing === 1 ? 'descripción' : 'descripciones'} que la app ya muestra pero Fifo todavía no conoce (por ejemplo las de Cruzin). Envíalas para que Fifo explique esos
-            servicios igual que el ticket.
+            Hay {missing} {missing === 1 ? 'descripción nueva o actualizada' : 'descripciones nuevas o actualizadas'} que la app ya muestra pero Fifo todavía no conoce. Envíalas para que Fifo
+            explique los servicios igual que el ticket.
           </p>
           <button type="button" className="savebar__save" disabled={status === 'saving'} onClick={() => save(setStatus, setError, draft)}>
             {status === 'saving' ? 'Enviando…' : 'Enviar a Fifo'}
