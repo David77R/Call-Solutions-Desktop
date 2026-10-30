@@ -47,7 +47,7 @@ function formFromEntry(entry, roster, author) {
   };
 }
 
-export default function SummaryForm({ company, combined, roster, baseEntry, authorName, dateKey, onSaved }) {
+export default function SummaryForm({ company, combined, roster, baseEntry, authorName, dateKey, onSaved, onCancel = null }) {
   const [form, setForm] = useState(() => formFromEntry(baseEntry, roster, authorName));
   const [status, setStatus] = useState('idle');
   const [copied, setCopied] = useState(false);
@@ -213,6 +213,11 @@ export default function SummaryForm({ company, combined, roster, baseEntry, auth
             {status === 'saved' && <CheckIcon />}
             {status === 'saving' ? 'Guardando…' : status === 'saved' ? 'Resumen guardado' : baseEntry ? 'Guardar cambios' : 'Guardar resumen'}
           </button>
+          {onCancel && (
+            <button type="button" className="sf-cancel" onClick={onCancel}>
+              Cancelar edición
+            </button>
+          )}
           {status === 'error' && <p className="sf-error">No se pudo guardar. Revisa la conexión e inténtalo de nuevo.</p>}
           {!form.author.trim() && <p className="sf-hint">Escribe el autor para poder guardar.</p>}
           <div className="summary-form__share">

@@ -63,8 +63,9 @@ export async function saveSummary(company, authorName, data, dateKey = todayKey(
     saved_at: new Date().toISOString(),
     ...data,
   };
-  await setDoc(doc(db, COLLECTION, `${company.slug}_${dateKey}`), entry);
-  return entry;
+  const write = setDoc(doc(db, COLLECTION, `${company.slug}_${dateKey}`), entry);
+  const synced = await Promise.race([write.then(() => true), new Promise((resolve) => setTimeout(() => resolve(false), 4000))]);
+  return { ...entry, synced };
 }
 
 export function deleteSummary(entry) {

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import CompanyTabs from '../../components/CompanyTabs';
 import { TrendBars } from '../../components/Charts';
 import SummaryForm from './SummaryForm';
+import SavedSummary from './SavedSummary';
 import { useCatalog } from '../../lib/useCatalog';
 import { useAuth } from '../../lib/AuthContext';
 import { accentTokens } from '../../lib/color';
@@ -80,6 +81,8 @@ export default function DailySummaryPage() {
   const [slug, setSlug] = useState(null);
   const [editingKey, setEditingKey] = useState(null);
   const [toast, setToast] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [lastSave, setLastSave] = useState(null);
 
   const company = companies.find((c) => c.slug === slug) || companies[0] || null;
   const { items, loading } = useCompanySummaries(company?.slug);
@@ -95,6 +98,14 @@ export default function DailySummaryPage() {
     if (!next) return;
     setSlug(next);
     setEditingKey(null);
+    setEditing(false);
+    setLastSave(null);
+  };
+
+  const editDay = (key) => {
+    setEditingKey(key);
+    setEditing(true);
+    setLastSave(null);
   };
 
   return (
@@ -109,12 +120,21 @@ export default function DailySummaryPage() {
           {editingKey && editingKey !== today ? (
             <>
               Editando el resumen del <strong>{labelFromDateKey(editingKey)}</strong>.{' '}
-              <button type="button" className="sf-link" onClick={() => setEditingKey(null)}>
+              <button
+                type="button"
+                className="sf-link"
+                onClick={() => {
+                  setEditingKey(null);
+                  setEditing(false);
+                }}
+              >
                 Volver a hoy
               </button>
             </>
+          ) : baseEntry && editing ? (
+            <>Editando el resumen de hoy de {company?.name}. Al guardar queda registrado quién lo editó.</>
           ) : baseEntry ? (
-            <>Ya hay un resumen de hoy para {company?.name}. Lo que cambies aquí lo actualiza y queda registrado quién lo editó.</>
+            <>{labelFromDateKey(today)}</>
           ) : (
             <>{labelFromDateKey(today)}</>
           )}
@@ -122,7 +142,21 @@ export default function DailySummaryPage() {
       </div>
 
       <div className="summary__layout">
-        {company && !loading ? (
+        {company && !loading && baseEntry && !editing ? (
+          <SavedSummary
+            key={`${company.slug}-${targetKey}`}
+            entry={baseEntry}
+            company={company}
+            roster={rosters[company.slug] || []}
+            agentName={user?.displayName || 'Agente'}
+            justSaved={lastSave?.key === `${company.slug}_${targetKey}`}
+            offline={lastSave?.key === `${company.slug}_${targetKey}` && !lastSave.synced}
+            onEdit={() => {
+              setEditing(true);
+              setLastSave(null);
+            }}
+          />
+        ) : company && !loading ? (
           <SummaryForm
             key={`${company.slug}-${targetKey}-${baseEntry?.saved_at || 'new'}`}
             company={company}
@@ -131,10 +165,14 @@ export default function DailySummaryPage() {
             baseEntry={baseEntry}
             authorName={user?.displayName || ''}
             dateKey={targetKey}
-            onSaved={() => {
-              setToast(true);
-              setTimeout(() => setToast(false), 2800);
+            onSaved={(entry) => {
+              setEditing(false);
+              setLastSave({ key: `${company.slug}_${targetKey}`, synced: entry?.synced !== false });
+              setToast(entry?.synced === false ? 'offline' : 'online');
+              setTimeout(() => setToast(false), 3200);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
+            onCancel={baseEntry ? () => setEditing(false) : null}
           />
         ) : (
           <div className="summary__loading">Cargando…</div>
@@ -154,7 +192,7 @@ export default function DailySummaryPage() {
           {items.length ? (
             <ul className="history-list">
               {items.map((entry) => (
-                <HistoryItem key={entry.date_key} entry={entry} active={entry.date_key === targetKey} onEdit={setEditingKey} />
+                <HistoryItem key={entry.date_key} entry={entry} active={entry.date_key === targetKey} onEdit={editDay} />
               ))}
             </ul>
           ) : (
@@ -165,7 +203,7 @@ export default function DailySummaryPage() {
 
       {toast && (
         <div className="toast" role="status">
-          Resumen guardado. El supervisor ya lo ve en Resúmenes totales.
+          {toast === 'offline' ? 'Resumen guardado en este equipo. Se subirá en cuanto vuelva la conexión.' : 'Resumen guardado. El supervisor ya lo ve en Resúmenes totales.'}
         </div>
       )}
     </div>
