@@ -71,7 +71,7 @@ function Change({ ch }) {
   );
 }
 
-function DayBars({ days, kind }) {
+function DayBars({ days, kind, color }) {
   const width = 680;
   const height = 190;
   const pad = { top: 22, bottom: 26, left: 6, right: 6 };
@@ -83,7 +83,7 @@ function DayBars({ days, kind }) {
   const best = days.reduce((b, d) => (d.v != null && (!b || d.v > b.v) ? d : b), null);
   const every = kind === 'week' ? 1 : Math.ceil(days.length / 10);
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="rep-bars" role="img" aria-label="Citas nuevas por día">
+    <svg viewBox={`0 0 ${width} ${height}`} className="rep-bars" role="img" aria-label="Citas nuevas por día" style={color ? { '--bar': color } : undefined}>
       <line x1={pad.left} x2={width - pad.right} y1={pad.top + innerH} y2={pad.top + innerH} className="rep-bars__base" />
       {days.map((d, i) => {
         const x = pad.left + slot * i + (slot - barW) / 2;
@@ -119,6 +119,7 @@ export default function ReportView({ initialKind = 'week', today, companies, onC
   const [kind, setKind] = useState(initialKind);
   const [offset, setOffset] = useState(-1);
   const [scope, setScope] = useState('all');
+  const [lastCompany, setLastCompany] = useState(null);
   const [copied, setCopied] = useState(false);
 
   const period = periodFor(kind, today, offset);
@@ -172,16 +173,31 @@ export default function ReportView({ initialKind = 'week', today, companies, onC
     if (best) points.push(`El mejor día fue el ${WEEKDAYS[parseKey(best.key).getDay()]} ${longDate(best.key, false)}, con ${best.v} citas nuevas.`);
     if (scope === 'all' && top && top.ch.value > 0) points.push(`${shortCompanyName(top.name)} fue la empresa que más creció (${changeText(top.ch)}).`);
     if (scope === 'all' && bottom && bottom.ch.value < 0) points.push(`${shortCompanyName(bottom.name)} fue la que más bajó (${changeText(bottom.ch)}).`);
-    if (data.cur.length < data.possible) points.push(`Faltan ${data.possible - data.cur.length} resúmenes del día por guardar en este periodo; esos días no cuentan como cero.`);
+    if (data.cur.length < data.possible) points.push(scope === 'all' ? `Faltan ${data.possible - data.cur.length} resúmenes del día por guardar en este periodo; esos días no cuentan como cero.` : (data.possible - data.cur.length === 1 ? 'Hay 1 día sin registro en este periodo; ese día no cuenta como cero.' : `Hay ${data.possible - data.cur.length} días sin registro en este periodo; esos días no cuentan como cero.`));
   }
 
   const title = kind === 'week' ? 'Reporte semanal de citas' : 'Reporte mensual de citas';
   const scopeLabel = company ? company.name : 'Todas las empresas';
 
+  const pickCompany = (slug) => {
+    setScope(slug);
+    setLastCompany(slug);
+  };
+
+  const printPdf = () => {
+    const previous = document.title;
+    const who = company ? shortCompanyName(company.name) : 'CC+CS';
+    document.title = `${who} - ${kind === 'week' ? 'Reporte semanal' : 'Reporte mensual'} - ${periodTitle(kind, period).replace(/^Semana del /, '')}`;
+    window.print();
+    setTimeout(() => {
+      document.title = previous;
+    }, 800);
+  };
+
   const copySummary = async () => {
     const lines = [
-      `*${title}*`,
-      `${periodTitle(kind, period)}${ongoing ? ' (en curso)' : ''} · ${scopeLabel}`,
+      company ? `*${company.name}*` : `*${title}*`,
+      company ? `${title} · ${periodTitle(kind, period)}${ongoing ? ' (en curso)' : ''}` : `${periodTitle(kind, period)}${ongoing ? ' (en curso)' : ''} · ${scopeLabel}`,
       '',
       ...KPIS.map((k) => {
         const now = metricValue(data.totalNow, k.key);
@@ -246,45 +262,73 @@ export default function ReportView({ initialKind = 'week', today, companies, onC
             ›
           </button>
         </div>
-        <select className="report-toolbar__select" value={scope} onChange={(e) => setScope(e.target.value)} aria-label="Empresa">
-          <option value="all">Todas las empresas</option>
-          {companies.map((c) => (
-            <option key={c.slug} value={c.slug}>
-              {c.name}
-            </option>
-          ))}
-        </select>
+        <div className="report-toolbar__group" role="group" aria-label="Alcance del reporte">
+          <button type="button" aria-pressed={scope === 'all'} onClick={() => setScope('all')}>
+            Reporte total
+          </button>
+          <button type="button" aria-pressed={scope !== 'all'} onClick={() => companies.length && pickCompany(lastCompany || companies[0].slug)}>
+            Por empresa
+          </button>
+        </div>
         <div className="report-toolbar__actions">
           <button type="button" className={copied ? 'report-btn is-done' : 'report-btn'} onClick={copySummary} disabled={!data.cur.length}>
             {copied ? <CheckIcon size={16} /> : <CopyIcon size={16} />}
             {copied ? 'Copiado' : 'Copiar resumen'}
           </button>
-          <button type="button" className="report-btn report-btn--main" onClick={() => window.print()} disabled={!data.cur.length}>
+          <button type="button" className="report-btn report-btn--main" onClick={printPdf} disabled={!data.cur.length}>
             Descargar PDF
           </button>
           <button type="button" className="report-close" onClick={onClose} aria-label="Cerrar reporte">
             <CloseIcon size={20} />
           </button>
         </div>
+        {scope !== 'all' && (
+          <div className="report-toolbar__companies" role="group" aria-label="Empresa del reporte">
+            {companies.map((c) => (
+              <button key={c.slug} type="button" aria-pressed={scope === c.slug} style={{ '--co': c.color_primary }} onClick={() => pickCompany(c.slug)}>
+                <i aria-hidden="true" />
+                {shortCompanyName(c.name)}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="report-scroll">
-        <article className={loading ? 'report-sheet is-loading' : 'report-sheet'}>
-          <header className="rep-head">
-            <img src={logo} alt="CC+CS Solutions" className="rep-head__logo" />
-            <div className="rep-head__text">
-              <h1>{title}</h1>
-              <p>
-                {periodTitle(kind, period)}
-                {ongoing ? ' (en curso)' : ''}
-              </p>
-              <p className="rep-head__scope" style={company ? { '--co': company.color_primary } : undefined}>
-                {company && <i aria-hidden="true" />}
-                {scopeLabel}
-              </p>
-            </div>
-            <p className="rep-head__date">Generado el {new Date().toLocaleDateString('es-VE', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-          </header>
+        <article className={loading ? 'report-sheet is-loading' : 'report-sheet'} style={company ? { '--accent': company.color_primary } : undefined}>
+          {company ? (
+            <header className="rep-head rep-head--company" style={{ '--co': company.color_primary }}>
+              <div className="rep-head__text">
+                <span className="rep-head__kicker">{title}</span>
+                <h1>{company.name}</h1>
+                <p>
+                  {periodTitle(kind, period)}
+                  {ongoing ? ' (en curso)' : ''}
+                </p>
+              </div>
+              <div className="rep-head__by">
+                <img src={logo} alt="" className="rep-head__logo rep-head__logo--sm" />
+                <span>
+                  Preparado por
+                  <strong>CC+CS Solutions</strong>
+                  {new Date().toLocaleDateString('es-VE', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </span>
+              </div>
+            </header>
+          ) : (
+            <header className="rep-head">
+              <img src={logo} alt="CC+CS Solutions" className="rep-head__logo" />
+              <div className="rep-head__text">
+                <h1>{title}</h1>
+                <p>
+                  {periodTitle(kind, period)}
+                  {ongoing ? ' (en curso)' : ''}
+                </p>
+                <p className="rep-head__scope">Todas las empresas</p>
+              </div>
+              <p className="rep-head__date">Generado el {new Date().toLocaleDateString('es-VE', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+            </header>
+          )}
 
           {!data.cur.length ? (
             <p className="rep-empty">{loading ? 'Cargando resúmenes…' : 'No hay resúmenes del día guardados en este periodo.'}</p>
@@ -315,7 +359,7 @@ export default function ReportView({ initialKind = 'week', today, companies, onC
 
               <section className="rep-block">
                 <h2>Citas nuevas por día</h2>
-                <DayBars days={data.days} kind={kind} />
+                <DayBars days={data.days} kind={kind} color={company ? company.color_primary : null} />
               </section>
 
               <section className="rep-block">
@@ -370,7 +414,7 @@ export default function ReportView({ initialKind = 'week', today, companies, onC
                           <td className="num strong">{d.totals ? d.totals.appointments : '—'}</td>
                           <td className="num">{d.totals ? d.totals.calls : '—'}</td>
                           <td className="num">{d.totals ? d.totals.messages : '—'}</td>
-                          <td className="num">{d.totals ? fmt(metricValue(d.totals, 'booking'), 'booking') : 'Sin resumen'}</td>
+                          <td className="num">{d.totals ? fmt(metricValue(d.totals, 'booking'), 'booking') : 'Sin registro'}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -379,8 +423,9 @@ export default function ReportView({ initialKind = 'week', today, companies, onC
               </section>
 
               <footer className="rep-foot">
-                Calculado con {data.cur.length} de {data.possible} resúmenes del día guardados en CC+CS. El % de agendamiento es citas nuevas entre mensajes más citas. Los días sin
-                resumen no cuentan como cero.
+                {company
+                  ? `Datos de ${data.cur.length} de ${data.possible} días con registro del call center de CC+CS Solutions. El % de agendamiento es citas nuevas entre mensajes más citas. Los días sin registro no cuentan como cero.`
+                  : `Calculado con ${data.cur.length} de ${data.possible} resúmenes del día guardados en CC+CS. El % de agendamiento es citas nuevas entre mensajes más citas. Los días sin resumen no cuentan como cero.`}
               </footer>
             </>
           )}
