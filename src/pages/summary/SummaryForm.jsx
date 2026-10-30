@@ -3,6 +3,7 @@ import NumberField from '../../components/NumberField';
 import { CheckIcon, CopyIcon } from '../../components/Icons';
 import { formatSummaryText } from '../../lib/reportFormatter';
 import { labelFromDateKey, saveSummary, whatsappLink } from '../../lib/summaries';
+import SummaryQuality from './SummaryQuality';
 
 function emptyGroomer(name = '') {
   return { name, completedCount: '', confirmedCount: '', absentToday: false, absentTomorrow: false };
@@ -150,6 +151,13 @@ export default function SummaryForm({ company, combined, roster, baseEntry, auth
             ))}
           </div>
         </section>
+
+        <SummaryQuality
+          company={company}
+          dateKey={dateKey}
+          roster={[...new Set([...roster, ...form.groomers.map((g) => g.name.trim()).filter(Boolean)])]}
+          agentName={form.author.trim() || authorName || 'Agente'}
+        />
 
         <div className="sf-field">
           <label htmlFor={`${id}-issues`}>Inconvenientes</label>
