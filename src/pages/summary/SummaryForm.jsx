@@ -1,9 +1,12 @@
-import { useId, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import NumberField from '../../components/NumberField';
 import { CheckIcon, CopyIcon } from '../../components/Icons';
 import { formatSummaryText } from '../../lib/reportFormatter';
 import { labelFromDateKey, saveSummary, whatsappLink } from '../../lib/summaries';
 import SummaryQuality from './SummaryQuality';
+import SummaryCounter from './SummaryCounter';
+import { useAuth } from '../../lib/AuthContext';
+import { totalOf, countsOf, useDayCounters } from '../../lib/counters';
 
 function emptyGroomer(name = '') {
   return { name, completedCount: '', confirmedCount: '', absentToday: false, absentTomorrow: false };
@@ -20,6 +23,7 @@ function formFromEntry(entry, roster, author) {
       groomers: roster.length ? roster.map((n) => emptyGroomer(n)) : [emptyGroomer()],
       issues: '',
       notes: '',
+      counter_source: null,
     };
   }
   return {
@@ -39,6 +43,7 @@ function formFromEntry(entry, roster, author) {
       : roster.map((n) => emptyGroomer(n)),
     issues: entry.issues || '',
     notes: entry.notes || '',
+    counter_source: entry.counter_source || null,
   };
 }
 
@@ -47,6 +52,32 @@ export default function SummaryForm({ company, combined, roster, baseEntry, auth
   const [status, setStatus] = useState('idle');
   const [copied, setCopied] = useState(false);
   const id = useId();
+  const { user } = useAuth();
+  const { bySlug } = useDayCounters(dateKey);
+  const agents = bySlug[company.slug];
+
+  const applyCounter = (scope, counts) =>
+    setForm((f) => ({
+      ...f,
+      calls: String(counts.calls),
+      messagesMeta: String(counts.messagesMeta),
+      messagesWhatsapp: combined ? f.messagesWhatsapp : String(counts.messagesWhatsapp),
+      newAppointments: String(counts.appointments),
+      counter_source: {
+        scope,
+        by_uid: user?.uid || null,
+        by_name: user?.displayName || f.author || 'Agente',
+        at: new Date().toISOString(),
+        counts,
+      },
+    }));
+
+  const mineTotal = totalOf(countsOf(agents?.[user?.uid]));
+  useEffect(() => {
+    if (baseEntry || form.counter_source || !mineTotal) return;
+    if ([form.calls, form.messagesMeta, form.messagesWhatsapp, form.newAppointments].some((v) => String(v).trim() !== '')) return;
+    applyCounter('mine', countsOf(agents[user.uid]));
+  }, [mineTotal]);
 
   const set = (key) => (value) => setForm((f) => ({ ...f, [key]: value }));
   const setGroomer = (i, key, value) =>
@@ -96,6 +127,8 @@ export default function SummaryForm({ company, combined, roster, baseEntry, auth
           <label htmlFor={`${id}-author`}>Autor del resumen</label>
           <input id={`${id}-author`} className="sf-input" value={form.author} onChange={(e) => set('author')(e.target.value)} />
         </div>
+
+        <SummaryCounter agents={agents} uid={user?.uid} combined={combined} source={form.counter_source} onUse={applyCounter} />
 
         <div className="sf-grid">
           <NumberField label="Llamadas recibidas" value={form.calls} onChange={set('calls')} />

@@ -7,6 +7,8 @@ import { useAuth } from '../lib/AuthContext';
 import { useCatalog } from '../lib/useCatalog';
 import { useNow, useProtocol } from '../lib/protocol';
 import { STATUS, formatDateTime, updateReminder, useReminders } from '../lib/reminders';
+import { countsOf, openCounter, totalOf, useDayCounters } from '../lib/counters';
+import { todayKey } from '../lib/summaries';
 import fifo from '../assets/fifo.webp';
 import './Topbar.css';
 
@@ -84,6 +86,8 @@ export default function Topbar() {
   const { overdue } = useProtocol();
   const now = useNow(15000);
   const [bellOpen, setBellOpen] = useState(false);
+  const { bySlug } = useDayCounters(todayKey());
+  const myCount = Object.values(bySlug).reduce((sum, agents) => sum + totalOf(countsOf(agents[user?.uid])), 0);
   const open = items.filter((r) => r.status === 'pending' || r.status === 'en_proceso');
   const firstName = (user?.displayName || '').split(' ')[0];
   const lastCount = useRef(open.length);
@@ -135,6 +139,16 @@ export default function Topbar() {
           <ChatIcon size={19} />
           <span>Mensajes</span>
           <kbd>M</kbd>
+        </button>
+
+        <button type="button" className="topbar__msgs topbar__counter" onClick={() => openCounter()} aria-label={`Contador del turno, ${myCount} registros hoy`}>
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M5 4v16M9.5 4v16M14 4v16M18.5 4v16M3 15.5 21 8.5" />
+          </svg>
+          <span>Contador</span>
+          <kbd key={myCount} className={myCount ? 'topbar__count is-on' : 'topbar__count'}>
+            {myCount}
+          </kbd>
         </button>
 
         <button type="button" className="topbar__btn" onClick={() => navigate('/resumen-del-dia')} aria-label="Resumen del día" data-tip="Resumen del día">

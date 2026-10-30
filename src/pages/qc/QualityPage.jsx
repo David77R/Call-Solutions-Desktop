@@ -46,7 +46,16 @@ export default function QualityPage() {
 
       <ul className="qc-list">
         {list.map((e, i) => (
-          <QualityEntry key={e.id} entry={e} index={i} company={showingAll ? companyOf(e.company_slug) : null} onDelete={deleteQualityEntry} />
+          <QualityEntry
+            key={e.id}
+            entry={e}
+            index={i}
+            company={showingAll ? companyOf(e.company_slug) : null}
+            onDelete={deleteQualityEntry}
+            editCompany={companyOf(e.company_slug)}
+            roster={rosters[e.company_slug] || []}
+            agentName={user?.displayName || 'Agente'}
+          />
         ))}
         {!list.length && <li className="qc-empty">Sin controles registrados {showingAll ? 'en ninguna empresa' : `para ${company?.name}`} en este día.</li>}
       </ul>

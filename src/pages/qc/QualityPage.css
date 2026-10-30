@@ -381,3 +381,22 @@
   color: var(--on-accent);
   transform: rotate(-8deg) scale(1.08);
 }
+
+.qc-item--editing {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.qc-composer--edit {
+  border-style: dashed;
+}
+
+.qc-cancel {
+  margin-left: auto;
+}
+
+.qc-cancel + .qc-save {
+  margin-left: 0;
+}

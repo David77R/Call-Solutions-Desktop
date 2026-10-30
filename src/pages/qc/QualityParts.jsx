@@ -1,5 +1,5 @@
 import { useId, useState } from 'react';
-import { SATISFACTION, createQualityEntry } from '../../lib/qualityControl';
+import { SATISFACTION, createQualityEntry, updateQualityEntry } from '../../lib/qualityControl';
 import '../summary/Summary.css';
 import './QualityPage.css';
 
@@ -15,12 +15,27 @@ export function Face({ kind }) {
   );
 }
 
+function formFromEntry(entry) {
+  return {
+    company_slug: entry.company_slug,
+    groomer_name: entry.groomer_name || '',
+    client_ordinal: String(entry.client_ordinal || 1),
+    contact_method: entry.contact_method || 'llamada',
+    satisfaction: entry.satisfaction || null,
+    feedback_text: entry.feedback_text || '',
+    review_requested: !!entry.review_requested,
+    rescheduled: !!entry.rescheduled,
+    reschedule_date: entry.reschedule_date || '',
+  };
+}
+
 function emptyForm(slug) {
   return { company_slug: slug, groomer_name: '', client_ordinal: '1', contact_method: 'llamada', satisfaction: null, feedback_text: '', review_requested: false, rescheduled: false, reschedule_date: '' };
 }
 
-export function Composer({ company, roster, agentName, dateKey }) {
-  const [form, setForm] = useState(() => emptyForm(company.slug));
+export function Composer({ company, roster, agentName, dateKey, entry = null, onDone = null }) {
+  const [form, setForm] = useState(() => (entry ? formFromEntry(entry) : emptyForm(company.slug)));
+  const groomers = [...new Set(['', ...roster, ...(form.groomer_name ? [form.groomer_name] : [])])];
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
   const id = useId();
@@ -28,6 +43,11 @@ export function Composer({ company, roster, agentName, dateKey }) {
 
   const save = (e) => {
     e.preventDefault();
+    if (entry) {
+      updateQualityEntry(entry.id, form, agentName).catch(() => {});
+      onDone?.();
+      return;
+    }
     setSaving(true);
     createQualityEntry({ ...form, created_by: agentName }, dateKey).catch(() => {});
     setSaving(false);
@@ -37,13 +57,13 @@ export function Composer({ company, roster, agentName, dateKey }) {
   };
 
   return (
-    <form className="qc-composer" onSubmit={save}>
+    <form className={entry ? 'qc-composer qc-composer--edit' : 'qc-composer'} onSubmit={save}>
       <div className="qc-composer__scan" aria-hidden="true" />
       <div className="qc-row">
         <fieldset className="qc-groomers">
           <legend>Groomer</legend>
           <div className="qc-groomers__list">
-            {['', ...roster].map((n, i) => (
+            {groomers.map((n, i) => (
               <button
                 key={n || 'none'}
                 type="button"
@@ -101,16 +121,29 @@ export function Composer({ company, roster, agentName, dateKey }) {
         {form.rescheduled && (
           <input type="date" className="date-nav__input" value={form.reschedule_date} aria-label="Fecha de la nueva cita" onChange={(e) => set('reschedule_date', e.target.value)} />
         )}
+        {entry && (
+          <button type="button" className="sf-chip qc-cancel" onClick={() => onDone?.()}>
+            Cancelar
+          </button>
+        )}
         <button type="submit" className={done ? 'qc-save is-done' : 'qc-save'} disabled={saving || !form.satisfaction}>
-          {done ? 'Registrado' : saving ? 'Guardando…' : 'Registrar control'}
+          {entry ? 'Guardar cambios' : done ? 'Registrado' : saving ? 'Guardando…' : 'Registrar control'}
         </button>
       </div>
     </form>
   );
 }
 
-export function QualityEntry({ entry: e, index: i, company, onDelete }) {
+export function QualityEntry({ entry: e, index: i, company, onDelete, editCompany, roster = [], agentName }) {
   const [confirming, setConfirming] = useState(false);
+  const [editing, setEditing] = useState(false);
+  if (editing && editCompany) {
+    return (
+      <li className="qc-item qc-item--editing">
+        <Composer company={editCompany} roster={roster} agentName={agentName} dateKey={e.date_key} entry={e} onDone={() => setEditing(false)} />
+      </li>
+    );
+  }
   return (
     <li className="qc-item" style={{ '--sat': SATISFACTION[e.satisfaction]?.color || 'var(--line)', '--i': Math.min(i, 12) }}>
       <span className="qc-item__face">
@@ -131,6 +164,7 @@ export function QualityEntry({ entry: e, index: i, company, onDelete }) {
           {e.review_requested ? 'Reseña pedida. ' : ''}
           {e.rescheduled ? `Reagendado${e.reschedule_date ? ` para ${e.reschedule_date}` : ''}. ` : ''}
           Registrado por {e.created_by}
+          {e.updated_by ? `. Editado por ${e.updated_by}` : ''}
         </p>
       </div>
       {confirming ? (
@@ -143,9 +177,16 @@ export function QualityEntry({ entry: e, index: i, company, onDelete }) {
           </button>
         </span>
       ) : (
-        <button type="button" className="sf-chip" onClick={() => setConfirming(true)}>
-          Borrar
-        </button>
+        <span className="qc-item__actions">
+          {editCompany && (
+            <button type="button" className="sf-chip" onClick={() => setEditing(true)}>
+              Editar
+            </button>
+          )}
+          <button type="button" className="sf-chip" onClick={() => setConfirming(true)}>
+            Borrar
+          </button>
+        </span>
       )}
     </li>
   );

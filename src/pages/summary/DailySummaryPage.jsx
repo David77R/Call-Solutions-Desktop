@@ -28,6 +28,11 @@ function HistoryItem({ entry, active, onEdit }) {
         <span className="history-item__date">{labelFromDateKey(entry.date_key)}</span>
         <span className="history-item__author">{entry.author_name}</span>
       </div>
+      {entry.counter_source && (
+        <span className="history-item__counter">
+          Contado por {entry.counter_source.scope === 'team' ? 'todo el equipo' : (entry.counter_source.by_name || 'el agente').split(' ')[0]}
+        </span>
+      )}
       <div className="history-item__stats">
         <span>
           <strong>{m.calls}</strong> llamadas

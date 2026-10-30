@@ -38,7 +38,7 @@ export default function SummaryQuality({ company, dateKey, roster, agentName }) 
           <QualityStats list={entries} />
           <ul className="qc-list sf-qc__list">
             {entries.map((e, i) => (
-              <QualityEntry key={e.id} entry={e} index={i} company={null} onDelete={deleteQualityEntry} />
+              <QualityEntry key={e.id} entry={e} index={i} company={null} onDelete={deleteQualityEntry} editCompany={company} roster={roster} agentName={agentName} />
             ))}
           </ul>
         </>

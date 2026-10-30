@@ -45,3 +45,22 @@ export function createQualityEntry(data, dateKey) {
 export function deleteQualityEntry(id) {
   return deleteDoc(doc(db, COLLECTION, id));
 }
+
+export function updateQualityEntry(id, data, agentName) {
+  return setDoc(
+    doc(db, COLLECTION, id),
+    {
+      groomer_name: data.groomer_name || null,
+      client_ordinal: Number(data.client_ordinal) || 1,
+      contact_method: data.contact_method || 'llamada',
+      satisfaction: data.satisfaction || null,
+      feedback_text: data.feedback_text || '',
+      review_requested: !!data.review_requested,
+      rescheduled: !!data.rescheduled,
+      reschedule_date: data.reschedule_date || null,
+      updated_by: agentName || 'Agente',
+      updated_at: new Date().toISOString(),
+    },
+    { merge: true }
+  );
+}

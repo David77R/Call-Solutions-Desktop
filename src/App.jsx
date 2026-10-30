@@ -9,6 +9,7 @@ import ReminderAlerts from './components/ReminderAlerts';
 import Topbar from './components/Topbar';
 import MessagesDrawer from './components/MessagesDrawer';
 import UpdateBanner from './components/UpdateBanner';
+import CounterDrawer from './components/CounterDrawer';
 import { ALL_SECTIONS } from './sections';
 import './App.css';
 
@@ -96,6 +97,7 @@ function Shell() {
       <ProtocolAlerts />
       <ReminderAlerts />
       <MessagesDrawer />
+      <CounterDrawer />
       <UpdateBanner />
       <div className="shell">
         <Sidebar />
