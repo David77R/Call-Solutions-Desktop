@@ -9,6 +9,7 @@ import { useAuth } from '../../lib/AuthContext';
 import { STATUS, STATUS_ORDER, createReminder, formatDateTime, moveReminder, reminderOrder, removeReminder, updateReminder, useReminders } from '../../lib/reminders';
 import { REPEAT, askNotificationPermission, buildAlarm, describeAlarm, localDayKey } from '../../lib/reminderAlarm';
 import { ClockIcon } from '../../components/Icons';
+import SyncNotice from '../../components/SyncNotice';
 import './RemindersPage.css';
 
 function defaultTime() {
@@ -258,7 +259,7 @@ function orderBetween(prev, next) {
 export default function RemindersPage() {
   const { companies } = useCatalog();
   const { user } = useAuth();
-  const { items } = useReminders();
+  const { items, fromCache, error: syncError } = useReminders();
   const [filter, setFilter] = useState(null);
   const [text, setText] = useState('');
   const [newCompany, setNewCompany] = useState('');
@@ -359,6 +360,8 @@ export default function RemindersPage() {
         <h1 className="reminders__title">Recordatorios</h1>
         <p className="reminders__sub">Compartidos con todo el equipo. Arrastra las tarjetas para ordenarlas o cambiarlas de columna, y tócalas para ver el detalle.</p>
       </div>
+
+      <SyncNotice fromCache={fromCache} error={syncError} what="los recordatorios del equipo" />
 
       <CompanyTabs companies={companies} activeSlug={filter} onChange={setFilter} />
 

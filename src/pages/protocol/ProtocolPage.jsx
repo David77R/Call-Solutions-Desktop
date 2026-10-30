@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../../lib/AuthContext';
 import { minutesOf, useProtocol } from '../../lib/protocol';
 import { CheckIcon } from '../../components/Icons';
+import SyncNotice from '../../components/SyncNotice';
 import './ProtocolPage.css';
 
 const ALERTS_KEY = 'ccs_protocol_alerts';
@@ -16,7 +17,9 @@ function readAlerts() {
 
 export default function ProtocolPage() {
   const { user } = useAuth();
-  const { items, completions, toggle, nowMinutes, overdue } = useProtocol();
+  const { items, completions, toggle, nowMinutes, overdue, sync, dayKey, afterReset } = useProtocol();
+  const [y, m, d] = dayKey.split('-').map(Number);
+  const dayLabel = new Date(y, m - 1, d).toLocaleDateString('es-VE', { weekday: 'long', day: 'numeric', month: 'long' });
   const [alerts, setAlerts] = useState(readAlerts);
   const [alertError, setAlertError] = useState('');
   const doneCount = items.filter((i) => completions[i.id]).length;
@@ -59,6 +62,7 @@ export default function ProtocolPage() {
       <div className="protocol__head">
         <div>
           <h1 className="protocol__title">Protocolo del día</h1>
+          <p className="protocol__day">{afterReset ? `Ya cerró el de hoy. Mostrando el de mañana, ${dayLabel}.` : `Protocolo de hoy, ${dayLabel}.`}</p>
           <p className="protocol__sub">
             {doneCount} de {items.length} tareas hechas
             {overdue > 0 ? `, ${overdue} ${overdue === 1 ? 'atrasada' : 'atrasadas'}` : ''}. Se reinicia a las 8:00 p.m. y lo comparte todo el equipo.
@@ -68,6 +72,8 @@ export default function ProtocolPage() {
           <span>{pct}%</span>
         </div>
       </div>
+
+      <SyncNotice fromCache={sync.fromCache} error={sync.error} what="las tareas marcadas por el equipo" />
 
       <div className="protocol__alerts">
         {alerts ? (

@@ -12,7 +12,7 @@ export const STATUS = {
 
 export const STATUS_ORDER = ['pending', 'en_proceso', 'listo'];
 
-let remindersSnapshot = { items: [], loading: true };
+let remindersSnapshot = { items: [], loading: true, fromCache: true, error: null };
 let remindersStarted = false;
 const remindersListeners = new Set();
 
@@ -26,11 +26,12 @@ function subscribeReminders(listener) {
     remindersStarted = true;
     onSnapshot(
       collection(db, COLLECTION),
+      { includeMetadataChanges: true },
       (snap) => {
         const items = snap.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
-        emitReminders({ items, loading: false });
+        emitReminders({ items, loading: false, fromCache: snap.metadata.fromCache, error: null });
       },
-      () => emitReminders({ ...remindersSnapshot, loading: false })
+      (err) => emitReminders({ ...remindersSnapshot, loading: false, error: err.code || 'error' })
     );
   }
   remindersListeners.add(listener);

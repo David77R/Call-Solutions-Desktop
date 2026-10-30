@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { deleteField, doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import { DAILY_PROTOCOL_ITEMS } from '../data/dailyProtocol';
 
@@ -29,29 +29,39 @@ export function useProtocol() {
   const now = useNow();
   const dayKey = protocolDayKey(now);
   const [completions, setCompletions] = useState({});
+  const [sync, setSync] = useState({ fromCache: true, error: null });
 
   useEffect(
     () =>
       onSnapshot(
         doc(db, 'dailyProtocol', dayKey),
-        (snap) => setCompletions(snap.exists() ? snap.data().completions || {} : {}),
-        () => {}
+        { includeMetadataChanges: true },
+        (snap) => {
+          setCompletions(snap.exists() ? snap.data().completions || {} : {});
+          setSync({ fromCache: snap.metadata.fromCache, error: null });
+        },
+        (err) => setSync({ fromCache: true, error: err.code || 'error' })
       ),
     [dayKey]
   );
 
-  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  const afterReset = now.getHours() >= RESET_HOUR;
+  const nowMinutes = afterReset ? -1 : now.getHours() * 60 + now.getMinutes();
   const overdue = DAILY_PROTOCOL_ITEMS.filter((i) => !completions[i.id] && minutesOf(i.time) <= nowMinutes).length;
 
   const toggle = (itemId, agentName) => {
-    const next = { ...completions };
-    if (next[itemId]) delete next[itemId];
-    else next[itemId] = { at: new Date().toISOString(), by: agentName || null };
-    setCompletions(next);
-    return setDoc(doc(db, 'dailyProtocol', dayKey), { completions: next });
+    const done = !!completions[itemId];
+    const value = done ? deleteField() : { at: new Date().toISOString(), by: agentName || null };
+    setCompletions((current) => {
+      const next = { ...current };
+      if (done) delete next[itemId];
+      else next[itemId] = value;
+      return next;
+    });
+    return setDoc(doc(db, 'dailyProtocol', dayKey), { completions: { [itemId]: value } }, { merge: true });
   };
 
-  return { items: DAILY_PROTOCOL_ITEMS, completions, toggle, now, nowMinutes, overdue };
+  return { items: DAILY_PROTOCOL_ITEMS, completions, toggle, now, nowMinutes, overdue, sync, dayKey, afterReset };
 }
 
 export function useProtocolAlerts(enabled) {
