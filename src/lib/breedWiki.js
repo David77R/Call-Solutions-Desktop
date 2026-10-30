@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { BREED_WIKI } from '../data/breedWiki';
 import { BREED_WEIGHTS } from '../data/breedWeights';
+import { DOG_CEO_BREEDS, PHOTO_OVERRIDES } from '../data/breedPhotos';
 import { buildBreedSuggestion } from './quoteMessage';
 import { findBreed, isBreedCategory, parsePrice, searchPriceItems } from './search';
 
@@ -14,94 +15,6 @@ const WIKI_SEARCH = 'https://en.wikipedia.org/w/api.php?action=query&format=json
 const DOG_CEO = 'https://dog.ceo/api/breed/';
 const COMMONS_SEARCH = 'https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=12&prop=imageinfo&iiprop=url|mime&iiurlwidth=500&gsrsearch=';
 
-const DOG_CEO_BREEDS = {
-  akita: 'akita',
-  'alaskan malamute': 'malamute',
-  'australian shepherd l': 'australian/shepherd',
-  'basset hound': 'hound/basset',
-  beagle: 'beagle',
-  'belgian malinois': 'malinois',
-  'bernese mountain dog': 'mountain/bernese',
-  'border collie large': 'collie/border',
-  'boston terrier': 'bulldog/boston',
-  boxer: 'boxer',
-  'carlino / pug': 'pug',
-  'cavalier king charles': 'spaniel/blenheim',
-  chihuahua: 'chihuahua',
-  'chow chow': 'chow',
-  'cocker spaniel': 'spaniel/cocker',
-  corgi: 'pembroke',
-  doberman: 'doberman',
-  'english bulldog': 'bulldog/english',
-  'french bulldog': 'bulldog/french',
-  'german shepherd': 'germanshepherd',
-  'golden retriever': 'retriever/golden',
-  'great dane': 'dane/great',
-  'great pyrenees': 'pyrenees',
-  husky: 'husky',
-  'labrador retriever': 'labrador',
-  maltese: 'maltese',
-  mastiff: 'mastiff/english',
-  newfoundland: 'newfoundland',
-  'american pitbull terrier': 'pitbull',
-  pomeranian: 'pomeranian',
-  'rottweiler large': 'rottweiler',
-  'saint bernard': 'stbernard',
-  schnauzer: 'schnauzer',
-  'schnauzer mini': 'schnauzer/miniature',
-  'giant schnauzer': 'schnauzer/giant',
-  'shih tzu': 'shihtzu',
-  'standard poodle': 'poodle/standard',
-  'miniature poodle': 'poodle/miniature',
-  'toy poodle': 'poodle/toy',
-  'wheaten terrier': 'terrier/wheaten',
-  'yorkshire terrier': 'terrier/yorkshire',
-  labradoodle: 'labradoodle',
-  cockapoo: 'cockapoo',
-  cavapoo: 'cavapoo',
-  dalmata: 'dalmatian',
-  dachshund: 'dachshund',
-  'american staffordshire terrier': 'terrier/american',
-  'staffordshire bull terrier': 'bullterrier/staffordshire',
-  'bull terrier': 'terrier/bull',
-  'shar pei': 'sharpei',
-  'rhodesian ridgeback': 'ridgeback/rhodesian',
-  weimaraner: 'weimaraner',
-  vizsla: 'vizsla',
-  'german shorthaired pointer': 'pointer/germanlonghair',
-  'italian greyhound': 'greyhound/italian',
-  whippet: 'whippet',
-  bloodhound: 'hound/blood',
-  basenji: 'basenji',
-  'jack russell terrier': 'terrier/russell',
-  'miniature pinscher': 'pinscher/miniature',
-  'shiba inu': 'shiba',
-  samoyed: 'samoyed',
-  'norwegian elkhound': 'elkhound/norwegian',
-  'american eskimo dog': 'eskimo',
-  'shetland sheepdog': 'sheepdog/shetland',
-  collie: 'collie',
-  keeshond: 'keeshond',
-  'australian cattle dog': 'cattledog/australian',
-  'old english sheepdog': 'sheepdog/english',
-  leonberger: 'leonberg',
-  'tibetan mastiff': 'mastiff/tibetan',
-  'bichon frise': 'frise/bichon',
-  havanese: 'havanese',
-  papillon: 'papillon',
-  'japanese chin': 'spaniel/japanese',
-  'english springer spaniel': 'springer/english',
-  brittany: 'spaniel/brittany',
-  'lhasa apso': 'lhasa',
-  pekingese: 'pekinese',
-  'afghan hound': 'hound/afghan',
-  'coton de tulear': 'cotondetulear',
-  'west highland white terrier': 'terrier/westhighland',
-  'airedale terrier': 'airedale',
-  'scottish terrier': 'terrier/scottish',
-  'cairn terrier': 'terrier/cairn',
-  'american bulldog': 'bulldog/american',
-};
 const DENTAL = /dental|smile|placa/i;
 const EXTRA = /adicional|add-on/i;
 const FULL = /gold|full|furfection|completo/i;
@@ -206,9 +119,6 @@ async function fetchSearch(breed) {
 
 const squash = (text) => (text || '').toLowerCase().replace(/[^a-z]/g, '');
 
-const PHOTO_OVERRIDES = {
-  aussiedoodle: 'Thor, 2021 (51256377380).jpg',
-};
 
 function fromCommonsFile(file) {
   const base = `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file.replace(/ /g, '_'))}`;

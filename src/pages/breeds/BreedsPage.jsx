@@ -31,6 +31,8 @@ function useInView(ref) {
   return inView;
 }
 
+const proxyPhoto = (breed, large) => `/api/breed-photo?key=${encodeURIComponent(breed.key)}&w=${large ? 960 : 500}`;
+
 function Photo({ breed, enabled, large = false }) {
   const { photo, state } = useBreedPhoto(breed, enabled);
   const [loaded, setLoaded] = useState(false);
@@ -38,17 +40,23 @@ function Photo({ breed, enabled, large = false }) {
   const [backup, setBackup] = useState(null);
   const [failed, setFailed] = useState(false);
   const source = backup || photo;
-  const candidates = source ? [...new Set([large ? source.large : source.src, ...(source.backups || [])].filter(Boolean))] : [];
-  const src = failed ? null : candidates[attempt] || null;
+  const direct = source ? [large ? source.large : source.src, ...(source.backups || [])] : [];
+  const candidates = enabled ? [...new Set([backup ? null : proxyPhoto(breed, large), ...direct].filter(Boolean))] : [];
+  const waiting = attempt >= candidates.length && !backup && state !== 'missing' && state !== 'ready';
+  const src = failed || waiting ? null : candidates[attempt] || null;
 
   const onError = () => {
     if (attempt + 1 < candidates.length) {
       setAttempt(attempt + 1);
       return;
     }
+    if (!source && state !== 'missing' && state !== 'ready') {
+      setAttempt(attempt + 1);
+      return;
+    }
     if (!backup) {
       loadBackupPhoto(breed).then((found) => {
-        if (found && found.src !== candidates[attempt]) {
+        if (found && !candidates.includes(found.src)) {
           setBackup(found);
           setAttempt(0);
         } else {
@@ -60,7 +68,8 @@ function Photo({ breed, enabled, large = false }) {
     setFailed(true);
   };
 
-  const missing = failed || state === 'missing';
+  const missing = failed || (state === 'missing' && attempt >= candidates.length);
+
   return (
     <div className={`breed-photo${large ? ' breed-photo--large' : ''}${loaded && src ? ' is-loaded' : ''}${missing ? ' is-missing' : ''}`}>
       {src && large && loaded ? <img className="breed-photo__blur" src={src} alt="" aria-hidden="true" /> : null}
