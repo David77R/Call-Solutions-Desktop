@@ -631,3 +631,21 @@
   font-size: 16px;
   text-align: right;
 }
+
+.result__badge--dental,
+.result__badge--coat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text);
+}
+
+.result__badge--dental {
+  background: rgba(64, 196, 214, 0.22);
+  box-shadow: inset 0 0 0 1px rgba(64, 196, 214, 0.45);
+}
+
+.result__badge--coat {
+  background: rgba(232, 172, 92, 0.2);
+  box-shadow: inset 0 0 0 1px rgba(232, 172, 92, 0.45);
+}

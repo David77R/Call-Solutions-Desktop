@@ -1,6 +1,6 @@
-import { itemKey, labelWithRange } from '../../lib/search';
+import { isDentalCleaning, isDoubleCoat, itemKey, labelWithRange } from '../../lib/search';
 import fifo from '../../assets/fifo.webp';
-import { CatIcon } from '../../components/Icons';
+import { CatIcon, CoatIcon, ToothIcon } from '../../components/Icons';
 
 function groupByCompany(results) {
   const groups = [];
@@ -15,9 +15,21 @@ function groupByCompany(results) {
   return groups;
 }
 
-function Badges({ row }) {
+function Badges({ row, breedName }) {
   return (
     <span className="result__badges">
+      {isDentalCleaning(row) && (
+        <span className="result__badge result__badge--dental">
+          <ToothIcon size={13} />
+          Limpieza dental
+        </span>
+      )}
+      {isDoubleCoat(row, breedName) && (
+        <span className="result__badge result__badge--coat">
+          <CoatIcon size={13} />
+          Doble manto
+        </span>
+      )}
       {row.is_cat && (
         <span className="result__badge result__badge--cat">
           <CatIcon size={13} />
@@ -33,7 +45,7 @@ function Badges({ row }) {
   );
 }
 
-export default function ResultsList({ results, query, selectedKey, onSelect, catMissing = [] }) {
+export default function ResultsList({ results, query, selectedKey, onSelect, catMissing = [], breedName = null }) {
   if (!results.length) {
     return (
       <div className="results-empty">
@@ -75,7 +87,7 @@ export default function ResultsList({ results, query, selectedKey, onSelect, cat
                     <span className="result__text">
                       <span className="result__label">{labelWithRange(row)}</span>
                       <span className="result__category">{row.category_name}</span>
-                      <Badges row={row} />
+                      <Badges row={row} breedName={breedName} />
                     </span>
                     <span className="result__price">{row.price_display || 'Por confirmar'}</span>
                   </button>

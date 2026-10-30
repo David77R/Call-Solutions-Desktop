@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { wikiForBreedName } from '../lib/breedWiki';
 import AnimatedPrice from './AnimatedPrice';
 import ZonePicker from './ZonePicker';
-import { AlertIcon, CatIcon, ChatIcon, CheckIcon, CloseIcon, CopyIcon, PawIcon, StarIcon } from './Icons';
+import { AlertIcon, CatIcon, ChatIcon, CheckIcon, CloseIcon, CoatIcon, CopyIcon, PawIcon, StarIcon, ToothIcon } from './Icons';
 import { coatDescriptions } from '../data/coats';
 import { getServiceDescription } from '../data/serviceDescriptions';
-import { breedCoat, isDiscountEligible, itemKey, labelWithRange, parsePrice } from '../lib/search';
+import { breedCoat, isDentalCleaning, isDiscountEligible, itemKey, labelWithRange, parsePrice } from '../lib/search';
 import { isFavorite, toggleFavorite } from '../lib/favorites';
 import { buildBreedSuggestion, buildQuoteMessage, catEquivalent, hasBreedSuggestion } from '../lib/quoteMessage';
 import { countUsage, fillTemplate, openMessages, templateById, useMessageTemplates } from '../lib/messageTemplates';
@@ -86,6 +86,8 @@ function FilledTicket({ item, descriptions, rows, breedFromQuery, lang, onLangCh
       : null
     : item.category_name;
   const coat = item.coat || breedCoat(breedFromQuery);
+  const dentalCleaning = isBundle ? isDentalCleaning({ label: option?.name }) : isDentalCleaning(item);
+  const doubleCoat = !item.is_cat && !dentalCleaning && coat === 'doble_capa';
   const priceText = isBundle ? option?.price : item.price_display;
   const needsReview = isBundle ? option?.needs_review : item.needs_review;
   const serviceName = isBundle ? option?.name : item.is_cat ? catEquivalent(item, rows) : item.pill_label || item.category_name;
@@ -184,11 +186,27 @@ function FilledTicket({ item, descriptions, rows, breedFromQuery, lang, onLangCh
       </header>
 
       <div className="ticket__titles">
-        {item.is_cat && (
-          <span className="ticket__cat">
-            <CatIcon size={16} />
-            Servicio para gatos
-          </span>
+        {(item.is_cat || dentalCleaning || doubleCoat) && (
+          <div className="ticket__tags">
+            {item.is_cat && (
+              <span className="ticket__cat">
+                <CatIcon size={16} />
+                Servicio para gatos
+              </span>
+            )}
+            {dentalCleaning && (
+              <span className="ticket__cat ticket__tag--dental">
+                <ToothIcon size={16} />
+                Limpieza dental
+              </span>
+            )}
+            {doubleCoat && (
+              <span className="ticket__cat ticket__tag--coat">
+                <CoatIcon size={16} />
+                Raza de doble manto
+              </span>
+            )}
+          </div>
         )}
         <h2 className="ticket__title">{title}</h2>
         {subtitle && <p className="ticket__subtitle">{subtitle}</p>}

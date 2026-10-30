@@ -168,7 +168,7 @@ export default function PricesPage() {
           )}
 
           {results ? (
-            <ResultsList results={results} query={trimmed} selectedKey={itemKey(selected)} onSelect={handleSelect} catMissing={catMissing} />
+            <ResultsList results={results} query={trimmed} selectedKey={itemKey(selected)} onSelect={handleSelect} catMissing={catMissing} breedName={breed ? breed.breed : null} />
           ) : (
             <CompanyOverview
               companies={catalog.companies}

@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { DonutChart, Heatmap, HBars, Lines, SmallMultiples, StackedColumns } from './charts';
 import Overview from './Overview';
+import ReportView from './ReportView';
 import { shortCompanyName } from '../../components/CompanyTabs';
 import { useCatalog } from '../../lib/useCatalog';
 import { summaryMetrics, todayKey } from '../../lib/summaries';
@@ -78,6 +79,7 @@ export default function StatsPage() {
   const [selection, setSelection] = useState(null);
   const [sort, setSort] = useState({ key: 'date_key', dir: 'desc' });
   const tableRef = useRef(null);
+  const [report, setReport] = useState(null);
 
   const range = preset === 'custom' ? custom : presetRange(preset, today);
   const span = daysBetween(range.from, range.to) + 1;
@@ -189,7 +191,24 @@ export default function StatsPage() {
             {scoped.length === 1 ? 'resumen diario guardado' : 'resúmenes diarios guardados'} ({coverage}% de cobertura).
           </p>
         </div>
+        <div className="stats__reports">
+          <button type="button" className="stats__report-btn" onClick={() => setReport('week')}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <path d="M14 2v6h6M8 13h8M8 17h5" />
+            </svg>
+            Reporte semanal
+          </button>
+          <button type="button" className="stats__report-btn" onClick={() => setReport('month')}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="3" y="4.5" width="18" height="16.5" rx="2.5" />
+              <path d="M16 2.5v4M8 2.5v4M3 10h18" />
+            </svg>
+            Reporte mensual
+          </button>
+        </div>
       </div>
+      {report && <ReportView initialKind={report} today={today} companies={companies} onClose={() => setReport(null)} />}
 
       <div className="filters">
         <Seg label="Periodo" options={PRESETS} value={preset} onChange={setPreset} />

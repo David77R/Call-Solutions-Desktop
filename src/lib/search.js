@@ -459,3 +459,18 @@ export function labelWithRange(row) {
 export function titleCase(text) {
   return text.replace(/\b\w/g, (c) => c.toUpperCase());
 }
+
+const DENTAL_CLEANING = /deep dental|dental cleaning|smile refresh|limpieza dental|limpieza cosm[eé]tica|promo dental|cat dental/i;
+const DENTAL_EXCLUDE = /teeth brushing|cepillado de dientes|kit dental/i;
+
+export function isDentalCleaning(row) {
+  if (!row) return false;
+  const text = `${row.original_category_name || ''} ${row.category_name || ''} ${row.pill_label || ''} ${row.label || ''}`;
+  return DENTAL_CLEANING.test(text) && !DENTAL_EXCLUDE.test(row.label || '');
+}
+
+export function isDoubleCoat(row, breedName) {
+  if (!row || row.is_cat || isDentalCleaning(row)) return false;
+  const coat = row.coat || breedCoat(row.breed) || breedCoat(breedName);
+  return coat === 'doble_capa';
+}

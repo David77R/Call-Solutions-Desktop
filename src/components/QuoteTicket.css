@@ -880,3 +880,55 @@
   background: rgba(5, 3, 32, 0.08);
   transform: translateY(-1px);
 }
+
+.ticket__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.ticket__tags .ticket__cat {
+  margin-bottom: 0;
+}
+
+.ticket__tag--dental {
+  background: #0e6b78;
+}
+
+.ticket__tag--dental svg {
+  animation: tooth-shine 3.2s ease-in-out 600ms infinite;
+}
+
+.ticket__tag--coat {
+  background: #6a4a1e;
+}
+
+.ticket__tag--coat svg {
+  animation: coat-wave 2.6s ease-in-out 600ms infinite;
+}
+
+@keyframes tooth-shine {
+  0%,
+  78%,
+  100% {
+    transform: scale(1);
+    filter: none;
+  }
+
+  86% {
+    transform: scale(1.18);
+    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.8));
+  }
+}
+
+@keyframes coat-wave {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  50% {
+    transform: translateX(2px);
+  }
+}
