@@ -437,3 +437,124 @@ export function Heatmap({ buckets, series, value, onPick }) {
     </div>
   );
 }
+
+function smoothPath(points) {
+  if (!points.length) return '';
+  if (points.length === 1) return `M${points[0].x},${points[0].y}`;
+  let d = `M${points[0].x.toFixed(1)},${points[0].y.toFixed(1)}`;
+  for (let i = 1; i < points.length; i += 1) {
+    const p0 = points[i - 1];
+    const p1 = points[i];
+    const mx = (p0.x + p1.x) / 2;
+    d += ` C${mx.toFixed(1)},${p0.y.toFixed(1)} ${mx.toFixed(1)},${p1.y.toFixed(1)} ${p1.x.toFixed(1)},${p1.y.toFixed(1)}`;
+  }
+  return d;
+}
+
+export function Sparkline({ values, color = 'currentColor', width = 96, height = 30, fill = false }) {
+  const pts = values.map((v, i) => ({ v, i })).filter((p) => p.v != null);
+  if (pts.length < 2) return <svg width={width} height={height} aria-hidden="true" className="spark" />;
+  const min = Math.min(...pts.map((p) => p.v));
+  const max = Math.max(...pts.map((p) => p.v));
+  const span = max - min || 1;
+  const xAt = (i) => 2 + (i / Math.max(1, values.length - 1)) * (width - 4);
+  const yAt = (v) => 3 + (1 - (v - min) / span) * (height - 6);
+  const points = pts.map((p) => ({ x: xAt(p.i), y: yAt(p.v) }));
+  const d = smoothPath(points);
+  const id = `sp-${Math.random().toString(36).slice(2, 8)}`;
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-hidden="true" className="spark">
+      {fill && (
+        <>
+          <defs>
+            <linearGradient id={id} x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0" stopColor={color} stopOpacity="0.35" />
+              <stop offset="1" stopColor={color} stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          <path d={`${d} L${points[points.length - 1].x},${height} L${points[0].x},${height} Z`} fill={`url(#${id})`} />
+        </>
+      )}
+      <path d={d} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" pathLength="1" className="spark__line" />
+    </svg>
+  );
+}
+
+const HERO_PAD = { top: PAD.top, right: 18, bottom: 32, left: PAD.left };
+
+function useSize() {
+  const ref = useRef(null);
+  const [size, setSize] = useState({ width: 800, height: 300 });
+  useLayoutEffect(() => {
+    if (!ref.current) return undefined;
+    const measure = () => setSize({ width: ref.current.clientWidth || 800, height: Math.max(240, ref.current.clientHeight || 300) });
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(ref.current);
+    return () => ro.disconnect();
+  }, []);
+  return [ref, size];
+}
+
+export function AreaHero({ buckets, values, metric, color, onPick }) {
+  const [ref, { width, height }] = useSize();
+  const [hover, setHover] = useState(null);
+  const innerW = Math.max(10, width - HERO_PAD.left - HERO_PAD.right);
+  const innerH = height - HERO_PAD.top - HERO_PAD.bottom;
+  const isRate = metric === 'booking';
+  const present = values.filter((v) => v != null);
+  const max = isRate ? 100 : niceMax(Math.max(...present, 0));
+  const xAt = (i) => HERO_PAD.left + (buckets.length <= 1 ? innerW / 2 : (i / (buckets.length - 1)) * innerW);
+  const yAt = (v) => HERO_PAD.top + innerH - (v / max) * innerH;
+  const step = labelStep(buckets.length, innerW);
+  const points = values.map((v, i) => (v == null ? null : { x: xAt(i), y: yAt(v), i })).filter(Boolean);
+  const line = smoothPath(points);
+  const area = points.length > 1 ? `${line} L${points[points.length - 1].x},${HERO_PAD.top + innerH} L${points[0].x},${HERO_PAD.top + innerH} Z` : '';
+
+  const onMove = (e) => {
+    const x = e.nativeEvent.offsetX;
+    const raw = buckets.length <= 1 ? 0 : Math.round(((x - HERO_PAD.left) / innerW) * (buckets.length - 1));
+    const i = Math.max(0, Math.min(buckets.length - 1, raw));
+    const nearest = points.reduce((best, p) => (best == null || Math.abs(p.i - i) < Math.abs(best.i - i) ? p : best), null);
+    setHover(nearest ? nearest.i : null);
+  };
+
+  const hv = hover != null ? values[hover] : null;
+  const tipLeft = hover != null ? Math.min(Math.max(xAt(hover), 70), width - 70) : 0;
+
+  return (
+    <div className="hero-viz" ref={ref} onPointerLeave={() => setHover(null)}>
+      <svg width={width} height={height} role="img" aria-label="Evolución del periodo" onPointerMove={onMove} onClick={() => hover != null && onPick({ bucket: buckets[hover].key })}>
+        <defs>
+          <linearGradient id="hero-fill" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0" stopColor={color} stopOpacity="0.32" />
+            <stop offset="1" stopColor={color} stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <YAxis max={max} innerH={innerH} innerW={innerW} isRate={isRate} />
+        {buckets.map((b, i) =>
+          i % step === 0 ? (
+            <text key={b.key} x={xAt(i)} y={height - 10} className="viz-axis__x">
+              {b.label}
+            </text>
+          ) : null
+        )}
+        {area && <path d={area} fill="url(#hero-fill)" className="hero-viz__area" />}
+        <path d={line} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" pathLength="1" className="hero-viz__line" />
+        {hover != null && hv != null && (
+          <g className="hero-viz__hover">
+            <line x1={xAt(hover)} x2={xAt(hover)} y1={HERO_PAD.top} y2={HERO_PAD.top + innerH} className="viz-cross" />
+            <circle cx={xAt(hover)} cy={yAt(hv)} r="9" fill={color} opacity="0.2" />
+            <circle cx={xAt(hover)} cy={yAt(hv)} r="5" fill="#fff" stroke={color} strokeWidth="2.5" />
+          </g>
+        )}
+      </svg>
+      {hover != null && hv != null && (
+        <div className="hero-tip" style={{ left: tipLeft, top: Math.min(yAt(hv) + 18, height - 70) }} role="status">
+          <span>{buckets[hover].label}</span>
+          <strong>{formatMetric(hv, metric)}</strong>
+        </div>
+      )}
+    </div>
+  );
+}

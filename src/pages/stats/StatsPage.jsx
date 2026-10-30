@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { DonutChart, Heatmap, HBars, Lines, SmallMultiples, StackedColumns } from './charts';
-import { CountUp } from '../../components/Charts';
+import Overview from './Overview';
 import { shortCompanyName } from '../../components/CompanyTabs';
 import { useCatalog } from '../../lib/useCatalog';
 import { summaryMetrics, todayKey } from '../../lib/summaries';
@@ -62,27 +62,6 @@ function Seg({ options, value, onChange, label, disabledKeys = [] }) {
         </button>
       ))}
     </div>
-  );
-}
-
-function Delta({ now, before, rate }) {
-  if (before == null || now == null) return <span className="kpi-delta is-flat">Sin periodo anterior</span>;
-  if (rate) {
-    const diff = now - before;
-    const cls = Math.abs(diff) < 0.05 ? 'is-flat' : diff > 0 ? 'is-up' : 'is-down';
-    return (
-      <span className={`kpi-delta ${cls}`}>
-        {diff > 0 ? '▲' : diff < 0 ? '▼' : '•'} {Math.abs(diff).toFixed(1)} pts vs periodo anterior
-      </span>
-    );
-  }
-  if (!before) return <span className="kpi-delta is-flat">Sin datos del periodo anterior</span>;
-  const pct = ((now - before) / before) * 100;
-  const cls = Math.abs(pct) < 0.5 ? 'is-flat' : pct > 0 ? 'is-up' : 'is-down';
-  return (
-    <span className={`kpi-delta ${cls}`}>
-      {pct > 0 ? '▲' : pct < 0 ? '▼' : '•'} {Math.abs(pct).toFixed(1)}% vs periodo anterior
-    </span>
   );
 }
 
@@ -149,14 +128,6 @@ export default function StatsPage() {
     .map((se) => ({ ...se, value: companyTotals.has(se.slug) ? metricValue(companyTotals.get(se.slug), metric) : isRate ? null : 0 }))
     .sort((a, b) => (b.value ?? -1) - (a.value ?? -1));
 
-  const totalNow = scoped.reduce(addEntry, emptyTotals());
-  const totalPrev = scopedPrev.reduce(addEntry, emptyTotals());
-  const kpis = [
-    { key: 'appointments', label: 'Citas nuevas' },
-    { key: 'calls', label: 'Llamadas' },
-    { key: 'messages', label: 'Mensajes' },
-    { key: 'booking', label: '% de agendamiento', rate: true },
-  ];
 
   const possible = series.length * span;
   const coverage = possible ? Math.round((scoped.length / possible) * 100) : 0;
@@ -280,26 +251,25 @@ export default function StatsPage() {
 
       {error && <p className="co-card__issue">No se pudieron leer los resúmenes ({error}).</p>}
 
-      <div className="kpis">
-        {kpis.map((k, i) => {
-          const now = metricValue(totalNow, k.key);
-          const before = scopedPrev.length ? metricValue(totalPrev, k.key) : null;
-          return (
-            <div key={k.key} className={metric === k.key ? 'kpi is-active' : 'kpi'} style={{ '--i': i }}>
-              <button type="button" className="kpi__hit" onClick={() => setMetric(k.key)} aria-label={`Ver ${k.label} en las gráficas`} />
-              <span className="kpi__value">{k.rate ? (now == null ? '—' : `${now.toFixed(1)}%`) : <CountUp value={now || 0} />}</span>
-              <span className="kpi__label">{k.label}</span>
-              <Delta now={now} before={before} rate={k.rate} />
-            </div>
-          );
-        })}
-      </div>
+      <Overview
+        buckets={buckets}
+        grain={grain}
+        scoped={scoped}
+        scopedPrev={scopedPrev}
+        series={series}
+        metric={metric}
+        metricLabel={metricMeta.label}
+        onMetric={setMetric}
+        onPick={(sel) => pick({ ...sel, grain })}
+        today={today}
+        rangeTo={range.to}
+      />
 
       <section className="viz-card">
         <header className="viz-card__head">
           <div>
             <h2>
-              {metricMeta.label} por {GRAINS.find((g) => g.key === grain).label.toLowerCase()}
+              Comparar empresas: {metricMeta.label.toLowerCase()} por {GRAINS.find((g) => g.key === grain).label.toLowerCase()}
             </h2>
             <p>{isRate ? 'Citas nuevas entre mensajes más citas, por empresa.' : 'Suma de lo reportado en el Resumen del día. Toca una barra o un punto para auditar sus registros.'}</p>
           </div>
