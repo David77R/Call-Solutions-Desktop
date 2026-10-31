@@ -15,6 +15,8 @@ import {
   useDateSummaries,
   whatsappLink,
 } from '../../lib/summaries';
+import { useQualityEntries } from '../../lib/qualityControl';
+import { QualityDetail, QualityStrip } from './QualityStrip';
 import './Summary.css';
 
 function CompanyTrend({ slug, color }) {
@@ -26,7 +28,7 @@ function CompanyTrend({ slug, color }) {
   return <TrendBars data={data} color={color} title="Citas nuevas, últimos registros" />;
 }
 
-function CompanyCard({ company, entry, index }) {
+function CompanyCard({ company, entry, index, quality }) {
   const [open, setOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -41,6 +43,8 @@ function CompanyCard({ company, entry, index }) {
             <p className="co-card__pending">Sin resumen reportado para este día.</p>
           </div>
         </div>
+        <QualityStrip entries={quality} />
+        {quality.length > 0 && <QualityDetail entries={quality} />}
       </article>
     );
   }
@@ -100,6 +104,8 @@ function CompanyCard({ company, entry, index }) {
         </dl>
       </div>
 
+      <QualityStrip entries={quality} />
+
       {open && (
         <div className="co-card__detail">
           {completedBy.length > 0 && (
@@ -128,6 +134,7 @@ function CompanyCard({ company, entry, index }) {
           )}
           {entry.issues?.trim() && <p className="co-card__issue">{entry.issues.trim()}</p>}
           {entry.notes?.trim() && <p className="co-card__note">{entry.notes.trim()}</p>}
+          <QualityDetail entries={quality} />
           <CompanyTrend slug={company.slug} color={color} />
         </div>
       )}
@@ -165,6 +172,7 @@ export default function TotalsPage() {
   const { companies } = useCatalog();
   const [dateKey, setDateKey] = useState(todayKey());
   const { items } = useDateSummaries(dateKey);
+  const quality = useQualityEntries(dateKey);
   const [copied, setCopied] = useState(false);
   const isToday = dateKey === todayKey();
   const label = labelFromDateKey(dateKey);
@@ -187,6 +195,7 @@ export default function TotalsPage() {
     { label: 'Mensajes', value: totals.messages },
     { label: 'Citas nuevas', value: totals.appointments },
     { label: 'Confirmadas para mañana', value: totals.confirmed },
+    { label: 'Controles de calidad', value: quality.length },
   ];
 
   const copyAll = async () => {
@@ -230,7 +239,7 @@ export default function TotalsPage() {
           <button type="button" className="sf-ghost" onClick={copyAll}>
             {copied ? 'Copiado' : 'Copiar todo como texto'}
           </button>
-          <button type="button" className="sf-ghost" onClick={() => printHtml(buildDailyReportHtml(companies, items, label))}>
+          <button type="button" className="sf-ghost" onClick={() => printHtml(buildDailyReportHtml(companies, items, label, quality))}>
             Descargar PDF
           </button>
         </div>
@@ -249,7 +258,7 @@ export default function TotalsPage() {
 
       <div className="company-grid" key={`g-${dateKey}`}>
         {companies.map((c, i) => (
-          <CompanyCard key={c.slug} company={c} entry={items.find((e) => e.company_slug === c.slug) || null} index={i} />
+          <CompanyCard key={c.slug} company={c} entry={items.find((e) => e.company_slug === c.slug) || null} index={i} quality={quality.filter((q) => q.company_slug === c.slug)} />
         ))}
       </div>
     </div>

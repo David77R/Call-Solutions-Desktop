@@ -55,7 +55,30 @@ function renderDonut(color, messages, appointments) {
   `;
 }
 
-function renderCompanySection(company, entry) {
+const QC_LABELS = { good: ['Bien', '#1f9d63'], neutral: ['Regular', '#b88a00'], bad: ['Mal', '#c4372a'] };
+
+function escapeHtml(text) {
+  return String(text || '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+}
+
+function renderQuality(quality) {
+  if (!quality.length) return '';
+  const counts = Object.entries(QC_LABELS)
+    .map(([key, [label]]) => ({ label, n: quality.filter((q) => q.satisfaction === key).length }))
+    .filter((c) => c.n)
+    .map((c) => `${c.label}: ${c.n}`)
+    .join(' · ');
+  const lines = quality
+    .map((q) => {
+      const [label, color] = QC_LABELS[q.satisfaction] || ['Sin calificar', '#7c869c'];
+      const extra = [q.review_requested ? 'reseña pedida' : '', q.rescheduled ? `reagendado${q.reschedule_date ? ` para ${q.reschedule_date}` : ''}` : ''].filter(Boolean).join(', ');
+      return `<li><b style="color:${color}">${label}</b> · Cliente ${q.client_ordinal}${q.groomer_name ? ` de ${escapeHtml(q.groomer_name)}` : ''}, por ${q.contact_method}${q.feedback_text ? ` — “${escapeHtml(q.feedback_text)}”` : ''}${extra ? ` (${extra})` : ''}</li>`;
+    })
+    .join('');
+  return `<p class="subtitle">Control de calidad: ${quality.length} ${quality.length === 1 ? 'cliente' : 'clientes'} (${counts})</p><ul>${lines}</ul>`;
+}
+
+function renderCompanySection(company, entry, quality = []) {
   const color = company.color_primary || '#5474bc';
 
   if (!entry) {
@@ -63,6 +86,7 @@ function renderCompanySection(company, entry) {
       <section class="company">
         <h2 style="color:${color}">${company.name}</h2>
         <p class="pending">Sin resumen reportado hoy.</p>
+        ${renderQuality(quality)}
       </section>
     `;
   }
@@ -108,17 +132,18 @@ function renderCompanySection(company, entry) {
       ${confirmedGroomerLines ? `<p class="subtitle">Confirmadas por groomer</p><ul>${confirmedGroomerLines}</ul>` : ''}
       ${entry.issues && entry.issues.trim() ? `<p class="issue">⚠ ${entry.issues.trim()}</p>` : ''}
       ${entry.notes && entry.notes.trim() ? `<p class="notes">${entry.notes.trim()}</p>` : ''}
+      ${renderQuality(quality)}
     </section>
   `;
 }
 
-export function buildDailyReportHtml(companies, summaries, dateLabel) {
+export function buildDailyReportHtml(companies, summaries, dateLabel, quality = []) {
   const rows = companies.map((company) => ({
     company,
     entry: summaries.find((s) => s.company_slug === company.slug) || null,
   }));
 
-  const sections = rows.map((r) => renderCompanySection(r.company, r.entry)).join('');
+  const sections = rows.map((r) => renderCompanySection(r.company, r.entry, quality.filter((q) => q.company_slug === r.company.slug))).join('');
 
   return `
     <html>
