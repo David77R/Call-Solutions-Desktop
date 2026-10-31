@@ -1150,3 +1150,32 @@
   transform: translateY(-2px);
   box-shadow: 0 14px 30px -14px var(--accent, var(--moon));
 }
+
+.sf-draft {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding: 10px 14px;
+  border: 1px solid rgba(242, 201, 76, 0.45);
+  border-radius: var(--radius-md, 14px);
+  background: rgba(242, 201, 76, 0.1);
+  font-size: 13.5px;
+  animation: rise-in 320ms ease both;
+}
+
+.sf-draft button {
+  border: 0;
+  background: transparent;
+  color: var(--text-soft);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.sf-draft button:hover {
+  color: var(--text);
+}

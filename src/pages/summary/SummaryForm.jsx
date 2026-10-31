@@ -7,6 +7,7 @@ import SummaryQuality from './SummaryQuality';
 import SummaryCounter from './SummaryCounter';
 import { useAuth } from '../../lib/AuthContext';
 import { totalOf, countsOf, useDayCounters } from '../../lib/counters';
+import { clearDraft, readDraft, writeDraft } from '../../lib/summaryDrafts';
 
 function emptyGroomer(name = '') {
   return { name, completedCount: '', confirmedCount: '', absentToday: false, absentTomorrow: false };
@@ -48,7 +49,23 @@ function formFromEntry(entry, roster, author) {
 }
 
 export default function SummaryForm({ company, combined, roster, baseEntry, authorName, dateKey, onSaved, onCancel = null }) {
-  const [form, setForm] = useState(() => formFromEntry(baseEntry, roster, authorName));
+  const baseSavedAt = baseEntry?.saved_at || null;
+  const [clean] = useState(() => JSON.stringify(formFromEntry(baseEntry, roster, authorName)));
+  const [restored, setRestored] = useState(() => {
+    const draft = readDraft(company.slug, dateKey, baseSavedAt);
+    return draft && JSON.stringify(draft.form) !== clean ? draft : null;
+  });
+  const [form, setForm] = useState(() => restored?.form || JSON.parse(clean));
+
+  useEffect(() => {
+    if (JSON.stringify(form) !== clean) writeDraft(company.slug, dateKey, baseSavedAt, form);
+  }, [form, clean, company.slug, dateKey, baseSavedAt]);
+
+  const discardDraft = () => {
+    clearDraft(company.slug, dateKey);
+    setRestored(null);
+    setForm(JSON.parse(clean));
+  };
   const [status, setStatus] = useState('idle');
   const [copied, setCopied] = useState(false);
   const id = useId();
@@ -103,6 +120,7 @@ export default function SummaryForm({ company, combined, roster, baseEntry, auth
     try {
       const audit = baseEntry ? { edited_by: form.author, edited_at: new Date().toISOString() } : {};
       const entry = await saveSummary(company, form.author, { ...form, messagesCombined: combined, ...audit }, dateKey);
+      clearDraft(company.slug, dateKey);
       setStatus('saved');
       onSaved?.(entry);
     } catch {
@@ -127,6 +145,15 @@ export default function SummaryForm({ company, combined, roster, baseEntry, auth
           <label htmlFor={`${id}-author`}>Autor del resumen</label>
           <input id={`${id}-author`} className="sf-input" value={form.author} onChange={(e) => set('author')(e.target.value)} />
         </div>
+
+        {restored && (
+          <div className="sf-draft" role="status">
+            <span>Recuperamos lo que tenías sin guardar de este resumen.</span>
+            <button type="button" onClick={discardDraft}>
+              Descartar y empezar de nuevo
+            </button>
+          </div>
+        )}
 
         <SummaryCounter agents={agents} uid={user?.uid} combined={combined} source={form.counter_source} onUse={applyCounter} />
 
@@ -214,7 +241,14 @@ export default function SummaryForm({ company, combined, roster, baseEntry, auth
             {status === 'saving' ? 'Guardando…' : status === 'saved' ? 'Resumen guardado' : baseEntry ? 'Guardar cambios' : 'Guardar resumen'}
           </button>
           {onCancel && (
-            <button type="button" className="sf-cancel" onClick={onCancel}>
+            <button
+              type="button"
+              className="sf-cancel"
+              onClick={() => {
+                clearDraft(company.slug, dateKey);
+                onCancel();
+              }}
+            >
               Cancelar edición
             </button>
           )}

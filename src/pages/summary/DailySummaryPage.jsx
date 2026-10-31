@@ -4,6 +4,7 @@ import CompanyTabs from '../../components/CompanyTabs';
 import { TrendBars } from '../../components/Charts';
 import SummaryForm from './SummaryForm';
 import SavedSummary from './SavedSummary';
+import { hasDraft } from '../../lib/summaryDrafts';
 import { useCatalog } from '../../lib/useCatalog';
 import { useAuth } from '../../lib/AuthContext';
 import { accentTokens } from '../../lib/color';
@@ -83,12 +84,15 @@ export default function DailySummaryPage() {
   const [toast, setToast] = useState(false);
   const [editing, setEditing] = useState(false);
   const [lastSave, setLastSave] = useState(null);
+  const [, setDraftTick] = useState(0);
 
   const company = companies.find((c) => c.slug === slug) || companies[0] || null;
   const { items, loading } = useCompanySummaries(company?.slug);
   const today = todayKey();
   const targetKey = editingKey || today;
   const baseEntry = items.find((i) => i.date_key === targetKey) || null;
+  const draftOpen = Boolean(company && baseEntry && hasDraft(company.slug, targetKey, baseEntry.saved_at));
+  const showForm = !baseEntry || editing || draftOpen;
   const trend = items
     .slice(0, 7)
     .reverse()
@@ -131,7 +135,7 @@ export default function DailySummaryPage() {
                 Volver a hoy
               </button>
             </>
-          ) : baseEntry && editing ? (
+          ) : baseEntry && showForm ? (
             <>Editando el resumen de hoy de {company?.name}. Al guardar queda registrado quién lo editó.</>
           ) : baseEntry ? (
             <>{labelFromDateKey(today)}</>
@@ -142,7 +146,7 @@ export default function DailySummaryPage() {
       </div>
 
       <div className="summary__layout">
-        {company && !loading && baseEntry && !editing ? (
+        {company && !loading && !showForm ? (
           <SavedSummary
             key={`${company.slug}-${targetKey}`}
             entry={baseEntry}
@@ -172,7 +176,14 @@ export default function DailySummaryPage() {
               setTimeout(() => setToast(false), 3200);
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            onCancel={baseEntry ? () => setEditing(false) : null}
+            onCancel={
+              baseEntry
+                ? () => {
+                    setEditing(false);
+                    setDraftTick((t) => t + 1);
+                  }
+                : null
+            }
           />
         ) : (
           <div className="summary__loading">Cargando…</div>
