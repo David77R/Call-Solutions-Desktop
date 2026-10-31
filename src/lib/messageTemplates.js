@@ -18,7 +18,11 @@ function subscribe(listener) {
     onSnapshot(
       doc(db, 'messageTemplates', 'main'),
       (snap) => {
-        const items = snap.exists() && Array.isArray(snap.data().items) ? snap.data().items : DEFAULT_TEMPLATES;
+        const data = snap.exists() ? snap.data() : null;
+        const stored = data && Array.isArray(data.items) ? data.items : null;
+        const removed = new Set(data?.removed || []);
+        const ids = new Set((stored || []).map((t) => t.id));
+        const items = stored ? [...stored, ...DEFAULT_TEMPLATES.filter((t) => !ids.has(t.id) && !removed.has(t.id))] : DEFAULT_TEMPLATES;
         snapshot = { items, fromServer: snap.exists() };
         listeners.forEach((l) => l());
       },

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { collection, doc, getDocFromServer, onSnapshot, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
+import { DEFAULT_TEMPLATES } from '../data/messageTemplates';
 
 function stable(value) {
   if (Array.isArray(value)) return `[${value.map(stable).join(',')}]`;
@@ -35,7 +36,9 @@ export function saveCallFlow(flow) {
 }
 
 export function saveMessageTemplates(items) {
-  return setAndVerify(doc(db, 'messageTemplates', 'main'), { items });
+  const ids = new Set(items.map((t) => t.id));
+  const removed = DEFAULT_TEMPLATES.map((t) => t.id).filter((id) => !ids.has(id));
+  return setAndVerify(doc(db, 'messageTemplates', 'main'), { items, removed });
 }
 
 export function saveRoster(slug, names) {

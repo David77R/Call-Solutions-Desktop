@@ -84,6 +84,27 @@ export const DEFAULT_TEMPLATES = [
     en: 'Your appointment on {fecha} with {empresa} has been cancelled. Whenever you would like to book again, write to us here.',
   },
   {
+    id: 'control-calidad',
+    group: 'despues',
+    title: 'Control de calidad',
+    es: 'Hola, le escribe {agente} de {empresa}. Queremos saber cómo le fue a {mascota} con {groomer} en su servicio de grooming. ¿Quedó satisfecho con el resultado? Su opinión es muy importante para nosotros y nos ayuda a seguir mejorando.',
+    en: "Hi, this is {agente} from {empresa}. We'd love to know how {mascota}'s grooming went with {groomer}. Were you happy with the result? Your feedback is very important to us and helps us keep improving.",
+  },
+  {
+    id: 'resena-control',
+    group: 'despues',
+    title: 'Pedir reseña después del control',
+    es: '¡Muchas gracias por su comentario! Nos alegra mucho saber que {mascota} quedó feliz con su servicio. Si tiene un minuto, nos ayudaría muchísimo que comparta su experiencia en una reseña: {link}\n\n¡Gracias por confiar en {empresa}!',
+    en: "Thank you so much for your feedback! We're so glad to hear {mascota} was happy with the service. If you have a minute, sharing your experience in a review would help us a lot: {link}\n\nThank you for trusting {empresa}!",
+  },
+  {
+    id: 'proxima-cita',
+    group: 'despues',
+    title: 'Agendar próxima cita (4 a 5 semanas)',
+    es: 'Para mantener a {mascota} con su pelaje sano y bien cuidado, le recomendamos su próximo grooming en 4 a 5 semanas. Contamos con horarios flexibles y podemos dejarle la cita reservada desde ya. Un día antes le escribiremos para confirmarla.\n\n¿Le gustaría que se la agendemos? Responda SÍ con el día y la hora que mejor le queden.',
+    en: "To keep {mascota}'s coat healthy and well groomed, we recommend the next grooming in 4 to 5 weeks. We have flexible schedules and can reserve the appointment for you right now. We'll message you the day before to confirm it.\n\nWould you like us to book it? Reply YES with the day and time that work best for you.",
+  },
+  {
     id: 'gracias',
     group: 'despues',
     title: 'Agradecimiento',
