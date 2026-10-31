@@ -5,6 +5,7 @@ import { useCatalog } from '../lib/useCatalog';
 import { useAuth } from '../lib/AuthContext';
 import { useGroomerRosters } from '../lib/useGroomerRosters';
 import RemarketingComposer from './RemarketingComposer';
+import { useReviewLinks } from '../lib/reviewLinks';
 import { buildGroomingOptions, groomingSizes, hasGroomingOptions } from '../lib/groomingOptions';
 import { accentTokens } from '../lib/color';
 import { AUTO_FIELDS, FIELD_LABELS, TEMPLATE_GROUPS } from '../data/messageTemplates';
@@ -200,7 +201,7 @@ function MessageCard({ template, lang, auto, roster, index, flash, onCopied }) {
             ) : (
               <label key={key} className="msg-field">
                 <span>{fieldLabel(key)}</span>
-                <input value={values[key] || ''} onChange={(e) => setValues((v) => ({ ...v, [key]: e.target.value }))} />
+                <input value={values[key] ?? auto[key] ?? ''} onChange={(e) => setValues((v) => ({ ...v, [key]: e.target.value }))} />
               </label>
             ),
           )}
@@ -340,7 +341,8 @@ export default function MessagesDrawer() {
   }, [flashId]);
 
   const company = companies.find((c) => c.slug === slug) || null;
-  const auto = { empresa: company?.name || '', agente: (user?.displayName || '').split(' ')[0] };
+  const { links: reviewLinks } = useReviewLinks();
+  const auto = { empresa: company?.name || '', agente: (user?.displayName || '').split(' ')[0], ...(company && reviewLinks[company.slug] ? { link: reviewLinks[company.slug] } : {}) };
   const roster = company ? rosters[company.slug] || [] : [...new Set(Object.values(rosters).flat())];
 
   const groups = useMemo(() => {

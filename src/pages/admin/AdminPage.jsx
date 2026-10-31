@@ -4,6 +4,7 @@ import DescriptionsEditor from './DescriptionsEditor';
 import ScriptEditor from './ScriptEditor';
 import RostersEditor from './RostersEditor';
 import MessagesEditor from './MessagesEditor';
+import ReviewLinksEditor from './ReviewLinksEditor';
 import CompanyTabs from '../../components/CompanyTabs';
 import { useCatalog } from '../../lib/useCatalog';
 import { useServiceDescriptionsSync } from '../../lib/useServiceDescriptions';
@@ -170,6 +171,7 @@ export default function AdminPage() {
         {tab === 'prices' && company && <PricesEditor key={company.slug + JSON.stringify(company).length} company={company} />}
         {tab === 'descriptions' && <DescriptionsEditor key={JSON.stringify(descriptions).length} descriptions={descriptions} missing={missing} companies={companies} />}
         {tab === 'script' && <ScriptEditor key={JSON.stringify(flow).length} flow={flow} />}
+        {tab === 'messages' && <ReviewLinksEditor companies={companies} />}
         {tab === 'messages' && <MessagesEditor key={JSON.stringify(templates).length} items={templates} />}
         {tab === 'rosters' && company && <RostersEditor key={company.slug + (rosters[company.slug] || []).join()} company={company} names={rosters[company.slug] || []} />}
         {tab === 'agents' && <Agents />}

@@ -500,3 +500,41 @@
 .msg-ed__add {
   align-self: flex-start;
 }
+
+.review-links {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.review-links__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 10px 14px;
+}
+
+.review-links__row span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.review-links__row i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--co);
+}
+
+.review-links__row .is-invalid {
+  border-color: #ff8a7a;
+}
+
+.review-links__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
