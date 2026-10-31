@@ -5,6 +5,7 @@ import { useCatalog } from '../lib/useCatalog';
 import { useAuth } from '../lib/AuthContext';
 import { useGroomerRosters } from '../lib/useGroomerRosters';
 import RemarketingComposer from './RemarketingComposer';
+import { buildGroomingOptions, groomingSizes, hasGroomingOptions } from '../lib/groomingOptions';
 import { accentTokens } from '../lib/color';
 import { AUTO_FIELDS, FIELD_LABELS, TEMPLATE_GROUPS } from '../data/messageTemplates';
 import {
@@ -209,6 +210,70 @@ function MessageCard({ template, lang, auto, roster, index, flash, onCopied }) {
   );
 }
 
+const OPTIONS_ID = 'opciones-grooming';
+const OPTIONS_MATCH = /opci|grooming|precio|basic|full|bañ|bath/i;
+
+function GroomingOptionsCard({ company, rows, lang, index, onCopied }) {
+  const [size, setSize] = useState(null);
+  const [copied, setCopied] = useState(false);
+  const sizes = useMemo(() => (company ? groomingSizes(rows, company.slug) : []), [rows, company]);
+  const ready = company && hasGroomingOptions(company.slug);
+  const text = ready ? buildGroomingOptions(company.slug, sizes, size, lang) : '';
+
+  useEffect(() => setSize(null), [company?.slug]);
+
+  useEffect(() => {
+    if (!copied) return undefined;
+    const t = setTimeout(() => setCopied(false), COPIED_MS);
+    return () => clearTimeout(t);
+  }, [copied]);
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      onCopied(OPTIONS_ID);
+    } catch {
+      setCopied(false);
+    }
+  };
+
+  return (
+    <li className={`msg-card msg-card--options${copied ? ' is-copied' : ''}`} style={{ '--i': Math.min(index, 12) }}>
+      <div className="msg-card__head">
+        <span className="msg-card__title">Opciones de grooming{company ? ` · ${shortCompanyName(company.name)}` : ''}</span>
+        {ready && (
+          <button type="button" className="msg-card__copy" onClick={copy} aria-label="Copiar opciones de grooming">
+            {copied ? <CheckIcon size={16} /> : <CopyIcon size={16} />}
+            {copied ? 'Copiado' : 'Copiar'}
+          </button>
+        )}
+      </div>
+      {!company ? (
+        <p className="msg-card__hint">Elige una empresa arriba y se arma con sus servicios y precios.</p>
+      ) : !ready ? (
+        <p className="msg-card__hint">Esta empresa todavía no tiene opciones configuradas.</p>
+      ) : (
+        <>
+          {sizes.length > 0 && (
+            <div className="msg-sizes" role="group" aria-label="Talla de la mascota">
+              <button type="button" aria-pressed={size === null} onClick={() => setSize(null)}>
+                Desde
+              </button>
+              {sizes.map((s, i) => (
+                <button key={`${s.name}-${i}`} type="button" aria-pressed={size === i} onClick={() => setSize(i)} title={s.range.trim()}>
+                  {s.name}
+                </button>
+              ))}
+            </div>
+          )}
+          <p className="msg-card__text msg-card__text--pre">{text}</p>
+        </>
+      )}
+    </li>
+  );
+}
+
 export default function MessagesDrawer() {
   const { items } = useMessageTemplates();
   const { companies, rows } = useCatalog();
@@ -351,6 +416,9 @@ export default function MessagesDrawer() {
               <section key={g.key} className="msgs__group">
                 <h3>{g.label}</h3>
                 <ul>
+                  {g.key === 'antes' && (!query.trim() || OPTIONS_MATCH.test(query)) && (
+                    <GroomingOptionsCard company={company} rows={rows} lang={lang} index={index++} onCopied={(id) => setUsage(countUsage(id))} />
+                  )}
                   {g.items.map((t) => (
                     <MessageCard
                       key={`${t.id}-${lang}`}

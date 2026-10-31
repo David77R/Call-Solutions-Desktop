@@ -930,3 +930,45 @@
 .rmkt__count.is-long {
   color: var(--warn-text);
 }
+
+.msg-card--options {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  background:
+    radial-gradient(120% 80% at 100% 0%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 70%),
+    var(--raised);
+}
+
+.msg-card__hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.msg-sizes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.msg-sizes button {
+  min-height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-soft);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background-color 200ms ease,
+    border-color 200ms ease,
+    color 200ms ease;
+}
+
+.msg-sizes button[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 24%, transparent);
+  color: var(--text);
+}
