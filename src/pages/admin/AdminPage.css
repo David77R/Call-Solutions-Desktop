@@ -538,3 +538,7 @@
   justify-content: flex-end;
   gap: 10px;
 }
+
+.review-links h4 {
+  text-transform: none;
+}
