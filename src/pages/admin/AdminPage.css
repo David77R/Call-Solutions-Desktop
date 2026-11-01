@@ -542,3 +542,17 @@
 .review-links h4 {
   text-transform: none;
 }
+
+.review-links__found {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding: 10px 14px;
+  border: 1px solid rgba(95, 211, 154, 0.45);
+  border-radius: var(--radius-md, 14px);
+  background: rgba(95, 211, 154, 0.08);
+  font-size: 13.5px;
+  animation: rise-in 320ms ease both;
+}

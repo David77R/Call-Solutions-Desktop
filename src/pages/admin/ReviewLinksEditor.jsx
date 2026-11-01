@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { shortCompanyName } from '../../components/CompanyTabs';
 import { saveReviewLinks, useReviewLinks } from '../../lib/reviewLinks';
+import { useReminders } from '../../lib/reminders';
+import { findReviewLinks } from '../../lib/findReviewLinks';
 
 const looksLikeUrl = (v) => !v.trim() || /^https?:\/\/\S+$/i.test(v.trim());
 
@@ -8,6 +10,9 @@ export default function ReviewLinksEditor({ companies }) {
   const { links, loaded } = useReviewLinks();
   const [draft, setDraft] = useState(links);
   const [status, setStatus] = useState('idle');
+  const { items: reminders } = useReminders();
+  const found = findReviewLinks(reminders, companies);
+  const pending = companies.filter((c) => found[c.slug] && (draft[c.slug] || '').trim() !== found[c.slug].url);
 
   useEffect(() => {
     if (loaded) setDraft(links);
@@ -33,6 +38,21 @@ export default function ReviewLinksEditor({ companies }) {
       <p className="admin-hint">
         Pega el link de Google Maps donde el cliente deja la reseña. Se pone solo en los mensajes que tienen <code className="msg-ed__token">{'{link}'}</code> cuando eliges esa empresa.
       </p>
+      {pending.length > 0 && (
+        <div className="review-links__found" role="status">
+          <span>
+            Encontré {pending.length === 1 ? 'un link de reseña' : `${pending.length} links de reseña`} en Recordatorios para{' '}
+            <strong>{pending.map((c) => shortCompanyName(c.name)).join(', ')}</strong>.
+          </span>
+          <button
+            type="button"
+            className="sf-chip"
+            onClick={() => setDraft((d) => ({ ...d, ...Object.fromEntries(pending.map((c) => [c.slug, found[c.slug].url])) }))}
+          >
+            Usar estos links
+          </button>
+        </div>
+      )}
       <div className="review-links__list">
         {companies.map((c) => {
           const value = draft[c.slug] || '';
