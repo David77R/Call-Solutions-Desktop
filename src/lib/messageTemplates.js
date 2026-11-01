@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from './firebase';
-import { DEFAULT_TEMPLATES } from '../data/messageTemplates';
+import { DEFAULT_TEMPLATES, LEGACY_TEXTS } from '../data/messageTemplates';
 
 const USAGE_KEY = 'ccs_message_usage';
 const LANG_KEY = 'ccs_message_lang';
@@ -22,7 +22,12 @@ function subscribe(listener) {
         const stored = data && Array.isArray(data.items) ? data.items : null;
         const removed = new Set(data?.removed || []);
         const ids = new Set((stored || []).map((t) => t.id));
-        const items = stored ? [...stored, ...DEFAULT_TEMPLATES.filter((t) => !ids.has(t.id) && !removed.has(t.id))] : DEFAULT_TEMPLATES;
+        const upgraded = (stored || []).map((t) => {
+          const fresh = DEFAULT_TEMPLATES.find((d) => d.id === t.id);
+          const old = LEGACY_TEXTS[t.id] || [];
+          return fresh && old.some((o) => o.es === t.es && o.en === t.en) ? { ...t, es: fresh.es, en: fresh.en } : t;
+        });
+        const items = stored ? [...upgraded, ...DEFAULT_TEMPLATES.filter((t) => !ids.has(t.id) && !removed.has(t.id))] : DEFAULT_TEMPLATES;
         snapshot = { items, fromServer: snap.exists() };
         listeners.forEach((l) => l());
       },

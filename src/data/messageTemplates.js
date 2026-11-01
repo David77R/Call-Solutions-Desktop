@@ -87,8 +87,8 @@ export const DEFAULT_TEMPLATES = [
     id: 'control-calidad',
     group: 'despues',
     title: 'Control de calidad',
-    es: 'Hola, le escribe {agente} de {empresa}. Queremos saber cómo le fue a {mascota} con {groomer} en su servicio de grooming. ¿Quedó satisfecho con el resultado? Su opinión es muy importante para nosotros y nos ayuda a seguir mejorando.',
-    en: "Hi, this is {agente} from {empresa}. We'd love to know how {mascota}'s grooming went with {groomer}. Were you happy with the result? Your feedback is very important to us and helps us keep improving.",
+    es: 'Hola, le escribe {agente} de {empresa}. Queremos saber cómo le fue a {mascota} con {groomer} en su servicio de grooming. ¿Quedó satisfecho con el resultado? Su opinión es muy importante para nosotros y nos ayuda a seguir mejorando.\n\nSi quedó contento con el servicio, nos ayudaría muchísimo que nos deje una reseña aquí: {link}',
+    en: "Hi, this is {agente} from {empresa}. We'd love to know how {mascota}'s grooming went with {groomer}. Were you happy with the result? Your feedback is very important to us and helps us keep improving.\n\nIf you were happy with the service, it would mean a lot if you left us a review here: {link}",
   },
   {
     id: 'resena-control',
@@ -101,8 +101,8 @@ export const DEFAULT_TEMPLATES = [
     id: 'proxima-cita',
     group: 'despues',
     title: 'Agendar próxima cita (4 a 5 semanas)',
-    es: 'Para mantener a {mascota} con su pelaje sano y bien cuidado, le recomendamos su próximo grooming en 4 a 5 semanas. Contamos con horarios flexibles y podemos dejarle la cita reservada desde ya. Un día antes le escribiremos para confirmarla.\n\n¿Le gustaría que se la agendemos? Responda SÍ con el día y la hora que mejor le queden.',
-    en: "To keep {mascota}'s coat healthy and well groomed, we recommend the next grooming in 4 to 5 weeks. We have flexible schedules and can reserve the appointment for you right now. We'll message you the day before to confirm it.\n\nWould you like us to book it? Reply YES with the day and time that work best for you.",
+    es: 'Para mantener a {mascota} con su pelaje sano y bien cuidado, le recomendamos su próximo grooming en 4 a 5 semanas. Contamos con horarios flexibles y podemos dejarle la cita reservada desde ya. Un día antes le escribiremos para confirmarla.\n\n¿Le gustaría que se la agendemos? Responda SÍ con el día y la hora que mejor le queden.\n\nY si aún no lo ha hecho, nos encantaría conocer su opinión en una reseña: {link}',
+    en: "To keep {mascota}'s coat healthy and well groomed, we recommend the next grooming in 4 to 5 weeks. We have flexible schedules and can reserve the appointment for you right now. We'll message you the day before to confirm it.\n\nWould you like us to book it? Reply YES with the day and time that work best for you.\n\nAnd if you haven't yet, we'd love to hear your thoughts in a review: {link}",
   },
   {
     id: 'gracias',
@@ -126,3 +126,8 @@ export const DEFAULT_TEMPLATES = [
     en: "The total for today's service is {monto}. Thank you for your business.",
   },
 ];
+
+export const LEGACY_TEXTS = {
+  'control-calidad': [{ es: 'Hola, le escribe {agente} de {empresa}. Queremos saber cómo le fue a {mascota} con {groomer} en su servicio de grooming. ¿Quedó satisfecho con el resultado? Su opinión es muy importante para nosotros y nos ayuda a seguir mejorando.', en: "Hi, this is {agente} from {empresa}. We'd love to know how {mascota}'s grooming went with {groomer}. Were you happy with the result? Your feedback is very important to us and helps us keep improving." }],
+  'proxima-cita': [{ es: 'Para mantener a {mascota} con su pelaje sano y bien cuidado, le recomendamos su próximo grooming en 4 a 5 semanas. Contamos con horarios flexibles y podemos dejarle la cita reservada desde ya. Un día antes le escribiremos para confirmarla.\n\n¿Le gustaría que se la agendemos? Responda SÍ con el día y la hora que mejor le queden.', en: "To keep {mascota}'s coat healthy and well groomed, we recommend the next grooming in 4 to 5 weeks. We have flexible schedules and can reserve the appointment for you right now. We'll message you the day before to confirm it.\n\nWould you like us to book it? Reply YES with the day and time that work best for you." }],
+};
