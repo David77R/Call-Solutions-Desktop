@@ -1,73 +1,42 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../lib/AuthContext';
 import { agentDisplayName, agentInitials } from '../lib/agents';
-import { isHeic, saveAgentPhoto, useAgentProfile } from '../lib/useAgentProfile';
+import { useAgentProfile } from '../lib/useAgentProfile';
+import ProfileDialog from './ProfileDialog';
 import './AgentCard.css';
-
-const PHOTO_ERRORS = {
-  'permission-denied': 'Firebase no deja guardar la foto. Revisa que la regla de "agents" esté publicada.',
-  unreadable: 'Esa imagen no se pudo abrir. Prueba con otra foto.',
-  timeout: 'La conexión está lenta y la foto no terminó de subir. Inténtalo de nuevo.',
-};
 
 export default function AgentCard() {
   const { user, logout } = useAuth();
   const profile = useAgentProfile(user);
-  const inputRef = useRef(null);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
+  const [open, setOpen] = useState(false);
   const name = user?.displayName || profile?.displayName || agentDisplayName(user);
-
-  const onFile = async (e) => {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file) return;
-    if (file.type && !file.type.startsWith('image/') && !isHeic(file)) {
-      setError('Elige una imagen (JPG o PNG).');
-      return;
-    }
-    setSaving(true);
-    setError('');
-    try {
-      await saveAgentPhoto(user, file);
-    } catch (err) {
-      setError(PHOTO_ERRORS[err?.code] || PHOTO_ERRORS[err?.message] || 'No se pudo guardar la foto. Inténtalo de nuevo.');
-    } finally {
-      setSaving(false);
-    }
-  };
 
   return (
     <div className="agent-card">
       <div className="agent-card__row">
-        <button
-          type="button"
-          className={saving ? 'agent-card__avatar is-saving' : 'agent-card__avatar'}
-          onClick={() => inputRef.current?.click()}
-          aria-label={profile?.photo ? 'Cambiar foto de perfil' : 'Agregar foto de perfil'}
-        >
-          {profile?.photo ? (
-            <img key={profile.photo.length} src={profile.photo} alt="" className="agent-card__photo" />
-          ) : (
-            <span className="agent-card__initials">{agentInitials({ displayName: name })}</span>
-          )}
-          <span className="agent-card__camera" aria-hidden="true">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 8h3l2-3h6l2 3h3v11H4z" />
-              <circle cx="12" cy="13" r="3.5" />
-            </svg>
+        <button type="button" className="agent-card__open" onClick={() => setOpen(true)} aria-label={`Ver y editar el perfil de ${name}`}>
+          <span className="agent-card__avatar">
+            {profile?.photo ? (
+              <img key={profile.photo.length} src={profile.photo} alt="" className="agent-card__photo" />
+            ) : (
+              <span className="agent-card__initials">{agentInitials({ displayName: name })}</span>
+            )}
+            <span className="agent-card__camera" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" />
+              </svg>
+            </span>
+          </span>
+          <span className="agent-card__text">
+            <span className="agent-card__name">{name}</span>
+            <span className="agent-card__role">{profile?.role || 'Agente'}</span>
           </span>
         </button>
-        <input ref={inputRef} type="file" accept="image/*,.heic,.heif" hidden onChange={onFile} />
-        <span className="agent-card__text">
-          <span className="agent-card__name">{name}</span>
-          <span className="agent-card__role">Agente</span>
-        </span>
         <button type="button" className="agent-card__logout" onClick={logout}>
           Salir
         </button>
       </div>
-      {error && <p className="agent-card__error">{error}</p>}
+      {open && <ProfileDialog profile={profile} onClose={() => setOpen(false)} />}
     </div>
   );
 }

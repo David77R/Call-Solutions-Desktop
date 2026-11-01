@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
+import { EmailAuthProvider, createUserWithEmailAndPassword, onAuthStateChanged, reauthenticateWithCredential, signInWithEmailAndPassword, signOut, updatePassword, updateProfile } from 'firebase/auth';
 import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { agentEmail } from './agents';
@@ -34,6 +34,17 @@ export function AuthProvider({ children }) {
         setState({ user: auth.currentUser, loading: false });
       },
       logout: () => signOut(auth),
+      rename: async (displayName) => {
+        if (!auth.currentUser) return;
+        await updateProfile(auth.currentUser, { displayName });
+        setState({ user: auth.currentUser, loading: false });
+      },
+      changePassword: async (current, next) => {
+        const u = auth.currentUser;
+        if (!u?.email) throw new Error('no-user');
+        await reauthenticateWithCredential(u, EmailAuthProvider.credential(u.email, current));
+        await updatePassword(u, next);
+      },
     }),
     [state]
   );

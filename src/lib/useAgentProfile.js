@@ -98,3 +98,16 @@ export async function saveAgentPhoto(user, file) {
   const photo = canvas.toDataURL('image/jpeg', AVATAR_QUALITY);
   await withTimeout(setDoc(doc(db, 'agents', user.uid), { photo, photoUpdatedAt: serverTimestamp() }, { merge: true }));
 }
+
+export async function saveAgentProfile(user, fields) {
+  const data = {};
+  if (fields.displayName !== undefined) data.displayName = fields.displayName;
+  if (fields.role !== undefined) data.role = fields.role;
+  data.profileUpdatedAt = serverTimestamp();
+  const write = setDoc(doc(db, 'agents', user.uid), data, { merge: true });
+  await Promise.race([write, new Promise((resolve) => setTimeout(resolve, 4000))]);
+}
+
+export async function removeAgentPhoto(user) {
+  await withTimeout(setDoc(doc(db, 'agents', user.uid), { photo: null, photoUpdatedAt: serverTimestamp() }, { merge: true }));
+}
