@@ -40,6 +40,18 @@ export function saveMazeScore(agentName, score) {
   }).catch(() => {});
 }
 
+export function saveCatScore(agentName, score, result, level) {
+  if (!agentName?.trim() || score <= 0) return Promise.resolve();
+  return setDoc(doc(db, 'catArtilleryScores', makeId()), {
+    agent_name: agentName.trim(),
+    score,
+    result,
+    level,
+    date_key: todayKey(),
+    played_at: new Date().toISOString(),
+  }).catch(() => {});
+}
+
 function useWeekTotals(collectionName) {
   const [totals, setTotals] = useState({});
   useEffect(
@@ -67,8 +79,15 @@ function useWeekTotals(collectionName) {
 export function useLeaderboard() {
   const trivia = useWeekTotals('triviaScores');
   const maze = useWeekTotals('mazeScores');
-  const names = new Set([...Object.keys(trivia), ...Object.keys(maze)]);
+  const cats = useWeekTotals('catArtilleryScores');
+  const names = new Set([...Object.keys(trivia), ...Object.keys(maze), ...Object.keys(cats)]);
   return [...names]
-    .map((name) => ({ name, trivia: trivia[name] || 0, maze: maze[name] || 0, total: (trivia[name] || 0) + (maze[name] || 0) }))
+    .map((name) => ({
+      name,
+      trivia: trivia[name] || 0,
+      maze: maze[name] || 0,
+      cats: cats[name] || 0,
+      total: (trivia[name] || 0) + (maze[name] || 0) + (cats[name] || 0),
+    }))
     .sort((a, b) => b.total - a.total);
 }

@@ -28,6 +28,7 @@ export default function Leaderboard({ agentName }) {
             <th scope="col">Agente</th>
             <th scope="col">Trivia</th>
             <th scope="col">Laberinto</th>
+            <th scope="col">Gatos</th>
             <th scope="col">Total</th>
           </tr>
         </thead>
@@ -38,6 +39,7 @@ export default function Leaderboard({ agentName }) {
               <td>{r.name}</td>
               <td>{r.trivia}</td>
               <td>{r.maze}</td>
+              <td>{r.cats}</td>
               <td>
                 <strong>{r.total}</strong>
               </td>
@@ -45,7 +47,7 @@ export default function Leaderboard({ agentName }) {
           ))}
         </tbody>
       </table>
-      <p className="lb__note">Se reinicia cada lunes. Suma los puntos de la app móvil y de escritorio.</p>
+      <p className="lb__note">Se reinicia cada lunes. Suma trivia, laberinto y gatos de la app móvil y de escritorio.</p>
     </div>
   );
 }

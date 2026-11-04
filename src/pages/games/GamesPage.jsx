@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import TriviaGame from './TriviaGame';
 import MazeGame from './MazeGame';
+import CatArtilleryGame from './CatArtilleryGame';
 import Leaderboard from './Leaderboard';
 import { useCatalog } from '../../lib/useCatalog';
 import { useGroomerRosters } from '../../lib/useGroomerRosters';
@@ -10,6 +11,7 @@ import './Games.css';
 const TABS = [
   { key: 'trivia', label: 'Trivia' },
   { key: 'maze', label: 'Laberinto' },
+  { key: 'cats', label: 'Gatos' },
   { key: 'board', label: 'Leaderboard' },
 ];
 
@@ -37,6 +39,7 @@ export default function GamesPage() {
       <div className="games__stage" key={tab}>
         {tab === 'trivia' && <TriviaGame companies={companies} rosters={rosters} agentName={agentName} />}
         {tab === 'maze' && <MazeGame agentName={agentName} />}
+        {tab === 'cats' && <CatArtilleryGame agentName={agentName} />}
         {tab === 'board' && <Leaderboard agentName={agentName} />}
       </div>
     </div>
