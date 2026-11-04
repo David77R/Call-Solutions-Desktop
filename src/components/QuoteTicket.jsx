@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { wikiForBreedName } from '../lib/breedWiki';
 import AnimatedPrice from './AnimatedPrice';
 import ZonePicker from './ZonePicker';
-import { AlertIcon, CatIcon, ChatIcon, CheckIcon, CloseIcon, CoatIcon, CopyIcon, PawIcon, StarIcon, ToothIcon } from './Icons';
+import { AlertIcon, CatIcon, ChatIcon, CheckIcon, CloseIcon, CoatIcon, CopyIcon, GemIcon, PawIcon, StarIcon, ToothIcon } from './Icons';
+import { gemFor, gemForRow } from '../lib/gems';
 import { coatDescriptions } from '../data/coats';
 import { getServiceDescription } from '../data/serviceDescriptions';
 import { breedCoat, isDentalCleaning, isDiscountEligible, itemKey, labelWithRange, parsePrice } from '../lib/search';
@@ -80,14 +81,11 @@ function FilledTicket({ item, descriptions, rows, breedFromQuery, lang, onLangCh
 
   const option = isBundle ? item.options?.[optionIndex] : null;
   const title = isBundle ? item.breed : labelWithRange(item);
-  const subtitle = isBundle
-    ? item.weight_min_lbs != null
-      ? `${item.weight_min_lbs}-${item.weight_max_lbs} lbs`
-      : null
-    : item.category_name;
+  const subtitle = isBundle ? (item.weight_min_lbs != null ? `${item.weight_min_lbs}-${item.weight_max_lbs} lbs` : null) : item.category_name;
   const coat = item.coat || breedCoat(breedFromQuery);
   const dentalCleaning = isBundle ? isDentalCleaning({ label: option?.name }) : isDentalCleaning(item);
   const doubleCoat = !item.is_cat && !dentalCleaning && coat === 'doble_capa';
+  const gem = isBundle ? gemFor(item.company_slug, option?.name) : gemForRow(item);
   const priceText = isBundle ? option?.price : item.price_display;
   const needsReview = isBundle ? option?.needs_review : item.needs_review;
   const specialtyLabel = !isBundle && /raza especial|double-coated|special breed/i.test(item.category_name || '') ? (item.label || '').split(' - ')[0].split(' (')[0].trim() : '';
@@ -187,8 +185,14 @@ function FilledTicket({ item, descriptions, rows, breedFromQuery, lang, onLangCh
       </header>
 
       <div className="ticket__titles">
-        {(item.is_cat || dentalCleaning || doubleCoat) && (
+        {(item.is_cat || dentalCleaning || doubleCoat || gem) && (
           <div className="ticket__tags">
+            {gem && (
+              <span className="ticket__cat ticket__tag--gem" style={{ '--gem': gem.color }}>
+                <GemIcon gem={gem} size={16} />
+                {gem.name}
+              </span>
+            )}
             {item.is_cat && (
               <span className="ticket__cat">
                 <CatIcon size={16} />
@@ -353,7 +357,12 @@ function FilledTicket({ item, descriptions, rows, breedFromQuery, lang, onLangCh
       </div>
 
       {suggestionAvailable && (
-        <button type="button" className={suggestionOpen ? 'suggestion-toggle is-open' : 'suggestion-toggle'} aria-expanded={suggestionOpen} onClick={() => setSuggestionOpen((o) => !o)}>
+        <button
+          type="button"
+          className={suggestionOpen ? 'suggestion-toggle is-open' : 'suggestion-toggle'}
+          aria-expanded={suggestionOpen}
+          onClick={() => setSuggestionOpen((o) => !o)}
+        >
           <PawIcon size={18} />
           <span>Sugerencia para {breedFromQuery || 'esta raza'}</span>
           <span className="suggestion-toggle__chev" aria-hidden="true" />

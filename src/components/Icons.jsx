@@ -1,17 +1,6 @@
 function Svg({ size = 18, children, ...rest }) {
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      {...rest}
-    >
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...rest}>
       {children}
     </svg>
   );
@@ -143,5 +132,34 @@ export function CoatIcon(props) {
       <path d="M3 9c2.5-2.5 5.5-2.5 9 0s6.5 2.5 9 0" />
       <path d="M3 15c2.5-2.5 5.5-2.5 9 0s6.5 2.5 9 0" />
     </Svg>
+  );
+}
+
+export function GemIcon({ gem, size = 16, ...props }) {
+  if (!gem) return null;
+  if (gem.round) {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" {...props}>
+        <circle cx="12" cy="12" r="9" fill={gem.color} stroke={gem.dark} strokeWidth="1.2" />
+        <circle cx="12" cy="12" r="9" fill="url(#pearl-sheen)" opacity="0.5" />
+        <defs>
+          <radialGradient id="pearl-sheen" cx="35%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#ffffff" />
+            <stop offset="55%" stopColor="#f6d7e6" stopOpacity="0.4" />
+            <stop offset="100%" stopColor={gem.dark} stopOpacity="0.6" />
+          </radialGradient>
+        </defs>
+        <ellipse cx="9" cy="8.5" rx="2.6" ry="1.6" fill="#ffffff" opacity="0.9" transform="rotate(-30 9 8.5)" />
+      </svg>
+    );
+  }
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" {...props}>
+      <path d="M7 3.5h10l4.5 5.5L12 21 2.5 9z" fill={gem.color} stroke={gem.dark} strokeWidth="1.2" strokeLinejoin="round" />
+      <path d="M2.5 9h19" stroke={gem.dark} strokeWidth="1" opacity="0.7" />
+      <path d="M7 3.5 9.5 9 12 21l2.5-12L17 3.5" fill="none" stroke={gem.dark} strokeWidth="1" strokeLinejoin="round" opacity="0.7" />
+      <path d="M9.5 9 12 3.5 14.5 9z" fill={gem.light} opacity="0.85" />
+      <path d="M2.5 9 7 3.5 9.5 9z" fill={gem.light} opacity="0.45" />
+    </svg>
   );
 }

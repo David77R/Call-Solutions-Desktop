@@ -1,6 +1,7 @@
 import { isDentalCleaning, isDoubleCoat, itemKey, labelWithRange } from '../../lib/search';
 import fifo from '../../assets/fifo.webp';
-import { CatIcon, CoatIcon, ToothIcon } from '../../components/Icons';
+import { CatIcon, CoatIcon, GemIcon, ToothIcon } from '../../components/Icons';
+import { gemForRow } from '../../lib/gems';
 
 function groupByCompany(results) {
   const groups = [];
@@ -16,8 +17,15 @@ function groupByCompany(results) {
 }
 
 function Badges({ row, breedName }) {
+  const gem = gemForRow(row);
   return (
     <span className="result__badges">
+      {gem && (
+        <span className="result__badge result__badge--gem" style={{ '--gem': gem.color }}>
+          <GemIcon gem={gem} size={13} />
+          {gem.name}
+        </span>
+      )}
       {isDentalCleaning(row) && (
         <span className="result__badge result__badge--dental">
           <ToothIcon size={13} />
@@ -81,8 +89,9 @@ export default function ResultsList({ results, query, selectedKey, onSelect, cat
             {group.rows.map((row) => {
               const key = itemKey(row);
               const i = order++;
+              const gem = gemForRow(row);
               return (
-                <li key={key} style={{ '--i': Math.min(i, 14) }}>
+                <li key={key} style={gem ? { '--i': Math.min(i, 14), '--row-color': gem.color } : { '--i': Math.min(i, 14) }}>
                   <button type="button" className={selectedKey === key ? 'result is-selected' : 'result'} onClick={() => onSelect(row)}>
                     <span className="result__text">
                       <span className="result__label">{labelWithRange(row)}</span>
