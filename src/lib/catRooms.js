@@ -14,12 +14,13 @@ function makeCode() {
   return Array.from({ length: 4 }, () => LETTERS[Math.floor(Math.random() * LETTERS.length)]).join('');
 }
 
-export async function createRoom(player, seed) {
+export async function createRoom(player, seed, arena) {
   const code = makeCode();
   const now = new Date().toISOString();
   const write = setDoc(doc(db, COLLECTION, code), {
     code,
     seed,
+    arena,
     status: 'waiting',
     host: player,
     guest: null,

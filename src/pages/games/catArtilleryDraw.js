@@ -39,24 +39,24 @@ export function drawSky(ctx, time) {
   ctx.fill();
 }
 
-export function drawWater(ctx, time) {
-  const water = ctx.createLinearGradient(0, WATER, 0, H);
+export function drawWater(ctx, time, level = WATER) {
+  const water = ctx.createLinearGradient(0, level, 0, H);
   water.addColorStop(0, '#2b6cb0');
   water.addColorStop(1, '#0b2a55');
   ctx.fillStyle = water;
-  ctx.fillRect(0, WATER, W, H - WATER);
+  ctx.fillRect(0, level, W, H - level);
   ctx.strokeStyle = 'rgba(255,255,255,0.35)';
   ctx.lineWidth = 2;
   ctx.beginPath();
   for (let x = 0; x <= W; x += 8) {
-    const y = WATER + Math.sin(x / 30 + time / 20) * 2;
+    const y = level + Math.sin(x / 30 + time / 20) * 2;
     if (x === 0) ctx.moveTo(x, y);
     else ctx.lineTo(x, y);
   }
   ctx.stroke();
 }
 
-export function drawTerrain(ctx, terrain, base) {
+export function drawTerrain(ctx, terrain, base, level = WATER) {
   const ice = ctx.createLinearGradient(0, 150, 0, H);
   ice.addColorStop(0, '#ffffff');
   ice.addColorStop(0.35, '#cfe8f8');
@@ -84,7 +84,7 @@ export function drawTerrain(ctx, terrain, base) {
     ctx.clip();
     ctx.strokeStyle = 'rgba(255,255,255,0.75)';
     ctx.lineWidth = 1.2;
-    for (let y = 150; y < WATER; y += 12) {
+    for (let y = 120; y < level; y += 12) {
       ctx.beginPath();
       ctx.moveTo(0, y);
       ctx.lineTo(W, y);
@@ -104,7 +104,7 @@ export function drawTerrain(ctx, terrain, base) {
   ctx.beginPath();
   let pen = false;
   for (let x = 0; x < W; x += 2) {
-    if (terrain[x] > WATER) {
+    if (terrain[x] > level) {
       pen = false;
       continue;
     }
@@ -342,6 +342,27 @@ export function drawProjectile(ctx, p) {
     ctx.beginPath();
     ctx.arc(0, 0, 3.5, 0.3, 2.6);
     ctx.stroke();
+  } else if (p.kind === 'drill') {
+    ctx.rotate(Math.atan2(p.vy, p.vx));
+    ctx.fillStyle = '#8fa3bf';
+    ctx.fillRect(-12, -5, 10, 10);
+    ctx.fillStyle = '#5ef2ff';
+    ctx.beginPath();
+    ctx.moveTo(-2, -6);
+    ctx.lineTo(13, 0);
+    ctx.lineTo(-2, 6);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#1a6f86';
+    ctx.lineWidth = 1.2;
+    const spin = (p.age % 6) * 2;
+    for (let k = 0; k < 3; k += 1) {
+      const x = spin + k * 4 - 2;
+      ctx.beginPath();
+      ctx.moveTo(x, -5 + x / 3);
+      ctx.lineTo(x + 2, 5 - x / 3);
+      ctx.stroke();
+    }
   } else if (p.kind === 'icicle') {
     ctx.rotate(Math.atan2(p.vy, p.vx));
     ctx.fillStyle = '#bfefff';
@@ -361,6 +382,92 @@ export function drawProjectile(ctx, p) {
     ctx.arc(0, 0, 7, 0, Math.PI * 2);
     ctx.fill();
   }
+  ctx.restore();
+}
+
+function drawBarrel(ctx, o, time) {
+  ctx.save();
+  ctx.translate(o.x, o.y);
+  ctx.fillStyle = '#c2410c';
+  ctx.beginPath();
+  ctx.roundRect(-8, -9, 16, 18, 3);
+  ctx.fill();
+  ctx.fillStyle = '#7c2d12';
+  ctx.fillRect(-8, -5, 16, 2);
+  ctx.fillRect(-8, 3, 16, 2);
+  ctx.fillStyle = '#fde68a';
+  ctx.beginPath();
+  ctx.ellipse(0, -1, 4, 2.2, 0, 0, Math.PI * 2);
+  ctx.moveTo(3, -1);
+  ctx.lineTo(6, -3);
+  ctx.lineTo(6, 1);
+  ctx.fill();
+  if (o.fuse > 0) {
+    ctx.fillStyle = time % 6 < 3 ? '#fff7ae' : '#ff9f1c';
+    ctx.beginPath();
+    ctx.arc(0, -12, 3 + (time % 4), 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawCrate(ctx, o) {
+  ctx.save();
+  ctx.translate(o.x, o.y);
+  if (o.chute) {
+    ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(-9, -9);
+    ctx.lineTo(-18, -34);
+    ctx.moveTo(9, -9);
+    ctx.lineTo(18, -34);
+    ctx.stroke();
+    ctx.fillStyle = o.type === 'heal' ? '#ff6b8a' : '#ffd166';
+    ctx.beginPath();
+    ctx.arc(0, -34, 20, Math.PI, 0);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.beginPath();
+    ctx.arc(0, -34, 20, Math.PI, Math.PI * 1.33);
+    ctx.lineTo(0, -34);
+    ctx.fill();
+  }
+  ctx.fillStyle = '#a16207';
+  ctx.fillRect(-10, -10, 20, 20);
+  ctx.strokeStyle = '#713f12';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(-10, -10, 20, 20);
+  ctx.fillStyle = o.type === 'heal' ? '#ff4d6d' : '#ffffff';
+  if (o.type === 'heal') {
+    ctx.fillRect(-2.5, -6, 5, 12);
+    ctx.fillRect(-6, -2.5, 12, 5);
+  } else {
+    ctx.beginPath();
+    ctx.arc(0, 0, 5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+export function drawObject(ctx, o, time) {
+  if (!o.alive) return;
+  if (o.kind === 'barrel') drawBarrel(ctx, o, time);
+  else drawCrate(ctx, o);
+}
+
+export function drawTexts(ctx, texts) {
+  ctx.save();
+  ctx.font = '800 15px Inter, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  texts.forEach((t) => {
+    ctx.globalAlpha = Math.min(1, t.life / 30);
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = 'rgba(5,3,32,0.8)';
+    ctx.strokeText(t.text, t.x, t.y);
+    ctx.fillStyle = t.color;
+    ctx.fillText(t.text, t.x, t.y);
+  });
   ctx.restore();
 }
 

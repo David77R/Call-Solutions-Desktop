@@ -1,10 +1,34 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import fifo from '../../assets/fifo.webp';
-import { H, TEAMS, TEAM_X, UNIT_R, W, WATER, WEAPONS, botShot, carve, groundAt, launchVelocity, makeMap, previewPath, scoreFor, stepProjectile, windFor } from './catArtillery';
-import { drawPreview, drawProjectile, drawSky, drawTerrain, drawUnit, drawUnitHud, drawWater } from './catArtilleryDraw';
+import {
+  BARREL,
+  H,
+  SUDDEN_DEATH_TURN,
+  TEAMS,
+  TEAM_X,
+  UNIT_R,
+  W,
+  WATER,
+  WATER_RISE,
+  WEAPONS,
+  botShot,
+  carve,
+  crateFor,
+  groundAt,
+  launchVelocity,
+  makeMap,
+  previewPath,
+  scoreFor,
+  stepProjectile,
+  windFor,
+} from './catArtillery';
+import { drawObject, drawPreview, drawProjectile, drawSky, drawTerrain, drawTexts, drawUnit, drawUnitHud, drawWater } from './catArtilleryDraw';
 import { finishRoom, pushShot, pushState, useRoom } from '../../lib/catRooms';
 
 const SIDE_COLORS = ['#ffb38a', '#9cc7ff'];
+const ENERGY = 90;
+const OBJECT_R = { barrel: 9, crate: 10 };
+const WEAPON_KEYS = WEAPONS.map((_, i) => String(i + 1));
 
 export function WeaponIcon({ kind, size = 26 }) {
   if (kind === 'fish') {
@@ -23,6 +47,15 @@ export function WeaponIcon({ kind, size = 26 }) {
         <circle cx="21" cy="20" r="6" fill="#f472b6" />
         <circle cx="16" cy="11" r="6" fill="#ff9ae6" />
         <path d="M12 9c3 1 5 3 6 6M8 18c3 0 5 2 6 5M18 18c3 0 5 2 6 5" stroke="#ffe0f6" strokeWidth="1.2" fill="none" />
+      </svg>
+    );
+  }
+  if (kind === 'drill') {
+    return (
+      <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden="true">
+        <rect x="3" y="11" width="10" height="10" rx="2" fill="#8fa3bf" />
+        <path d="M12 9l17 7-17 7z" fill="#5ef2ff" />
+        <path d="M16 11l2 10M21 13l1.5 6" stroke="#1a6f86" strokeWidth="1.6" strokeLinecap="round" />
       </svg>
     );
   }
@@ -55,6 +88,7 @@ function buildTeams(config, terrain) {
       cursor: -1,
       angle: side === 0 ? 45 : 135,
       power: 60,
+      energy: ENERGY,
       weapon: 0,
       ammo: WEAPONS.map((w) => w.ammo),
       units: def.units.map((u, i) => ({
@@ -81,11 +115,14 @@ function nextAlive(team, from) {
 }
 
 function newGame(config) {
-  const { terrain, base } = makeMap(config.seed);
+  const { terrain, base, objects } = makeMap(config.seed, config.arena);
   return {
     config,
     terrain,
     base,
+    objects,
+    water: WATER,
+    texts: [],
     teams: buildTeams(config, terrain),
     turnTeam: 0,
     turnNo: 0,
@@ -130,6 +167,8 @@ export default function CatArena({ config, onExit, onSave }) {
       power: Math.round(team.power),
       weapon: team.weapon,
       ammo: [...team.ammo],
+      energy: Math.round((team.energy / ENERGY) * 100),
+      rising: g.turnNo >= SUDDEN_DEATH_TURN - 1,
       controller: team.controller,
       teams: g.teams.map((t) => ({ name: t.name, label: t.label, units: t.units.map((u) => ({ name: u.name, hp: Math.max(0, Math.round(u.hp)), alive: u.alive })) })),
       activeUnit: team.cursor,
@@ -147,6 +186,11 @@ export default function CatArena({ config, onExit, onSave }) {
       const team = g.teams[g.turnTeam];
       const unit = team.units[team.cursor];
       if (!unit) return;
+      if (typeof params.x === 'number') unit.x = params.x;
+      unit.y = groundAt(g.terrain, unit.x) - UNIT_R;
+      unit.vy = 0;
+      unit.fallFrom = null;
+      unit.face = params.angle < 90 ? 1 : -1;
       const weaponIndex = team.ammo[params.weapon] > 0 ? params.weapon : 0;
       const weapon = WEAPONS[weaponIndex];
       team.ammo[weaponIndex] -= 1;
@@ -165,11 +209,12 @@ export default function CatArena({ config, onExit, onSave }) {
         weapon,
         side: g.turnTeam,
         fast: weapon.fast,
+        dig: 0,
       }));
       g.phase = 'flying';
       g.lastShooterHuman = team.controller === 'human';
       if (online && team.controller === 'human' && !fromRemote) {
-        pushShot(config.code, { n: g.turnNo, side: g.turnTeam, unit: team.cursor, angle: params.angle, power: params.power, weapon: weaponIndex });
+        pushShot(config.code, { n: g.turnNo, side: g.turnTeam, unit: team.cursor, x: unit.x, angle: params.angle, power: params.power, weapon: weaponIndex });
       }
       sync();
     },
@@ -180,7 +225,14 @@ export default function CatArena({ config, onExit, onSave }) {
     (g) => {
       const team = g.teams[g.turnTeam];
       team.cursor = nextAlive(team, team.cursor);
+      team.energy = ENERGY;
       g.wind = windFor(g.config.seed, g.turnNo);
+      if (g.turnNo > 0 && g.turnNo % 3 === 0) g.objects.push(crateFor(g.config.seed, g.turnNo));
+      const rise = Math.max(0, g.turnNo - SUDDEN_DEATH_TURN + 1);
+      if (rise > 0) {
+        g.water = Math.max(250, WATER - rise * WATER_RISE);
+        if (rise === 1) g.texts.push({ x: W / 2, y: 140, text: '¡Muerte súbita! El agua empieza a subir', color: '#9cc7ff', life: 150, vy: 0 });
+      }
       if (team.controller === 'bot') {
         g.phase = 'thinking';
         const enemies = g.teams[1 - g.turnTeam].units.filter((u) => u.alive);
@@ -234,6 +286,10 @@ export default function CatArena({ config, onExit, onSave }) {
         u.alive = hp > 0;
       }),
     );
+    (room.state.objs || []).forEach(([id, alive]) => {
+      const o = g.objects.find((ob) => ob.id === id);
+      if (o && !alive) o.alive = false;
+    });
     sync();
   }, [online, room, sync, hud]);
 
@@ -272,16 +328,44 @@ export default function CatArena({ config, onExit, onSave }) {
             u.vy -= 2;
             u.x += Math.sign(u.x - x || 1) * Math.min(18, (weapon.radius - Math.min(d, weapon.radius)) * 0.5);
             u.x = Math.max(16, Math.min(W - 16, u.x));
-            if (tSide !== side) g.dealt[side] += dmg;
+            if (side >= 0 && tSide !== side) g.dealt[side] += dmg;
           }
         }),
       );
+      g.objects.forEach((o) => {
+        if (!o.alive || Math.hypot(o.x - x, o.y - y) > weapon.radius + OBJECT_R[o.kind]) return;
+        if (o.kind === 'barrel') {
+          if (!o.fuse) {
+            o.fuse = 14;
+            o.by = side;
+          }
+        } else collect(g, o, side);
+      });
+    };
+
+    const collect = (g, o, side) => {
+      o.alive = false;
+      for (let i = 0; i < 14; i += 1) {
+        const a = (i / 14) * Math.PI * 2;
+        g.particles.push({ x: o.x, y: o.y, vx: Math.cos(a) * 2.5, vy: Math.sin(a) * 2.5 - 1.5, life: 34, c: i % 2 ? '#ffd166' : '#a16207' });
+      }
+      if (side < 0) return;
+      const team = g.teams[side];
+      if (o.type === 'heal') {
+        team.units.forEach((u) => {
+          if (u.alive) u.hp = Math.min(100, u.hp + 25);
+        });
+        g.texts.push({ x: o.x, y: o.y - 20, text: `+25 vida para ${team.name}`, color: '#ff8fab', life: 90, vy: -0.5 });
+      } else {
+        [1, 2, 4].forEach((i) => (team.ammo[i] += 1));
+        g.texts.push({ x: o.x, y: o.y - 20, text: `+1 munición para ${team.name}`, color: '#ffd166', life: 90, vy: -0.5 });
+      }
     };
 
     const finishIfOver = (g) => {
       g.teams.forEach((team) =>
         team.units.forEach((u) => {
-          if (u.alive && (u.hp <= 0 || u.y > WATER)) {
+          if (u.alive && (u.hp <= 0 || u.y > g.water)) {
             u.alive = false;
             u.hp = 0;
           }
@@ -306,7 +390,11 @@ export default function CatArena({ config, onExit, onSave }) {
 
     const endTurn = (g) => {
       if (online && g.lastShooterHuman) {
-        pushState(config.code, { n: g.turnNo, hp: g.teams.map((t) => t.units.map((u) => [Math.round(Math.max(0, u.hp) * 10) / 10, Math.round(u.x)])) });
+        pushState(config.code, {
+          n: g.turnNo,
+          hp: g.teams.map((t) => t.units.map((u) => [Math.round(Math.max(0, u.hp) * 10) / 10, u.x])),
+          objs: g.objects.map((o) => [o.id, o.alive ? 1 : 0]),
+        });
       }
       if (finishIfOver(g)) {
         sync();
@@ -324,17 +412,51 @@ export default function CatArena({ config, onExit, onSave }) {
           if (!u.alive) return;
           const ground = groundAt(g.terrain, u.x) - UNIT_R;
           if (u.y < ground - 0.5 || u.vy < 0) {
+            if (u.fallFrom == null) u.fallFrom = u.y;
             u.vy += 0.35;
             u.y = Math.min(ground, u.y + u.vy);
             if (u.y >= ground) u.vy = 0;
             moving = true;
           } else {
+            if (u.fallFrom != null) {
+              const drop = u.y - u.fallFrom;
+              if (drop > 45 && g.phase !== 'aim') {
+                const dmg = Math.min(40, (drop - 45) * 0.35);
+                u.hp -= dmg;
+                u.flash = 24;
+                g.texts.push({ x: u.x, y: u.y - 54, text: `-${Math.round(dmg)} caída`, color: '#ff8a7a', life: 60, vy: -0.6 });
+              }
+              u.fallFrom = null;
+            }
             u.y = ground;
             u.vy = 0;
           }
           if (u.flash > 0) u.flash -= 1;
         }),
       );
+      g.objects.forEach((o) => {
+        if (!o.alive) return;
+        if (o.fuse > 0) {
+          o.fuse -= 1;
+          moving = true;
+          if (o.fuse === 0) {
+            o.alive = false;
+            explode(g, o.x, o.y, BARREL, o.by ?? -1);
+            return;
+          }
+        }
+        const ground = groundAt(g.terrain, o.x) - OBJECT_R[o.kind];
+        if (o.y < ground - 0.5) {
+          o.vy = o.chute ? 2.4 : o.vy + 0.35;
+          o.y = Math.min(ground, o.y + o.vy);
+          if (!o.chute) moving = true;
+        } else {
+          o.y = ground;
+          o.vy = 0;
+          o.chute = false;
+        }
+        if (o.y > g.water) o.alive = false;
+      });
       return moving;
     };
 
@@ -359,16 +481,47 @@ export default function CatArena({ config, onExit, onSave }) {
         for (let step = 0; step < 2; step += 1) {
           g.projectiles.forEach((p) => {
             if (p.done) return;
-            stepProjectile(p, g.wind);
+            if (p.dig > 0) {
+              p.x += p.dx * 2.6;
+              p.y += p.dy * 2.6;
+              p.age += 1;
+              carve(g.terrain, p.x, p.y, 9);
+              p.dig -= 1;
+              if (p.dig === 0 || p.x < 0 || p.x >= W || p.y > g.water) {
+                p.done = true;
+                explode(g, p.x, p.y, p.weapon, p.side);
+                return;
+              }
+            } else {
+              stepProjectile(p, g.wind);
+            }
             if (p.x < -60 || p.x > W + 60 || p.y > H + 20) {
               p.done = true;
               return;
             }
-            if (p.y >= groundAt(g.terrain, p.x)) {
+            if (!p.dig && p.y >= groundAt(g.terrain, p.x)) {
+              if (p.weapon.drill) {
+                const speed = Math.hypot(p.vx, p.vy) || 1;
+                p.dx = p.vx / speed;
+                p.dy = Math.max(0.35, p.vy / speed);
+                const norm = Math.hypot(p.dx, p.dy);
+                p.dx /= norm;
+                p.dy /= norm;
+                p.dig = 26;
+                g.shake = 3;
+                return;
+              }
               p.done = true;
               explode(g, p.x, p.y, p.weapon, p.side);
               return;
             }
+            g.objects.forEach((o) => {
+              if (!p.done && o.alive && Math.hypot(p.x - o.x, p.y - o.y) < OBJECT_R[o.kind] + 5) {
+                p.done = true;
+                explode(g, p.x, p.y, p.weapon, p.side);
+              }
+            });
+            if (p.done) return;
             g.teams.forEach((t) =>
               t.units.forEach((u) => {
                 if (!p.done && u.alive && p.age > 6 && Math.hypot(p.x - u.x, p.y - u.y) < UNIT_R + 4) {
@@ -392,6 +545,11 @@ export default function CatArena({ config, onExit, onSave }) {
         pt.life -= 1;
         return pt.life > 0 && pt.y < H;
       });
+      g.texts = g.texts.filter((t) => {
+        t.y += t.vy;
+        t.life -= 1;
+        return t.life > 0;
+      });
       g.rings = g.rings.filter((r) => {
         r.r += (r.max - r.r) * 0.25;
         r.life -= 0.06;
@@ -408,8 +566,9 @@ export default function CatArena({ config, onExit, onSave }) {
         g.shake *= 0.88;
       }
       drawSky(ctx, g.time);
-      drawTerrain(ctx, g.terrain, g.base);
-      drawWater(ctx, g.time);
+      drawTerrain(ctx, g.terrain, g.base, g.water);
+      g.objects.forEach((o) => drawObject(ctx, o, g.time));
+      drawWater(ctx, g.time, g.water);
       const active = team.units[team.cursor];
       if (canAim(g) && active) {
         drawPreview(ctx, previewPath(active.x, active.y - UNIT_R, team.angle, team.power, g.wind, g.terrain, WEAPONS[team.weapon]));
@@ -435,6 +594,7 @@ export default function CatArena({ config, onExit, onSave }) {
         ctx.fillRect(pt.x - 2, pt.y - 2, 4, 4);
       });
       ctx.globalAlpha = 1;
+      drawTexts(ctx, g.texts);
       ctx.fillStyle = 'rgba(255,255,255,0.8)';
       g.snow.forEach((f) => {
         ctx.beginPath();
@@ -465,6 +625,37 @@ export default function CatArena({ config, onExit, onSave }) {
     sync();
   };
 
+  const walk = useCallback(
+    (dir) => {
+      const g = gameRef.current;
+      if (!canAim(g)) return;
+      const team = g.teams[g.turnTeam];
+      const u = team.units[team.cursor];
+      if (!u || team.energy <= 0) return;
+      u.face = dir;
+      for (let k = 0; k < 3 && team.energy > 0; k += 1) {
+        const nx = Math.max(16, Math.min(W - 16, u.x + dir));
+        const climb = groundAt(g.terrain, u.x) - groundAt(g.terrain, nx);
+        if (climb > 3 || groundAt(g.terrain, nx) - UNIT_R > g.water - 6) break;
+        u.x = nx;
+        team.energy -= 1;
+      }
+      if (dir > 0 && team.angle > 90) team.angle = 180 - team.angle;
+      if (dir < 0 && team.angle < 90) team.angle = 180 - team.angle;
+      sync();
+    },
+    [sync],
+  );
+
+  const holdRef = useRef(0);
+  const startHold = (dir) => {
+    walk(dir);
+    window.clearInterval(holdRef.current);
+    holdRef.current = window.setInterval(() => walk(dir), 40);
+  };
+  const stopHold = () => window.clearInterval(holdRef.current);
+  useEffect(() => () => window.clearInterval(holdRef.current), []);
+
   const fireHuman = useCallback(() => {
     const g = gameRef.current;
     if (!canAim(g)) return;
@@ -484,11 +675,19 @@ export default function CatArena({ config, onExit, onSave }) {
       else if (e.key === 'ArrowRight') team.angle = Math.max(2, team.angle - step);
       else if (e.key === 'ArrowUp') team.power = Math.min(100, team.power + step);
       else if (e.key === 'ArrowDown') team.power = Math.max(10, team.power - step);
-      else if (e.key === ' ' || e.key === 'Enter') {
+      else if (e.key === 'a' || e.key === 'A') {
+        walk(-1);
+        e.preventDefault();
+        return;
+      } else if (e.key === 'd' || e.key === 'D') {
+        walk(1);
+        e.preventDefault();
+        return;
+      } else if (e.key === ' ' || e.key === 'Enter') {
         e.preventDefault();
         fireHuman();
         return;
-      } else if (['1', '2', '3', '4'].includes(e.key)) {
+      } else if (WEAPON_KEYS.includes(e.key)) {
         const i = Number(e.key) - 1;
         if (team.ammo[i] > 0) team.weapon = i;
       } else return;
@@ -497,7 +696,7 @@ export default function CatArena({ config, onExit, onSave }) {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [fireHuman, sync]);
+  }, [fireHuman, sync, walk]);
 
   const pickWeapon = (i) => {
     const g = gameRef.current;
@@ -579,7 +778,10 @@ export default function CatArena({ config, onExit, onSave }) {
             ))}
             <div className="cats__status">
               <strong>{status}</strong>
-              <span>Viento {windLabel}</span>
+              <span>
+                Viento {windLabel}
+                {hud.rising ? ' · El agua sube' : ''}
+              </span>
             </div>
           </div>
         )}
@@ -602,6 +804,41 @@ export default function CatArena({ config, onExit, onSave }) {
                   <span className="cats__wbtn-ammo">{Number.isFinite(hud.ammo[i]) ? hud.ammo[i] : '∞'}</span>
                 </button>
               ))}
+            </div>
+            <div className="cats__dock-move" role="group" aria-label="Caminar">
+              <button
+                type="button"
+                className="cats__iconbtn"
+                disabled={!myTurn || hud.energy <= 0}
+                onPointerDown={() => startHold(-1)}
+                onPointerUp={stopHold}
+                onPointerLeave={stopHold}
+                onPointerCancel={stopHold}
+                aria-label="Caminar a la izquierda"
+                title="Caminar a la izquierda (A)"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M15 5l-7 7 7 7" />
+                </svg>
+              </button>
+              <span className="cats__energy" title="Pasos que te quedan en este turno">
+                <i style={{ '--e': `${hud.energy}%` }} />
+              </span>
+              <button
+                type="button"
+                className="cats__iconbtn"
+                disabled={!myTurn || hud.energy <= 0}
+                onPointerDown={() => startHold(1)}
+                onPointerUp={stopHold}
+                onPointerLeave={stopHold}
+                onPointerCancel={stopHold}
+                aria-label="Caminar a la derecha"
+                title="Caminar a la derecha (D)"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
             </div>
             <div className="cats__dock-meters">
               <span className="cats__meter">
@@ -653,7 +890,8 @@ export default function CatArena({ config, onExit, onSave }) {
         )}
       </div>
       <p className="cats__help">
-        Arrastra desde el personaje marcado con la flecha y suelta para lanzar. Teclado: flechas para ángulo y potencia, 1 a 4 para el arma, espacio para lanzar.
+        Arrastra desde el personaje marcado con la flecha y suelta para lanzar. Teclado: A y D para caminar, flechas para ángulo y potencia, 1 a {WEAPONS.length} para el arma,
+        espacio para lanzar. Rompe las cajas que caen para ganar vida o munición, y cuidado con los barriles.
       </p>
     </div>
   );

@@ -1,5 +1,5 @@
 export const W = 960;
-export const H = 540;
+export const H = 600;
 export const WATER = 492;
 export const UNIT_R = 14;
 const GRAVITY = 0.2;
@@ -15,7 +15,25 @@ export const WEAPONS = [
   { key: 'fish', name: 'Pescado explosivo', radius: 48, damage: 44, ammo: 2 },
   { key: 'yarn', name: 'Triple ovillo', radius: 22, damage: 16, ammo: 2, split: 3 },
   { key: 'icicle', name: 'Carámbano', radius: 18, damage: 36, ammo: 3, fast: true },
+  { key: 'drill', name: 'Taladro de hielo', radius: 30, damage: 34, ammo: 2, drill: true },
 ];
+
+export const BARREL = { key: 'barrel', radius: 46, damage: 32 };
+export const SUDDEN_DEATH_TURN = 14;
+export const WATER_RISE = 8;
+
+export const ARENAS = {
+  bahia: { name: 'Bahía helada', text: 'Colinas, igloos y torres de hielo.' },
+  fortalezas: { name: 'Fortalezas', text: 'Murallas, búnkeres y una torre central.' },
+  islas: { name: 'Islas', text: 'Tres islas y agua helada entre ellas.' },
+  montana: { name: 'Montaña', text: 'Una montaña enorme en el medio.' },
+};
+
+export const ARENA_KEYS = Object.keys(ARENAS);
+
+export function resolveArena(arena, seed) {
+  return ARENAS[arena] ? arena : ARENA_KEYS[seed % ARENA_KEYS.length];
+}
 
 export const LEVELS = {
   facil: { label: 'Fácil', noise: 0.32, bonus: 0 },
@@ -105,21 +123,28 @@ function addIgloo(t, base, cx, r) {
   }
 }
 
-export function makeMap(seed) {
-  const rnd = rngFrom(seed);
+function addBattlement(t, base, cx, width, height) {
+  const start = Math.round(cx - width / 2);
+  for (let x = Math.max(0, start); x <= Math.min(W - 1, Math.round(cx + width / 2)); x += 1) {
+    if (!(base[x] > 0)) base[x] = t[x];
+    const merlon = Math.floor((x - start) / 7) % 2 === 0 ? 10 : 0;
+    t[x] = Math.min(t[x], base[x] - height - merlon);
+  }
+}
+
+function rolling(rnd, level, amp) {
   const t = new Float32Array(W);
-  const base = new Float32Array(W);
   const phases = [rnd() * 6, rnd() * 6, rnd() * 6];
+  for (let x = 0; x < W; x += 1) {
+    t[x] = level + Math.sin(x / 140 + phases[0]) * 24 * amp + Math.sin(x / 61 + phases[1]) * 11 * amp + Math.sin(x / 23 + phases[2]) * 3 * amp;
+  }
+  return t;
+}
+
+function bahia(rnd, t, base) {
   const hill = 60 + rnd() * 70;
   const hillX = W / 2 + (rnd() - 0.5) * 160;
-  for (let x = 0; x < W; x += 1) {
-    let y = 365;
-    y += Math.sin(x / 140 + phases[0]) * 24;
-    y += Math.sin(x / 61 + phases[1]) * 11;
-    y += Math.sin(x / 23 + phases[2]) * 3;
-    y -= hill * Math.exp(-((x - hillX) ** 2) / (2 * 120 ** 2));
-    t[x] = y;
-  }
+  for (let x = 0; x < W; x += 1) t[x] -= hill * Math.exp(-((x - hillX) ** 2) / (2 * 120 ** 2));
   TEAM_X.flat().forEach((cx) => flatten(t, cx, 22));
   addTower(t, base, 300 + rnd() * 20, 18, 48 + rnd() * 22);
   addTower(t, base, W - 300 - rnd() * 20, 18, 48 + rnd() * 22);
@@ -128,7 +153,69 @@ export function makeMap(seed) {
   else addTower(t, base, center, 26, 70 + rnd() * 30);
   addIgloo(t, base, 380 + rnd() * 30, 26);
   addIgloo(t, base, W - 380 - rnd() * 30, 26);
-  return { terrain: t, base };
+  return [420 + rnd() * 30, W - 420 - rnd() * 30];
+}
+
+function fortalezas(rnd, t, base) {
+  TEAM_X.flat().forEach((cx) => flatten(t, cx, 24));
+  const wall = 88 + rnd() * 20;
+  addBattlement(t, base, 300, 30, wall);
+  addBattlement(t, base, W - 300, 30, wall);
+  [110, 190, W - 110, W - 190].forEach((cx) => addTower(t, base, cx, 10, 20 + rnd() * 8));
+  addBattlement(t, base, W / 2, 44, 130 + rnd() * 30);
+  addIgloo(t, base, W / 2 - 110 - rnd() * 20, 28);
+  addIgloo(t, base, W / 2 + 110 + rnd() * 20, 28);
+  return [345, W - 345, W / 2 - 60, W / 2 + 60];
+}
+
+function islas(rnd, t, base) {
+  const channels = [
+    [300 + rnd() * 10, 46],
+    [W - 300 - rnd() * 10, 46],
+  ];
+  for (let x = 0; x < W; x += 1) {
+    channels.forEach(([cx, half]) => {
+      const d = Math.abs(x - cx);
+      if (d < half) t[x] = Math.max(t[x], WATER + 50 - (d / half) ** 3 * (WATER + 50 - t[x]));
+    });
+    t[x] -= 50 * Math.exp(-((x - W / 2) ** 2) / (2 * 70 ** 2));
+  }
+  TEAM_X.flat().forEach((cx) => flatten(t, cx, 20));
+  addTower(t, base, 250, 16, 46 + rnd() * 16);
+  addTower(t, base, W - 250, 16, 46 + rnd() * 16);
+  addIgloo(t, base, W / 2, 36 + rnd() * 8);
+  return [W / 2 - 85, W / 2 + 85];
+}
+
+function montana(rnd, t, base) {
+  const peak = 210 + rnd() * 40;
+  const spread = 100 + rnd() * 20;
+  for (let x = 0; x < W; x += 1) t[x] -= peak * Math.exp(-((x - W / 2) ** 2) / (2 * spread ** 2));
+  TEAM_X.flat().forEach((cx) => flatten(t, cx, 22));
+  addIgloo(t, base, W / 2, 30);
+  addTower(t, base, 330, 16, 56 + rnd() * 20);
+  addTower(t, base, W - 330, 16, 56 + rnd() * 20);
+  return [385, W - 385, W / 2 - 150, W / 2 + 150];
+}
+
+const BUILDERS = { bahia, fortalezas, islas, montana };
+const LEVELS_BY_ARENA = { bahia: [365, 1], fortalezas: [385, 0.45], islas: [385, 0.6], montana: [395, 0.5] };
+
+export function makeMap(seed, arenaKey = 'bahia') {
+  const arena = BUILDERS[arenaKey] ? arenaKey : 'bahia';
+  const rnd = rngFrom(seed);
+  const [level, amp] = LEVELS_BY_ARENA[arena];
+  const t = rolling(rnd, level, amp);
+  const base = new Float32Array(W);
+  const barrels = BUILDERS[arena](rnd, t, base);
+  const objects = barrels.map((x, i) => ({ id: `b${i}`, kind: 'barrel', x, y: 0, vy: 0, alive: true, fuse: 0 }));
+  objects.forEach((o) => (o.y = groundAt(t, o.x) - 9));
+  return { terrain: t, base, objects };
+}
+
+export function crateFor(seed, turn) {
+  const r = rngFrom((seed ^ Math.imul(turn + 7, 40503)) >>> 0);
+  return { id: `c${turn}`, kind: 'crate', x: 300 + r() * (W - 600), y: -24, vy: 0, alive: true, chute: true, type: r() < 0.5 ? 'ammo' : 'heal' };
 }
 
 export function groundAt(terrain, x) {

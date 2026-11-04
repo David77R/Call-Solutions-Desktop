@@ -3,8 +3,8 @@ import fifo from '../../assets/fifo.webp';
 import { useAuth } from '../../lib/AuthContext';
 import { saveCatScore } from '../../lib/games';
 import { createRoom, joinRoom, leaveRoom, useOpenRooms, useRoom } from '../../lib/catRooms';
-import { LEVELS, TEAMS, UNIT_R, newSeed } from './catArtillery';
-import { drawUnit } from './catArtilleryDraw';
+import { ARENAS, H, LEVELS, TEAMS, UNIT_R, W, makeMap, newSeed, resolveArena } from './catArtillery';
+import { drawObject, drawSky, drawTerrain, drawUnit, drawWater } from './catArtilleryDraw';
 import CatArena from './CatArena';
 
 const MODES = [
@@ -38,6 +38,53 @@ function TeamPreview({ team }) {
   return <canvas ref={ref} className="cats__preview" style={{ width: 150, height: 64 }} aria-hidden="true" />;
 }
 
+const PREVIEW_SEED = 20261104;
+const ARENA_OPTIONS = [...Object.entries(ARENAS), ['aleatorio', { name: 'Sorpresa', text: 'Fifo elige la arena.' }]];
+
+function ArenaPreview({ arena }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const canvas = ref.current;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const w = 168;
+    const h = (w * H) / W;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform((dpr * w) / W, 0, 0, (dpr * w) / W, 0, 0);
+    drawSky(ctx, 0);
+    if (ARENAS[arena]) {
+      const map = makeMap(PREVIEW_SEED, arena);
+      drawTerrain(ctx, map.terrain, map.base);
+      map.objects.forEach((o) => drawObject(ctx, o, 0));
+    } else {
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '800 220px Inter, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('?', W / 2, H / 2 + 80);
+    }
+    drawWater(ctx, 0);
+  }, [arena]);
+  return <canvas ref={ref} className="cats__arena-preview" aria-hidden="true" />;
+}
+
+function ArenaPicker({ value, onChange }) {
+  return (
+    <div className="cats__picker">
+      <span className="cats__picker-label">Arena</span>
+      <div className="cats__arenas" role="radiogroup" aria-label="Arena">
+        {ARENA_OPTIONS.map(([key, a]) => (
+          <button key={key} type="button" role="radio" aria-checked={value === key} className="cats__arenacard" onClick={() => onChange(key)}>
+            <ArenaPreview arena={key} />
+            <strong>{a.name}</strong>
+            <small>{a.text}</small>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function TeamPicker({ label, value, onChange, exclude }) {
   return (
     <div className="cats__picker">
@@ -55,7 +102,7 @@ function TeamPicker({ label, value, onChange, exclude }) {
   );
 }
 
-function Lobby({ user, firstName, team, setTeam, onStart, onBack }) {
+function Lobby({ user, firstName, team, setTeam, arena, setArena, onStart, onBack }) {
   const rooms = useOpenRooms(true);
   const [code, setCode] = useState('');
   const [myRoom, setMyRoom] = useState(null);
@@ -73,7 +120,8 @@ function Lobby({ user, firstName, team, setTeam, onStart, onBack }) {
     setBusy(true);
     setError('');
     try {
-      setMyRoom(await createRoom(player, newSeed()));
+      const seed = newSeed();
+      setMyRoom(await createRoom(player, seed, resolveArena(arena, seed)));
     } catch (err) {
       setError(err?.message === 'timeout' ? JOIN_ERRORS.timeout : 'No se pudo crear la sala. Revisa la conexión o la regla de catRooms en Firestore.');
     } finally {
@@ -133,7 +181,10 @@ function Lobby({ user, firstName, team, setTeam, onStart, onBack }) {
                 <li key={r.code}>
                   <span>
                     <strong>{r.host?.name}</strong> con {TEAMS[r.host?.team]?.name || 'su equipo'}
-                    <small>Sala {r.code}</small>
+                    <small>
+                      Sala {r.code}
+                      {ARENAS[r.arena] ? ` · ${ARENAS[r.arena].name}` : ''}
+                    </small>
                   </span>
                   <button type="button" className="game-btn" disabled={busy} onClick={() => join(r.code)}>
                     Unirme
@@ -147,6 +198,16 @@ function Lobby({ user, firstName, team, setTeam, onStart, onBack }) {
         </section>
         <section>
           <h3>Crear o entrar con código</h3>
+          <label className="cats__select">
+            <span>Arena de tu sala</span>
+            <select className="sf-input" value={arena} onChange={(e) => setArena(e.target.value)}>
+              {ARENA_OPTIONS.map(([key, a]) => (
+                <option key={key} value={key}>
+                  {a.name}
+                </option>
+              ))}
+            </select>
+          </label>
           <button type="button" className="game-btn" disabled={busy} onClick={create}>
             {busy ? 'Conectando…' : 'Crear sala'}
           </button>
@@ -194,16 +255,19 @@ export default function CatArtilleryGame({ agentName }) {
   const [teamA, setTeamA] = useState('gatos');
   const [teamB, setTeamB] = useState('perros');
   const [level, setLevel] = useState('medio');
+  const [arena, setArena] = useState('aleatorio');
   const [config, setConfig] = useState(null);
   const [guestCode, setGuestCode] = useState(null);
 
   const save = useCallback((score, result) => saveCatScore(agentName, score, result, config?.mode === 'online' ? 'online' : config?.level), [agentName, config]);
 
   const startOffline = () => {
+    const seed = newSeed();
     setConfig({
       mode,
       level,
-      seed: newSeed(),
+      seed,
+      arena: resolveArena(arena, seed),
       teams: [
         { team: teamA, label: mode === 'local' ? 'Jugador 1' : firstName, controller: 'human' },
         { team: teamB, label: mode === 'local' ? 'Jugador 2' : 'Fifo', controller: mode === 'local' ? 'human' : 'bot' },
@@ -224,6 +288,7 @@ export default function CatArtilleryGame({ agentName }) {
         code: room.code,
         side,
         seed: room.seed,
+        arena: resolveArena(room.arena, room.seed),
         teams: [
           { team: room.host.team, label: side === 0 ? firstName : room.host.name, controller: side === 0 ? 'human' : 'remote' },
           { team: room.guest.team, label: side === 1 ? firstName : room.guest.name, controller: side === 1 ? 'human' : 'remote' },
@@ -248,7 +313,8 @@ export default function CatArtilleryGame({ agentName }) {
 
   if (screen === 'game' && config) return <CatArena key={`${config.seed}-${config.code || ''}`} config={config} onExit={exit} onSave={save} />;
   if (screen === 'guest' && guestCode) return <GuestWait code={guestCode} onReady={guestReady} onBack={() => setScreen('lobby')} />;
-  if (screen === 'lobby') return <Lobby user={user} firstName={firstName} team={teamA} setTeam={setTeamA} onStart={startOnline} onBack={() => setScreen('setup')} />;
+  if (screen === 'lobby')
+    return <Lobby user={user} firstName={firstName} team={teamA} setTeam={setTeamA} arena={arena} setArena={setArena} onStart={startOnline} onBack={() => setScreen('setup')} />;
 
   return (
     <div className="cats__setup">
@@ -256,7 +322,9 @@ export default function CatArtilleryGame({ agentName }) {
         <img src={fifo} alt="" className="cats__setup-fifo" />
         <div>
           <h2>Batalla en la Antártida</h2>
-          <p>Equipos de tres por turnos. Apunta, elige la potencia y cuidado con el viento, las estructuras de hielo y el agua.</p>
+          <p>
+            Equipos de tres por turnos. Camina, apunta y elige la potencia. Usa las murallas para cubrirte, revienta barriles cerca del rival y rompe las cajas que caen del cielo.
+          </p>
         </div>
       </div>
 
@@ -271,6 +339,7 @@ export default function CatArtilleryGame({ agentName }) {
 
       <TeamPicker label={mode === 'local' ? 'Equipo del jugador 1' : 'Tu equipo'} value={teamA} onChange={setTeamA} exclude={mode === 'online' ? null : teamB} />
       {mode !== 'online' && <TeamPicker label={mode === 'local' ? 'Equipo del jugador 2' : 'Equipo rival'} value={teamB} onChange={setTeamB} exclude={teamA} />}
+      {mode !== 'online' && <ArenaPicker value={arena} onChange={setArena} />}
 
       {mode === 'bot' && (
         <div className="cats__picker">
