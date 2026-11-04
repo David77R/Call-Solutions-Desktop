@@ -203,20 +203,20 @@ export default function MazeGame({ agentName }) {
           <span className="maze__score">{g.score} pts</span>
         </div>
 
-      <div className="maze__pad" aria-label="Controles">
-        <button type="button" className="maze__key maze__key--up" aria-label="Arriba" onClick={() => move(-1, 0)}>
-          ▲
-        </button>
-        <button type="button" className="maze__key maze__key--left" aria-label="Izquierda" onClick={() => move(0, -1)}>
-          ◀
-        </button>
-        <button type="button" className="maze__key maze__key--down" aria-label="Abajo" onClick={() => move(1, 0)}>
-          ▼
-        </button>
-        <button type="button" className="maze__key maze__key--right" aria-label="Derecha" onClick={() => move(0, 1)}>
-          ▶
-        </button>
-      </div>
+        <div className="maze__pad" aria-label="Controles">
+          <button type="button" className="maze__key maze__key--up" aria-label="Arriba" onClick={() => move(-1, 0)}>
+            ▲
+          </button>
+          <button type="button" className="maze__key maze__key--left" aria-label="Izquierda" onClick={() => move(0, -1)}>
+            ◀
+          </button>
+          <button type="button" className="maze__key maze__key--down" aria-label="Abajo" onClick={() => move(1, 0)}>
+            ▼
+          </button>
+          <button type="button" className="maze__key maze__key--right" aria-label="Derecha" onClick={() => move(0, 1)}>
+            ▶
+          </button>
+        </div>
 
         <button type="button" className="maze__expand" aria-pressed={expanded} onClick={toggleExpanded}>
           {expanded ? 'Salir de pantalla completa' : 'Pantalla completa'}
