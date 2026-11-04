@@ -57,6 +57,7 @@ const COMPANY_OPTIONS = {
     full: { name: 'Full Grooming' },
   },
   floridaluxury: {
+    gems: true,
     basicCat: /^sapphire/i,
     fullCat: /^diamond/i,
     basic: {
@@ -150,20 +151,22 @@ export function buildGroomingOptions(slug, sizes, sizeIndex, lang) {
   }
 
   const basicDesc = cfg.basic[lang] || cfg.basic.es;
+  const basicMark = cfg.gems ? '💎' : '🫧';
+  const fullMark = cfg.gems ? '💎' : '✂️';
   const lines = en
     ? [
         'We have two grooming options for your pet:',
         '',
-        `🫧 ${cfg.basic.name.toUpperCase()}: ${basicDesc}.${forPrice(basicPrice)}`,
+        `${basicMark} ${cfg.basic.name.toUpperCase()}: ${basicDesc}.${forPrice(basicPrice)}`,
         '',
-        `✂️ ${cfg.full.name.toUpperCase()}: Everything in the ${cfg.basic.name} + a haircut or deshedding!${forPrice(fullPrice)}`,
+        `${fullMark} ${cfg.full.name.toUpperCase()}: Everything in the ${cfg.basic.name} + a haircut or deshedding!${forPrice(fullPrice)}`,
       ]
     : [
         'Tenemos dos opciones de grooming para su mascota:',
         '',
-        `🫧 ${cfg.basic.name.toUpperCase()}: ${basicDesc}.${forPrice(basicPrice)}`,
+        `${basicMark} ${cfg.basic.name.toUpperCase()}: ${basicDesc}.${forPrice(basicPrice)}`,
         '',
-        `✂️ ${cfg.full.name.toUpperCase()}: ¡Todo lo del ${cfg.basic.name} + corte de pelo o deslanado!${forPrice(fullPrice)}`,
+        `${fullMark} ${cfg.full.name.toUpperCase()}: ¡Todo lo del ${cfg.basic.name} + corte de pelo o deslanado!${forPrice(fullPrice)}`,
       ];
   return lines.join('\n');
 }

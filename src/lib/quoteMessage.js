@@ -88,7 +88,6 @@ function sentence(text) {
   return /[.!?]$/.test(t) ? t : `${t}.`;
 }
 
-
 export function breedName(item, breedFromQuery) {
   const raw = breedFromQuery || (item.type === 'breed_bundle' ? item.breed : null);
   return raw ? raw.replace(SIZE_SUFFIX, '').trim() : null;
@@ -111,7 +110,7 @@ export function catEquivalent(item, rows) {
   const text = `${item.category_name || ''} ${item.label || ''}`;
   const type = CAT_DENTAL.test(text) ? 'dental' : CAT_FULL.test(text) ? 'full' : 'bath';
   const dogRows = rows.filter(
-    (r) => r.company_slug === item.company_slug && !r.is_cat && !EXTRA.test(r.category_name) && !isBreedCategory(r.category_name) && !SPECIALTY.test(r.category_name)
+    (r) => r.company_slug === item.company_slug && !r.is_cat && !EXTRA.test(r.category_name) && !isBreedCategory(r.category_name) && !SPECIALTY.test(r.category_name),
   );
   const label = (r) => `${r.category_name} ${r.pill_label || ''}`;
   const pool =
@@ -150,7 +149,7 @@ function siblingServices(item, rows) {
         (isSpecialty ? r.category_name === item.category_name : !SPECIALTY.test(r.category_name)) &&
         !DENTAL.test(r.category_name) &&
         !EXTRA.test(r.category_name) &&
-        !(item.only_gold_alert && r.category_name.startsWith('Silver'))
+        !(item.only_gold_alert && r.category_name.startsWith('Silver')),
     )
     .sort((a, b) => a.category_order - b.category_order)
     .map((r) => ({
@@ -177,6 +176,9 @@ export function isDentalQuote(services) {
   return services.length > 0 && services.every(isDental);
 }
 
+const GEM_COMPANIES = new Set(['floridaluxury']);
+const gemMark = (item) => (GEM_COMPANIES.has(item.company_slug) ? '💎 ' : '');
+
 export function buildQuoteMessage({ item, rows, descriptions, lang, breedFromQuery, optionIndex, zone, zoneTotal, discount, discountTotal }) {
   const t = COPY[lang] || COPY.es;
   const pet = petLabel(breedName(item, breedFromQuery), lang);
@@ -187,11 +189,12 @@ export function buildQuoteMessage({ item, rows, descriptions, lang, breedFromQue
 
   const services = getQuoteServices(item, rows, optionIndex);
   const dental = isDentalQuote(services);
+  const gem = gemMark(item);
   const lines = [];
 
   if (services.length === 1) {
     const s = services[0];
-    lines.push(dental ? t.dental(pet) : t.one(pet, s.name));
+    lines.push(`${gem}${dental ? t.dental(pet) : t.one(pet, s.name)}`);
     const desc = describe(s);
     if (desc) lines.push(sentence(desc));
     lines.push(`${t.price}: ${s.price || t.tbd}.`);
@@ -199,7 +202,7 @@ export function buildQuoteMessage({ item, rows, descriptions, lang, breedFromQue
     lines.push(dental ? t.manyDental(pet) : t.many(pet), '');
     for (const s of services) {
       const desc = describe(s);
-      lines.push(`• ${s.name}${desc ? `: ${sentence(desc)}` : '.'} ${t.price}: ${s.price || t.tbd}.`);
+      lines.push(`${gem || '• '}${s.name}${desc ? `: ${sentence(desc)}` : '.'} ${t.price}: ${s.price || t.tbd}.`);
     }
   }
 
@@ -299,10 +302,9 @@ export function buildBreedSuggestion({ item, rows, descriptions, lang, breedFrom
   const pick = services.find((s) => (wantsFull ? FULL_SERVICE : BASIC_SERVICE).test(s.name)) || services[services.length - 1];
   const price = pick.price || base.tbd;
   const pet = petLabel(breed, lang);
-  const desc =
-    getServiceDescription(descriptions || {}, pick.name, item.company_slug, lang) || getServiceDescription(descriptions || {}, pick.category, item.company_slug, lang);
+  const desc = getServiceDescription(descriptions || {}, pick.name, item.company_slug, lang) || getServiceDescription(descriptions || {}, pick.category, item.company_slug, lang);
 
-  const blocks = [t.intro(pet, plan ? plan[lang] : '', pick.name), desc ? t.includes(pick.name, sentence(desc), price) : t.price(pick.name, price)];
+  const blocks = [`${gemMark(item)}${t.intro(pet, plan ? plan[lang] : '', pick.name)}`, desc ? t.includes(pick.name, sentence(desc), price) : t.price(pick.name, price)];
 
   const addons = pickAddons(item, rows, coat);
   if (addons.length) blocks.push([t.addonsTitle, ...addons.map((r) => t.addon(r.label, r.price_display || base.tbd))].join('\n'));
