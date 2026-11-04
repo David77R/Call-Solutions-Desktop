@@ -37,15 +37,14 @@ export default function Sidebar() {
             ))}
           </div>
         ))}
+        <NavLink to={GAMES_SECTION.path} className={({ isActive }) => (isActive ? 'sidebar__link sidebar__link--games is-active' : 'sidebar__link sidebar__link--games')}>
+          <span className="sidebar__icon">
+            <img src={fifo} alt="" className="sidebar__games-face" />
+          </span>
+          <span className="sidebar__label">{GAMES_SECTION.label}</span>
+        </NavLink>
       </div>
 
-      <NavLink to={GAMES_SECTION.path} className={({ isActive }) => (isActive ? 'sidebar__fifo is-active' : 'sidebar__fifo')}>
-        <img src={fifo} alt="" className="sidebar__fifo-face" />
-        <span className="sidebar__fifo-text">
-          <span className="sidebar__fifo-title">{GAMES_SECTION.label}</span>
-          <span className="sidebar__fifo-sub">Trivia, laberinto, gatos y leaderboard</span>
-        </span>
-      </NavLink>
     </nav>
   );
 }

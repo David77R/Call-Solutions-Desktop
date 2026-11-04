@@ -210,3 +210,26 @@
     gap: 14px;
   }
 }
+
+.sidebar__link--games {
+  margin-top: 4px;
+  opacity: 0.7;
+  transition: opacity 200ms ease;
+}
+
+.sidebar__link--games:hover,
+.sidebar__link--games.is-active {
+  opacity: 1;
+}
+
+.sidebar__games-face {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  filter: grayscale(0.6);
+}
+
+.sidebar__link--games:hover .sidebar__games-face,
+.sidebar__link--games.is-active .sidebar__games-face {
+  filter: none;
+}
