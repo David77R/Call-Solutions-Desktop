@@ -1,4 +1,4 @@
-import { BH, BLOCK, BW, COLS, FLAME_TIME, FUSE, ROWS, T, WALL, idx } from './bomberEngine';
+import { BH, BLOCK, BW, COLS, FLAME_TIME, FLOOR, FUSE, ROWS, SLOT_COLORS, T, WALL, idx } from './bomberEngine';
 import { drawUnit } from './catArtilleryDraw';
 
 const px = (v) => (v + 0.5) * T;
@@ -61,8 +61,36 @@ function drawBlockTile(ctx, c, r) {
   ctx.fill();
 }
 
+function drawPaint(ctx, st) {
+  for (let i = 0; i < st.paint.length; i += 1) {
+    const owner = st.paint[i];
+    if (owner < 0 || st.board.cells[i] !== FLOOR) continue;
+    const c = i % COLS;
+    const r = Math.floor(i / COLS);
+    const color = SLOT_COLORS[owner];
+    ctx.globalAlpha = 0.55;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.roundRect(c * T + 2, r * T + 2, T - 4, T - 4, 7);
+    ctx.fill();
+    ctx.globalAlpha = 0.35;
+    ctx.fillStyle = '#ffffff';
+    const x = c * T + T / 2;
+    const y = r * T + T / 2 + 2;
+    ctx.beginPath();
+    ctx.ellipse(x, y + 3, 5, 4, 0, 0, Math.PI * 2);
+    ctx.arc(x - 6, y - 4, 2.2, 0, Math.PI * 2);
+    ctx.arc(x - 2, y - 8, 2.2, 0, Math.PI * 2);
+    ctx.arc(x + 3, y - 8, 2.2, 0, Math.PI * 2);
+    ctx.arc(x + 7, y - 4, 2.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+}
+
 export function drawBoard(ctx, st) {
   drawFloor(ctx);
+  if (st.paint) drawPaint(ctx, st);
   const falling = new Map(st.fallen.map((f) => [f.i, f.t]));
   for (let r = 0; r < ROWS; r += 1) {
     for (let c = 0; c < COLS; c += 1) {
@@ -205,7 +233,7 @@ export function drawFlames(ctx, st) {
   }
 }
 
-export function drawPlayer(ctx, p, time, showName) {
+export function drawPlayer(ctx, p, time, showName, ring) {
   const x = px(p.x);
   const y = px(p.y) + 7;
   if (!p.alive) {
@@ -220,11 +248,20 @@ export function drawPlayer(ctx, p, time, showName) {
     ctx.restore();
     return;
   }
-  ctx.fillStyle = 'rgba(20, 30, 60, 0.22)';
-  ctx.beginPath();
-  ctx.ellipse(x, y + 11, 13, 4, 0, 0, Math.PI * 2);
-  ctx.fill();
+  if (ring) {
+    ctx.strokeStyle = ring;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse(x, y + 11, 15, 5.5, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  } else {
+    ctx.fillStyle = 'rgba(20, 30, 60, 0.22)';
+    ctx.beginPath();
+    ctx.ellipse(x, y + 11, 13, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
   ctx.save();
+  if (p.shield > 0) ctx.globalAlpha = Math.floor(time * 12) % 2 ? 0.35 : 1;
   ctx.translate(x, y + (p.dir ? Math.abs(Math.sin(time * 14)) * -2 : 0));
   ctx.scale(0.76, 0.76);
   drawUnit(ctx, { x: 0, y: 0, alive: true, flash: 0, face: p.face, colors: p.colors }, p.kind, null, false, time * 60);
@@ -235,7 +272,7 @@ export function drawPlayer(ctx, p, time, showName) {
     ctx.lineWidth = 3;
     ctx.strokeStyle = 'rgba(5,3,32,0.75)';
     ctx.strokeText(p.name, x, y - 30);
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = ring || '#ffffff';
     ctx.fillText(p.name, x, y - 30);
   }
 }
@@ -258,7 +295,7 @@ export function drawScene(ctx, st, showNames) {
   drawBoard(ctx, st);
   drawPowerups(ctx, st);
   drawBombs(ctx, st);
-  [...st.players].sort((a, b) => a.y - b.y).forEach((p) => drawPlayer(ctx, p, st.time, showNames));
+  [...st.players].sort((a, b) => a.y - b.y).forEach((p) => drawPlayer(ctx, p, st.time, showNames, st.conquest || st.players.length > 2 ? SLOT_COLORS[p.slot] : null));
   drawFlames(ctx, st);
   drawTexts(ctx, st);
 }

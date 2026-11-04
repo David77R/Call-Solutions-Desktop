@@ -12,6 +12,14 @@ export const FUSE = 2.5;
 export const FLAME_TIME = 0.55;
 export const SUDDEN_AT = 90;
 export const SUDDEN_STEP = 0.4;
+export const CONQUEST_TIME = 120;
+export const RESPAWN = 3;
+export const SHIELD = 2;
+export const SLOT_COLORS = ['#ff8a5c', '#4fc3ff', '#b57bff', '#4ed38f'];
+export const RULES = {
+  survival: { name: 'Supervivencia', text: 'El último en pie gana.' },
+  conquest: { name: 'Conquista', text: 'Pinta el piso con tus explosiones. Gana quien tenga más cuadros.' },
+};
 export const SPAWNS = [
   [1, 1],
   [COLS - 2, ROWS - 2],
@@ -35,8 +43,39 @@ const DIR_LIST = Object.entries(DIRS);
 export const idx = (c, r) => r * COLS + c;
 const inside = (c, r) => c >= 0 && r >= 0 && c < COLS && r < ROWS;
 
+const border = (c, r) => c === 0 || r === 0 || c === COLS - 1 || r === ROWS - 1;
+const grid = (c, r) => c % 2 === 0 && r % 2 === 0;
+
+function fortWall(c, r) {
+  if (grid(c, r)) return true;
+  if ((r === 3 || r === 7) && c >= 5 && c <= 11) return !(r === 3 && c === 7) && !(r === 7 && c === 9);
+  if ((c === 5 || c === 11) && r >= 3 && r <= 7) return r !== 5;
+  return false;
+}
+
+function mazeWall(c, r) {
+  if (grid(c, r)) return true;
+  if (c % 2 === 0 && r % 2 === 1 && c > 2 && c < COLS - 3) return (c / 2 + (r - 1) / 2) % 3 === 0;
+  if (c % 2 === 1 && r % 2 === 0 && r > 1 && r < ROWS - 2 && c > 2 && c < COLS - 3) return ((c - 1) / 2 + r / 2) % 4 === 1;
+  return false;
+}
+
+export const MAPS = {
+  clasico: { name: 'Clásico', text: 'Pilares de hielo y mucha nieve.', density: 0.72, wall: grid },
+  fortaleza: { name: 'Fortaleza', text: 'Un fuerte en el centro con poderes adentro.', density: 0.62, wall: fortWall, vault: (c, r) => c > 5 && c < 11 && r > 3 && r < 7 },
+  abierto: { name: 'Pista abierta', text: 'Pocos pilares y mucho espacio.', density: 0.5, wall: (c, r) => c % 4 === 0 && r % 4 === 0 },
+  cruce: { name: 'Cruce', text: 'Dos avenidas despejadas en cruz.', density: 0.8, wall: grid, open: (c, r) => r === 5 || c === 7 || c === 9 },
+  laberinto: { name: 'Laberinto', text: 'Pasillos estrechos y esquinas peligrosas.', density: 0.55, wall: mazeWall },
+};
+export const MAP_KEYS = Object.keys(MAPS);
+
+export function resolveMap(key, seed) {
+  return MAPS[key] ? key : MAP_KEYS[seed % MAP_KEYS.length];
+}
+
+let currentWall = grid;
 function isPillar(c, r) {
-  return c === 0 || r === 0 || c === COLS - 1 || r === ROWS - 1 || (c % 2 === 0 && r % 2 === 0);
+  return border(c, r) || currentWall(c, r);
 }
 
 function makeSpiral() {
@@ -57,7 +96,9 @@ function makeSpiral() {
     .map(([c, r]) => idx(c, r));
 }
 
-export function makeBoard(seed) {
+export function makeBoard(seed, mapKey = 'clasico') {
+  const map = MAPS[mapKey] || MAPS.clasico;
+  currentWall = map.wall;
   const rnd = rngFrom(seed);
   const cells = new Uint8Array(COLS * ROWS);
   const hidden = {};
@@ -74,21 +115,27 @@ export function makeBoard(seed) {
   for (let r = 0; r < ROWS; r += 1) {
     for (let c = 0; c < COLS; c += 1) {
       const i = idx(c, r);
+      const vault = map.vault?.(c, r);
       if (isPillar(c, r)) cells[i] = WALL;
-      else if (!clear.has(i) && rnd() < 0.72) {
+      else if (!clear.has(i) && !map.open?.(c, r) && (vault || rnd() < map.density)) {
         cells[i] = BLOCK;
-        if (rnd() < 0.34) {
+        if (rnd() < (vault ? 0.85 : 0.34)) {
           const roll = rnd();
           hidden[i] = roll < 0.38 ? 'bomb' : roll < 0.76 ? 'fire' : 'speed';
         }
       }
     }
   }
-  return { cells, hidden, powerups: {}, spiral: makeSpiral() };
+  const spiral = makeSpiral();
+  currentWall = grid;
+  return { cells, hidden, powerups: {}, spiral };
 }
 
 export function createState(config) {
-  const board = makeBoard(config.seed);
+  const board = makeBoard(config.seed, config.map);
+  const conquest = config.rules === 'conquest';
+  let paintable = 0;
+  board.cells.forEach((cell) => cell !== WALL && (paintable += 1));
   const players = config.players.map((pl, slot) => {
     const [c, r] = SPAWNS[slot];
     return {
@@ -118,11 +165,15 @@ export function createState(config) {
       wait: 0,
       ex: 0,
       ey: 0,
+      shield: 0,
     };
   });
   return {
     config,
+    conquest,
     board,
+    paint: new Int8Array(COLS * ROWS).fill(-1),
+    paintable,
     players,
     bombs: [],
     flames: new Float32Array(COLS * ROWS),
@@ -240,6 +291,7 @@ function explode(st, b) {
   blastCells(st, b).forEach((i) => {
     st.flames[i] = FLAME_TIME;
     st.flameOwner[i] = b.owner;
+    if (st.conquest) st.paint[i] = b.owner;
     if (st.board.cells[i] === BLOCK) {
       st.board.cells[i] = FLOOR;
       if (owner) owner.blocks += 1;
@@ -276,7 +328,7 @@ function dangerMap(st, extra) {
     );
   }
   bombs.forEach((b) => b.cells.forEach((i) => (danger[i] = Math.min(danger[i], b.t))));
-  if (st.time > SUDDEN_AT - 4) st.board.spiral.slice(st.suddenIndex, st.suddenIndex + 8).forEach((i) => (danger[i] = Math.min(danger[i], 1)));
+  if (!st.conquest && st.time > SUDDEN_AT - 4) st.board.spiral.slice(st.suddenIndex, st.suddenIndex + 8).forEach((i) => (danger[i] = Math.min(danger[i], 1)));
   return danger;
 }
 
@@ -323,6 +375,16 @@ function nextToBlock(st, c, r) {
   return DIR_LIST.some(([, [dx, dy]]) => inside(c + dx, r + dy) && st.board.cells[idx(c + dx, r + dy)] === BLOCK);
 }
 
+function paintGain(st, p, c, r) {
+  return blastCells(st, { c, r, fire: p.fire }).filter((i) => st.paint[i] !== p.slot).length;
+}
+
+export function paintCounts(st) {
+  const counts = st.players.map(() => 0);
+  for (let i = 0; i < st.paint.length; i += 1) if (st.paint[i] >= 0 && counts[st.paint[i]] != null) counts[st.paint[i]] += 1;
+  return counts;
+}
+
 function escapeFrom(st, p, here, danger, limit) {
   const tps = speedOf(p);
   const search = bfs(st, p, here, (ni, d) => danger[ni] < d / tps + 0.25);
@@ -343,7 +405,8 @@ function botThink(st, p, rnd) {
     if (step >= 0 && step !== hereI) p.target = step;
     return;
   }
-  if (p.bombsOut < p.maxBombs && (enemyInLine(st, p, here[0], here[1]) || nextToBlock(st, here[0], here[1])) && rnd() < level.aggro) {
+  const wantsBomb = enemyInLine(st, p, here[0], here[1]) || nextToBlock(st, here[0], here[1]) || (st.conquest && paintGain(st, p, here[0], here[1]) >= 4);
+  if (p.bombsOut < p.maxBombs && wantsBomb && rnd() < level.aggro) {
     const hypo = dangerMap(st, { c: here[0], r: here[1], fire: p.fire, t: FUSE });
     const step = escapeFrom(st, p, here, hypo, 6);
     if (step >= 0 && step !== hereI) {
@@ -363,7 +426,8 @@ function botThink(st, p, rnd) {
     let score = -d;
     if (st.board.powerups[i]) score += 14;
     if (nextToBlock(st, c, r)) score += 5;
-    if (level.hunt && enemyInLine(st, p, c, r)) score += 7;
+    if (level.hunt && enemyInLine(st, p, c, r)) score += st.conquest ? 3 : 7;
+    if (st.conquest && d < 7) score += paintGain(st, p, c, r) * 0.8;
     score += rnd() * 2;
     if (score > bestScore) {
       bestScore = score;
@@ -413,7 +477,16 @@ export function step(st, dt, hooks = {}) {
   const rnd = st.rnd || (st.rnd = rngFrom((st.config.seed ^ 0x9e3779b9) >>> 0));
 
   st.players.forEach((p) => {
-    if (!p.alive) return;
+    if (!p.alive) {
+      if (st.conquest && p.controller !== 'remote' && !p.left && st.time - p.deadAt >= RESPAWN && st.time < CONQUEST_TIME) {
+        const [c, r] = SPAWNS[p.slot];
+        Object.assign(p, { alive: true, x: c, y: r, dir: null, held: [], target: null, wait: 0, shield: SHIELD });
+        p.passing.clear();
+        hooks.onRevive?.(p);
+      }
+      return;
+    }
+    if (p.shield > 0) p.shield = Math.max(0, p.shield - dt);
     if (p.controller === 'bot') moveBot(st, p, dt, rnd);
     else if (p.dir) moveDir(st, p, p.dir, speedOf(p) * dt);
     if (p.controller === 'remote' && (p.ex || p.ey)) {
@@ -453,7 +526,7 @@ export function step(st, dt, hooks = {}) {
   }
   for (let i = 0; i < st.flames.length; i += 1) if (st.flames[i] > 0) st.flames[i] = Math.max(0, st.flames[i] - dt);
 
-  if (st.time >= SUDDEN_AT && st.suddenIndex < st.board.spiral.length) {
+  if (!st.conquest && st.time >= SUDDEN_AT && st.suddenIndex < st.board.spiral.length) {
     st.suddenClock += dt;
     while (st.suddenClock >= SUDDEN_STEP && st.suddenIndex < st.board.spiral.length) {
       st.suddenClock -= SUDDEN_STEP;
@@ -481,7 +554,7 @@ export function step(st, dt, hooks = {}) {
   st.fallen = st.fallen.filter((f) => f.t < 0.6);
 
   st.players.forEach((p) => {
-    if (!p.alive || p.controller === 'remote') return;
+    if (!p.alive || p.controller === 'remote' || p.shield > 0) return;
     const i = idx(...cellOf(p));
     if (st.flames[i] > 0) {
       killPlayer(st, p, st.flameOwner[i]);
@@ -496,6 +569,15 @@ export function step(st, dt, hooks = {}) {
   st.texts = st.texts.filter((t) => t.life > 0);
   if (st.shake > 0.2) st.shake *= 0.85;
 
+  if (st.conquest) {
+    const playing = st.players.filter((p) => !p.left);
+    if (st.time >= CONQUEST_TIME || playing.length <= 1) {
+      st.over = true;
+      st.winner = conquestWinner(st);
+      hooks.onOver?.(st.winner);
+    }
+    return;
+  }
   const alive = st.players.filter((p) => p.alive);
   if (alive.length <= 1 && !st.endAt) st.endAt = st.time + 1.1;
   if (st.endAt && st.time >= st.endAt) {
@@ -506,10 +588,31 @@ export function step(st, dt, hooks = {}) {
   }
 }
 
+export function conquestWinner(st) {
+  const counts = paintCounts(st);
+  const playing = st.players.filter((p) => !p.left);
+  if (playing.length === 1) return playing[0].slot;
+  const best = Math.max(...counts);
+  const top = counts.map((n, i) => (n === best ? i : -1)).filter((i) => i >= 0);
+  return best > 0 && top.length === 1 ? top[0] : -1;
+}
+
+export function encodePaint(st) {
+  return Array.from(st.paint, (v) => (v < 0 ? '.' : String(v))).join('');
+}
+
 export function applyRemote(st, slot, data) {
   const p = st.players[slot];
   if (!p || !data || data.seq <= p.seq) return;
   p.seq = data.seq;
+  if (data.left) p.left = true;
+  if (st.conquest && slot === 0 && st.config.me !== 0 && typeof data.paint === 'string' && data.paint.length === st.paint.length) {
+    for (let i = 0; i < st.paint.length; i += 1) st.paint[i] = data.paint[i] === '.' ? -1 : Number(data.paint[i]);
+  }
+  if (st.conquest && data.alive && !p.alive && !data.left) {
+    Object.assign(p, { alive: true, x: data.x, y: data.y, ex: 0, ey: 0, shield: SHIELD });
+    p.passing.clear();
+  }
   p.fire = data.fire ?? p.fire;
   p.maxBombs = data.maxBombs ?? p.maxBombs;
   p.speed = data.speed ?? p.speed;
@@ -539,5 +642,7 @@ export function bomberScore(st, slot, won) {
   const p = st.players[slot];
   if (!p) return 0;
   const level = BOT_LEVELS[st.config.level];
+  const bonus = won ? 120 + (st.config.mode === 'online' ? 60 : level?.bonus || 0) : 0;
+  if (st.conquest) return Math.round(paintCounts(st)[slot] / 2) + p.kills * 15 + bonus;
   return p.blocks * 2 + p.kills * 40 + (won ? 120 + (st.config.mode === 'online' ? 60 : level?.bonus || 0) : 0);
 }

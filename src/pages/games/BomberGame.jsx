@@ -5,7 +5,8 @@ import { saveBombScore } from '../../lib/games';
 import { MAX_PLAYERS, createBombRoom, joinBombRoom, leaveBombRoom, startBombRoom, useBombRoom, useOpenBombRooms } from '../../lib/bombRooms';
 import { TEAMS, newSeed } from './catArtillery';
 import { drawUnit } from './catArtilleryDraw';
-import { BOT_LEVELS } from './bomberEngine';
+import { BH, BOT_LEVELS, BW, MAPS, RULES, makeBoard, resolveMap } from './bomberEngine';
+import { drawBoard } from './bomberDraw';
 import BomberArena from './BomberArena';
 
 const CHARACTERS = Object.entries(TEAMS).flatMap(([team, t]) => t.units.map((u, i) => ({ key: `${team}:${i}`, team, kind: t.kind, name: u.name, colors: u })));
@@ -66,6 +67,65 @@ function CharPicker({ label, value, onChange, taken = [] }) {
   );
 }
 
+const MAP_OPTIONS = [...Object.entries(MAPS), ['aleatorio', { name: 'Sorpresa', text: 'Fifo elige el mapa.' }]];
+
+function MapPreview({ map }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const canvas = ref.current;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const w = 168;
+    const h = (w * BH) / BW;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform((dpr * w) / BW, 0, 0, (dpr * w) / BW, 0, 0);
+    if (MAPS[map]) drawBoard(ctx, { board: makeBoard(4242, map), fallen: [] });
+    else {
+      ctx.fillStyle = '#24427f';
+      ctx.fillRect(0, 0, BW, BH);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '800 260px Inter, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('?', BW / 2, BH / 2 + 90);
+    }
+  }, [map]);
+  return <canvas ref={ref} className="cats__arena-preview bomb__map-preview" aria-hidden="true" />;
+}
+
+function MapPicker({ value, onChange }) {
+  return (
+    <div className="cats__picker">
+      <span className="cats__picker-label">Mapa</span>
+      <div className="cats__arenas bomb__maps" role="radiogroup" aria-label="Mapa">
+        {MAP_OPTIONS.map(([key, m]) => (
+          <button key={key} type="button" role="radio" aria-checked={value === key} className="cats__arenacard" onClick={() => onChange(key)}>
+            <MapPreview map={key} />
+            <strong>{m.name}</strong>
+            <small>{m.text}</small>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function RulesPicker({ value, onChange }) {
+  return (
+    <div className="cats__picker">
+      <span className="cats__picker-label">Reglas</span>
+      <div className="bomb__rules" role="radiogroup" aria-label="Reglas">
+        {Object.entries(RULES).map(([key, r]) => (
+          <button key={key} type="button" role="radio" aria-checked={value === key} className="cats__mode" onClick={() => onChange(key)}>
+            <strong>{r.name}</strong>
+            <small>{r.text}</small>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function Count({ label, value, min, max, onChange }) {
   return (
     <div className="cats__picker">
@@ -100,6 +160,9 @@ function WaitingRoom({ code, room, me, onLeave }) {
     <div className="game-intro cats__lobby">
       <img src={fifo} alt="" className="game-intro__fifo" />
       <h2>Sala {code}</h2>
+      <p className="bomb__room-meta">
+        {RULES[room?.rules]?.name || 'Supervivencia'} · {MAPS[room?.map]?.name || 'Mapa sorpresa'}
+      </p>
       <p>{isHost ? 'Cuando estén todos, dale a Empezar. Pueden entrar hasta 4.' : `Esperando a que ${hostName || 'el anfitrión'} empiece la partida…`}</p>
       <span className="cats__code">{code}</span>
       <ul className="bomb__roster">
@@ -125,7 +188,7 @@ function WaitingRoom({ code, room, me, onLeave }) {
   );
 }
 
-function Lobby({ user, firstName, char, setChar, onStart, onBack }) {
+function Lobby({ user, firstName, char, setChar, map, setMap, rules, setRules, onStart, onBack }) {
   const rooms = useOpenBombRooms(true);
   const [code, setCode] = useState('');
   const [myRoom, setMyRoom] = useState(null);
@@ -185,7 +248,7 @@ function Lobby({ user, firstName, char, setChar, onStart, onBack }) {
                     <span>
                       <strong>Sala de {host?.name || 'un compañero'}</strong>
                       <small>
-                        {r.code} · {count}/{MAX_PLAYERS} jugadores
+                        {r.code} · {count}/{MAX_PLAYERS} jugadores · {RULES[r.rules]?.name || 'Supervivencia'} · {MAPS[r.map]?.name || 'Clásico'}
                       </small>
                     </span>
                     <button type="button" className="game-btn" disabled={busy || count >= MAX_PLAYERS} onClick={() => run(() => joinBombRoom(r.code, player))}>
@@ -201,7 +264,39 @@ function Lobby({ user, firstName, char, setChar, onStart, onBack }) {
         </section>
         <section>
           <h3>Crear o entrar con código</h3>
-          <button type="button" className="game-btn" disabled={busy} onClick={() => run(() => createBombRoom(player, newSeed()))}>
+          <div className="bomb__selects">
+            <label className="cats__select">
+              <span>Reglas</span>
+              <select className="sf-input" value={rules} onChange={(e) => setRules(e.target.value)}>
+                {Object.entries(RULES).map(([key, r]) => (
+                  <option key={key} value={key}>
+                    {r.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="cats__select">
+              <span>Mapa</span>
+              <select className="sf-input" value={map} onChange={(e) => setMap(e.target.value)}>
+                {MAP_OPTIONS.map(([key, m]) => (
+                  <option key={key} value={key}>
+                    {m.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <button
+            type="button"
+            className="game-btn"
+            disabled={busy}
+            onClick={() =>
+              run(() => {
+                const seed = newSeed();
+                return createBombRoom(player, seed, { map: resolveMap(map, seed), rules });
+              })
+            }
+          >
             {busy ? 'Conectando…' : 'Crear sala'}
           </button>
           <div className="cats__join">
@@ -234,6 +329,8 @@ export default function BomberGame({ agentName }) {
   const [bots, setBots] = useState(3);
   const [extraBots, setExtraBots] = useState(0);
   const [level, setLevel] = useState('medio');
+  const [map, setMap] = useState('clasico');
+  const [rules, setRules] = useState('survival');
   const [config, setConfig] = useState(null);
 
   const save = useCallback((score, result) => saveBombScore(agentName, score, result, config?.mode === 'online' ? 'online' : config?.level), [agentName, config]);
@@ -249,7 +346,7 @@ export default function BomberGame({ agentName }) {
           ]
         : [{ name: firstName, kind: a.kind, colors: a.colors, controller: 'human', keys: 'all' }];
     const taken = mode === 'local' ? [charA, charB] : [charA];
-    setConfig({ mode, level, seed, players: [...humans, ...botPlayers(mode === 'local' ? extraBots : bots, taken, seed)] });
+    setConfig({ mode, level, seed, map: resolveMap(map, seed), rules, players: [...humans, ...botPlayers(mode === 'local' ? extraBots : bots, taken, seed)] });
     setScreen('game');
   };
 
@@ -261,6 +358,8 @@ export default function BomberGame({ agentName }) {
         mode: 'online',
         code: room.code,
         seed: room.seed,
+        map: resolveMap(room.map, room.seed),
+        rules: room.rules || 'survival',
         me: list.findIndex((p) => p.uid === me),
         players: list.map((p) => {
           const c = charOf(p.char);
@@ -278,7 +377,21 @@ export default function BomberGame({ agentName }) {
   }, [config]);
 
   if (screen === 'game' && config) return <BomberArena key={`${config.seed}-${config.code || ''}`} config={config} onExit={exit} onSave={save} />;
-  if (screen === 'lobby') return <Lobby user={user} firstName={firstName} char={charA} setChar={setCharA} onStart={startOnline} onBack={() => setScreen('setup')} />;
+  if (screen === 'lobby')
+    return (
+      <Lobby
+        user={user}
+        firstName={firstName}
+        char={charA}
+        setChar={setCharA}
+        map={map}
+        setMap={setMap}
+        rules={rules}
+        setRules={setRules}
+        onStart={startOnline}
+        onBack={() => setScreen('setup')}
+      />
+    );
 
   return (
     <div className="cats__setup">
@@ -286,7 +399,7 @@ export default function BomberGame({ agentName }) {
         <img src={fifo} alt="" className="cats__setup-fifo" />
         <div>
           <h2>Bombas en el hielo</h2>
-          <p>Rompe los bloques de nieve, recoge poderes y atrapa a los demás con tus bombas. El último en pie gana.</p>
+          <p>Rompe los bloques de nieve, recoge poderes y atrapa a los demás con tus bombas. Juega a quedar en pie o a conquistar el mapa pintándolo de tu color.</p>
         </div>
       </div>
 
@@ -301,6 +414,9 @@ export default function BomberGame({ agentName }) {
 
       <CharPicker label={mode === 'local' ? 'Personaje del jugador 1' : 'Tu personaje'} value={charA} onChange={setCharA} taken={mode === 'local' ? [charB] : []} />
       {mode === 'local' && <CharPicker label="Personaje del jugador 2" value={charB} onChange={setCharB} taken={[charA]} />}
+
+      {mode !== 'online' && <RulesPicker value={rules} onChange={setRules} />}
+      {mode !== 'online' && <MapPicker value={map} onChange={setMap} />}
 
       {mode !== 'online' && (
         <div className="bomb__options">

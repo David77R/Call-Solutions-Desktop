@@ -18,13 +18,15 @@ function makeCode() {
   return Array.from({ length: 4 }, () => LETTERS[Math.floor(Math.random() * LETTERS.length)]).join('');
 }
 
-export async function createBombRoom(player, seed) {
+export async function createBombRoom(player, seed, options = {}) {
   const code = makeCode();
   const now = new Date().toISOString();
   const write = setDoc(doc(db, COLLECTION, roomId(code)), {
     game: 'bomb',
     code,
     seed,
+    map: options.map || 'clasico',
+    rules: options.rules || 'survival',
     status: 'waiting',
     host: player.uid,
     players: [{ ...player, slot: 0 }],
