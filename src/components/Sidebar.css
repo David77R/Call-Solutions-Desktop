@@ -1,8 +1,37 @@
 .sidebar {
+  position: sticky;
+  top: 0;
   display: flex;
   flex-direction: column;
   gap: 20px;
+  height: 100vh;
+  height: 100dvh;
   padding: 24px 18px;
+}
+
+.sidebar__scroll {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 20px;
+  min-height: 0;
+  margin: 0 -8px;
+  padding: 0 8px 4px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+    position: static;
+    height: auto;
+  }
+
+  .sidebar__scroll {
+    overflow: visible;
+  }
 }
 
 .sidebar__logo {
@@ -112,7 +141,7 @@
 }
 
 .sidebar__fifo {
-  margin-top: auto;
+  flex: none;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -164,4 +193,20 @@
 
 .sidebar__badge--warn {
   background: var(--warn);
+}
+
+@media (max-height: 820px) {
+  .sidebar {
+    gap: 14px;
+    padding-top: 16px;
+    padding-bottom: 14px;
+  }
+
+  .sidebar__logo {
+    width: 88px;
+  }
+
+  .sidebar__scroll {
+    gap: 14px;
+  }
 }
