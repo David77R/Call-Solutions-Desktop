@@ -74,7 +74,7 @@ export function useOpenRooms(enabled) {
         setRooms(
           snap.docs
             .map((d) => d.data())
-            .filter((r) => now - Date.parse(r.updated_at || r.created_at || 0) < STALE_MS)
+            .filter((r) => !r.game && now - Date.parse(r.updated_at || r.created_at || 0) < STALE_MS)
             .sort((a, b) => (a.created_at < b.created_at ? 1 : -1)),
         );
       },

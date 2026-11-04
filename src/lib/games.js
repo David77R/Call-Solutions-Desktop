@@ -52,7 +52,20 @@ export function saveCatScore(agentName, score, result, level) {
   }).catch(() => {});
 }
 
-function useWeekTotals(collectionName) {
+export function saveBombScore(agentName, score, result, level) {
+  if (!agentName?.trim() || score <= 0) return Promise.resolve();
+  return setDoc(doc(db, 'catArtilleryScores', makeId()), {
+    agent_name: agentName.trim(),
+    game: 'bomb',
+    score,
+    result,
+    level,
+    date_key: todayKey(),
+    played_at: new Date().toISOString(),
+  }).catch(() => {});
+}
+
+function useWeekTotals(collectionName, game) {
   const [totals, setTotals] = useState({});
   useEffect(
     () =>
@@ -64,14 +77,14 @@ function useWeekTotals(collectionName) {
           snap.docs.forEach((d) => {
             const data = d.data();
             const name = (data.agent_name || '').trim();
-            if (!name || !keys.includes(data.date_key)) return;
+            if (!name || !keys.includes(data.date_key) || (data.game || null) !== (game || null)) return;
             next[name] = (next[name] || 0) + (data.score || 0);
           });
           setTotals(next);
         },
-        () => {}
+        () => {},
       ),
-    [collectionName]
+    [collectionName, game],
   );
   return totals;
 }
@@ -80,14 +93,16 @@ export function useLeaderboard() {
   const trivia = useWeekTotals('triviaScores');
   const maze = useWeekTotals('mazeScores');
   const cats = useWeekTotals('catArtilleryScores');
-  const names = new Set([...Object.keys(trivia), ...Object.keys(maze), ...Object.keys(cats)]);
+  const bombs = useWeekTotals('catArtilleryScores', 'bomb');
+  const names = new Set([...Object.keys(trivia), ...Object.keys(maze), ...Object.keys(cats), ...Object.keys(bombs)]);
   return [...names]
     .map((name) => ({
       name,
       trivia: trivia[name] || 0,
       maze: maze[name] || 0,
       cats: cats[name] || 0,
-      total: (trivia[name] || 0) + (maze[name] || 0) + (cats[name] || 0),
+      bombs: bombs[name] || 0,
+      total: (trivia[name] || 0) + (maze[name] || 0) + (cats[name] || 0) + (bombs[name] || 0),
     }))
     .sort((a, b) => b.total - a.total);
 }

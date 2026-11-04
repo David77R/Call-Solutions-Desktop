@@ -23,7 +23,7 @@
 .games__tabs {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(4, 130px);
+  grid-template-columns: repeat(5, 122px);
   padding: 4px;
   border: 1px solid var(--line);
   border-radius: 999px;
@@ -34,7 +34,7 @@
   position: absolute;
   top: 4px;
   left: 4px;
-  width: 130px;
+  width: 122px;
   height: calc(100% - 8px);
   border-radius: 999px;
   background: linear-gradient(115deg, #7f97e8, #5ef2ff);
@@ -1404,5 +1404,261 @@
 
   .cats__launch {
     padding: 0 14px;
+  }
+}
+
+.bomb__chars {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+
+@media (max-width: 640px) {
+  .bomb__chars {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.bomb__char {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 4px 8px;
+  border: 1.5px solid var(--line-strong);
+  border-radius: var(--radius-md, 14px);
+  background: linear-gradient(180deg, rgba(36, 66, 127, 0.55), rgba(158, 201, 238, 0.22));
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  transition:
+    border-color 200ms ease,
+    transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 200ms ease;
+}
+
+.bomb__char:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.bomb__char[aria-checked='true'] {
+  border-color: #ffd166;
+  box-shadow: 0 0 0 3px rgba(255, 209, 102, 0.18);
+}
+
+.bomb__char:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.bomb__char small {
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.bomb__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+
+.bomb__roster {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin: 4px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bomb__roster li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px 4px 4px;
+  border-radius: 999px;
+  background: var(--raised);
+}
+
+.bomb__roster small {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.bomb {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 1040px;
+  margin: 0 auto;
+}
+
+.bomb.is-full,
+.bomb:fullscreen {
+  justify-content: center;
+  max-width: none;
+  padding: 16px;
+  background: var(--night);
+}
+
+.bomb:fullscreen .bomb__stage {
+  width: 100%;
+  max-width: min(100%, calc((100vh - 60px) * 748 / 484));
+  margin: 0 auto;
+}
+
+.bomb__stage {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.9);
+  container-type: inline-size;
+}
+
+.bomb__canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.bomb__hud {
+  position: absolute;
+  inset: 6px 8px auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.bomb__players {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.bomb__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 6px;
+  border-radius: 999px;
+  background: rgba(5, 3, 32, 0.62);
+  backdrop-filter: blur(4px);
+  color: #ffffff;
+  font-size: 12px;
+  transition: opacity 300ms ease;
+}
+
+.bomb__chip i {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--a);
+  border-radius: 50%;
+  background: var(--c);
+}
+
+.bomb__chip strong {
+  font-weight: 800;
+}
+
+.bomb__chip.is-out {
+  opacity: 0.4;
+  text-decoration: line-through;
+}
+
+.bomb__stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 11.5px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.bomb__stat--bomb {
+  color: #b8c6ff;
+}
+
+.bomb__stat--fire {
+  color: #ffb38a;
+}
+
+.bomb__stat--speed {
+  color: #ffe14d;
+}
+
+.bomb__clock {
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(5, 3, 32, 0.62);
+  backdrop-filter: blur(4px);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.bomb__clock.is-sudden {
+  background: #b4234d;
+  animation: bomb-pulse 900ms ease-in-out infinite;
+}
+
+@keyframes bomb-pulse {
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+.bomb__tools {
+  display: flex;
+  gap: 4px;
+  pointer-events: auto;
+}
+
+.bomb__tools .cats__iconbtn {
+  width: 32px;
+  height: 32px;
+  background: rgba(5, 3, 32, 0.62);
+}
+
+.bomb__count {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  font-family: var(--font-display);
+  font-size: 110px;
+  font-weight: 800;
+  text-shadow: 0 6px 30px rgba(5, 3, 32, 0.7);
+  pointer-events: none;
+  animation: bomb-count 800ms ease-out both;
+}
+
+@keyframes bomb-count {
+  from {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@container (max-width: 760px) {
+  .bomb__stat {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bomb__count,
+  .bomb__clock.is-sudden {
+    animation: none;
   }
 }
