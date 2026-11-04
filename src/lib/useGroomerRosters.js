@@ -9,9 +9,10 @@ const FALLBACK = {
   mayami: ['Nicolás', 'Andrea'],
   tinis: ['Marianela', 'Herbert', 'Jorgett'],
   cutepaws: ['Raudel', 'George', 'Dians', 'Sergio'],
+  floridaluxury: ['Armando'],
 };
 
-const COMBINED_MESSAGES = { famous: true, cruzin: true, abbie: false, mayami: false, tinis: false };
+const COMBINED_MESSAGES = { famous: true, cruzin: true, abbie: false, mayami: false, tinis: false, floridaluxury: false };
 
 export function isCombinedMessages(slug) {
   return COMBINED_MESSAGES[slug] ?? true;
@@ -26,7 +27,7 @@ export function useGroomerRosters() {
         collection(db, 'groomerRosters'),
         (snap) => {
           if (snap.empty) return;
-          const fresh = {};
+          const fresh = { ...FALLBACK };
           snap.docs.forEach((d) => {
             fresh[d.id] = d.data().names || [];
           });
