@@ -312,6 +312,7 @@ const EXTRA_CATEGORY = /adicional|add-on/i;
 const MIXED_BREED = /^mixed breed/i;
 
 const SPECIALTY_PACKAGES = [
+  { category: /raza especial.*(aussie|collie)/i, fits: (b) => /australian shepherd|collie/.test(b.breed), specific: true },
   { category: /raza especial.*husky/i, fits: (b) => b.coat === 'doble_capa' },
   { category: /raza especial.*(poodle|sheepdog)/i, fits: (b) => b.coat === 'rizado' || /sheep/.test(b.breed) },
   { category: /raza especial.*cavalier/i, fits: (b) => /cavalier/.test(b.breed) },
@@ -341,8 +342,10 @@ function packagesForBreed(rows, breed) {
     const specialty = specialtyFor(r);
     return !specialty || specialty.fits(breed);
   });
-  const withSpecialty = new Set(usable.filter((r) => specialtyFor(r)).map((r) => r.company_slug));
-  return usable.filter((r) => !withSpecialty.has(r.company_slug) || specialtyFor(r) || isDentalService(r));
+  const withSpecific = new Set(usable.filter((r) => specialtyFor(r)?.specific).map((r) => r.company_slug));
+  const narrowed = usable.filter((r) => !withSpecific.has(r.company_slug) || !specialtyFor(r) || specialtyFor(r).specific);
+  const withSpecialty = new Set(narrowed.filter((r) => specialtyFor(r)).map((r) => r.company_slug));
+  return narrowed.filter((r) => !withSpecialty.has(r.company_slug) || specialtyFor(r) || isDentalService(r));
 }
 
 export function breedCoat(name) {

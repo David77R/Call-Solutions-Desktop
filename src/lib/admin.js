@@ -24,7 +24,8 @@ async function setAndVerify(ref, data) {
 }
 
 export function saveCompanyCatalog(company) {
-  return setAndVerify(doc(db, 'priceCatalog', company.slug), company);
+  const { seed_only: _seedOnly, ...data } = company;
+  return setAndVerify(doc(db, 'priceCatalog', data.slug), data);
 }
 
 export function saveServiceDescriptions(global, byCompany) {

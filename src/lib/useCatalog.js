@@ -4,6 +4,18 @@ import { db } from './firebase';
 import { flattenCatalog } from './search';
 
 const OFFLINE_FALLBACK_MS = 6000;
+let seedCompanies = null;
+
+function loadSeed() {
+  if (!seedCompanies) seedCompanies = import('../data/seedData.json').then(({ default: seed }) => seed.companies);
+  return seedCompanies;
+}
+
+function withNewSeedCompanies(companies, seed) {
+  const known = new Set(companies.map((c) => c.slug));
+  const extra = (seed || []).filter((c) => !known.has(c.slug)).map((c) => ({ ...c, seed_only: true }));
+  return [...companies, ...extra].sort(byName);
+}
 const byName = (a, b) => a.name.localeCompare(b.name);
 
 let snapshot = { companies: [], rows: [], status: 'loading' };
@@ -61,7 +73,14 @@ function start() {
         setStatus(status);
         return;
       }
-      setCompanies(snap.docs.map((d) => d.data()).sort(byName), status);
+      const live = snap.docs.map((d) => d.data());
+      setCompanies(live.sort(byName), status);
+      loadSeed()
+        .then((seed) => {
+          const merged = withNewSeedCompanies(live, seed);
+          if (merged.length !== live.length) setCompanies(merged, status);
+        })
+        .catch(() => {});
     },
     useSeed
   );

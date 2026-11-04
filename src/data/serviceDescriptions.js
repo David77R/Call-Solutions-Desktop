@@ -72,6 +72,28 @@ export const defaultCompanyDescriptions = {
       en: 'Everything from the Bath Package plus a haircut or deshedding treatment for your pet.',
     },
   },
+  floridaluxury: {
+    sapphire: {
+      es: 'Baño con shampoo y acondicionador especializados para el tipo de pelaje y piel, secado con blower y cepillado completo (no incluye desenredado de nudos), corte y limado de uñas, limpieza de oídos, cepillado de dientes y recorte sanitario (barriga, entrepiernas, zona genital y debajo de la cola).',
+      en: "Specialty shampoo and conditioner for your dog's coat and skin type, full blow-dry and brushing (no dematting or detangling), nail clipping and grinding, ear cleaning, teeth brushing, and sanitary trim (belly, inner thighs, genital area and under the tail).",
+    },
+    diamond: {
+      es: 'Todo lo del Sapphire Bath Package, más corte de pelo y estilo personalizado según la raza y la preferencia del cliente. En razas de doble manto se hace un deslanado profundo en lugar del corte completo para proteger su pelaje.',
+      en: "Everything in the Sapphire Bath Package, plus a haircut and styling customized to your dog's breed and your preference. For double-coated breeds, a deep deshedding treatment is provided in place of a full haircut to protect their coat.",
+    },
+    bath: {
+      es: 'Baño con shampoo y acondicionador especializados para el tipo de pelaje y piel, secado con blower y cepillado completo (no incluye desenredado de nudos), corte y limado de uñas, limpieza de oídos, cepillado de dientes y recorte sanitario (barriga, entrepiernas, zona genital y debajo de la cola).',
+      en: "Specialty shampoo and conditioner for your dog's coat and skin type, full blow-dry and brushing (no dematting or detangling), nail clipping and grinding, ear cleaning, teeth brushing, and sanitary trim (belly, inner thighs, genital area and under the tail).",
+    },
+    'full grooming': {
+      es: 'Todo lo del Sapphire Bath Package, más corte de pelo y estilo personalizado según la raza y la preferencia del cliente. En razas de doble manto se hace un deslanado profundo en lugar del corte completo para proteger su pelaje.',
+      en: "Everything in the Sapphire Bath Package, plus a haircut and styling customized to your dog's breed and your preference. For double-coated breeds, a deep deshedding treatment is provided in place of a full haircut to protect their coat.",
+    },
+    platinum: {
+      es: 'Corte a tijera o corte especial personalizado. Agrega unos 20 minutos al servicio.',
+      en: 'Hand scissor or custom specialty cut. Adds about 20 minutes to the service.',
+    },
+  },
   cutepaws: {
     'full grooming': {
       es: 'Shampoo y enjuague doble, acondicionador, secado a mano, corte y limado de uñas y limpieza de oídos. Incluye corte de pelo O deslanado. No incluye desenredado de nudos.',

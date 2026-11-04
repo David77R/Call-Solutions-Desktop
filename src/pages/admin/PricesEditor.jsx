@@ -19,8 +19,35 @@ export default function PricesEditor({ company }) {
       return next;
     });
 
+  const [publish, setPublish] = useState('idle');
+  const [publishError, setPublishError] = useState('');
+
+  const publishCompany = async () => {
+    setPublish('saving');
+    setPublishError('');
+    try {
+      await saveCompanyCatalog(draft);
+      setPublish('done');
+    } catch (err) {
+      setPublish('idle');
+      setPublishError(err?.message || 'No se pudo publicar. Revisa la conexión e inténtalo de nuevo.');
+    }
+  };
+
   return (
     <div className="admin-block">
+      {company.seed_only && publish !== 'done' && (
+        <div className="desc-sync">
+          <p>
+            {company.name} es nueva y todavía no está en la base de datos. Ya la ve todo el equipo en la app, pero Fifo no la conoce hasta que la publiques. Al publicarla, los cambios de
+            precios que hagas aquí también quedan guardados.
+          </p>
+          <button type="button" className="savebar__save" disabled={publish === 'saving'} onClick={publishCompany}>
+            {publish === 'saving' ? 'Publicando…' : 'Publicar empresa'}
+          </button>
+          {publishError && <p className="sf-error">{publishError}</p>}
+        </div>
+      )}
       {draft.categories.map((cat, ci) => (
         <section key={ci} className={open === ci ? 'acc is-open' : 'acc'}>
           <button type="button" className="acc__head" aria-expanded={open === ci} onClick={() => setOpen(open === ci ? -1 : ci)}>

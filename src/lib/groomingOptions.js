@@ -56,6 +56,16 @@ const COMPANY_OPTIONS = {
     },
     full: { name: 'Full Grooming' },
   },
+  floridaluxury: {
+    basicCat: /^sapphire/i,
+    fullCat: /^diamond/i,
+    basic: {
+      name: 'Sapphire Bath Package',
+      es: 'Baño con shampoo y acondicionador especializados, secado y cepillado completo, corte y limado de uñas, limpieza de oídos, cepillado de dientes y recorte sanitario',
+      en: 'Specialty shampoo and conditioner, full blow-dry and brushing, nail clipping and grinding, ear cleaning, teeth brushing and sanitary trim',
+    },
+    full: { name: 'Diamond Full Grooming' },
+  },
 };
 
 const SIZE = /(mini|small|medium|large|extra large|xl)/i;

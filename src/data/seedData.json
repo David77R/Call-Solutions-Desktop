@@ -1800,6 +1800,273 @@
           ]
         }
       ]
+    },
+    {
+      "slug": "floridaluxury",
+      "name": "Florida Luxury Grooming",
+      "color_primary": "#C9A227",
+      "color_secondary": "#8A6D12",
+      "color_accent": "#1A1A1A",
+      "logo": "floridaluxury.jpeg",
+      "notes": [
+        "Zona: Miami-Dade, Broward y Palm Beach (hasta Jupiter)",
+        "Pago por Zelle: Floridaluxurygrooming",
+        "Sapphire (baño): 30 min Small, 60 min Medium, 90 min Large",
+        "Diamond (full grooming): 60 min Small, 75 min Medium, 90 min Large",
+        "Razas de doble manto (ej. Husky Mix): se hace deslanado profundo en lugar de corte completo para proteger el pelaje"
+      ],
+      "categories": [
+        {
+          "name": "Sapphire Bath Package (baño, secado, uñas, oídos y sanitario)",
+          "pill_label": "Sapphire Bath Package",
+          "items": [
+            {
+              "label": "Small - hasta 15 lbs",
+              "price_display": "$65.00",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 15.0
+            },
+            {
+              "label": "Medium - 16 a 40 lbs",
+              "price_display": "$80.00",
+              "needs_review": false,
+              "weight_min_lbs": 16.0,
+              "weight_max_lbs": 40.0
+            },
+            {
+              "label": "Large - 41 a 80 lbs",
+              "price_display": "$110.00",
+              "needs_review": false,
+              "weight_min_lbs": 41.0,
+              "weight_max_lbs": 80.0
+            }
+          ]
+        },
+        {
+          "name": "Diamond Full Grooming (Sapphire + corte y estilo)",
+          "pill_label": "Diamond Full Grooming",
+          "items": [
+            {
+              "label": "Small - hasta 15 lbs",
+              "price_display": "$90.00",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 15.0
+            },
+            {
+              "label": "Medium - 16 a 40 lbs",
+              "price_display": "$110.00",
+              "needs_review": false,
+              "weight_min_lbs": 16.0,
+              "weight_max_lbs": 40.0
+            },
+            {
+              "label": "Large - 41 a 80 lbs",
+              "price_display": "$145.00",
+              "needs_review": false,
+              "weight_min_lbs": 41.0,
+              "weight_max_lbs": 80.0
+            }
+          ]
+        },
+        {
+          "name": "Raza especial - Ruby: Poodle Mix & Sheepdogs",
+          "items": [
+            {
+              "label": "Bath - Small (hasta 20 lbs)",
+              "price_display": "$95.00",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 20.0
+            },
+            {
+              "label": "Full Grooming - Small (hasta 20 lbs)",
+              "price_display": "$120.00",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 20.0
+            },
+            {
+              "label": "Bath - Medium (21-40 lbs)",
+              "price_display": "$115.00",
+              "needs_review": false,
+              "weight_min_lbs": 21.0,
+              "weight_max_lbs": 40.0
+            },
+            {
+              "label": "Full Grooming - Medium (21-40 lbs)",
+              "price_display": "$155.00",
+              "needs_review": false,
+              "weight_min_lbs": 21.0,
+              "weight_max_lbs": 40.0
+            },
+            {
+              "label": "Bath - Large (41-80 lbs)",
+              "price_display": "$145.00",
+              "needs_review": false,
+              "weight_min_lbs": 41.0,
+              "weight_max_lbs": 80.0
+            },
+            {
+              "label": "Full Grooming - Large (41-80 lbs)",
+              "price_display": "$190.00",
+              "needs_review": false,
+              "weight_min_lbs": 41.0,
+              "weight_max_lbs": 80.0
+            }
+          ]
+        },
+        {
+          "name": "Raza especial - Emerald: Husky, German Shepherd & Golden (doble manto)",
+          "items": [
+            {
+              "label": "Full Grooming - Small (hasta 20 lbs)",
+              "price_display": "$120.00",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 20.0
+            },
+            {
+              "label": "Full Grooming - Medium (21-40 lbs)",
+              "price_display": "$150.00",
+              "needs_review": false,
+              "weight_min_lbs": 21.0,
+              "weight_max_lbs": 40.0
+            },
+            {
+              "label": "Full Grooming - Large (41-80 lbs)",
+              "price_display": "$185.00",
+              "needs_review": false,
+              "weight_min_lbs": 41.0,
+              "weight_max_lbs": 80.0
+            },
+            {
+              "label": "Full Grooming - Extra Large (mas de 81 lbs)",
+              "price_display": "$240.00",
+              "needs_review": false,
+              "weight_min_lbs": 81.0,
+              "weight_max_lbs": 300.0
+            }
+          ]
+        },
+        {
+          "name": "Raza especial - Topaz: Aussie & Collie",
+          "items": [
+            {
+              "label": "Bath - Small/Medium (hasta 40 lbs)",
+              "price_display": "$115.00",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 40.0
+            },
+            {
+              "label": "Full Grooming - Small/Medium (hasta 40 lbs)",
+              "price_display": "$145.00",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 40.0
+            },
+            {
+              "label": "Bath - Large (41-80 lbs)",
+              "price_display": "$140.00",
+              "needs_review": false,
+              "weight_min_lbs": 41.0,
+              "weight_max_lbs": 80.0
+            },
+            {
+              "label": "Full Grooming - Large (41-80 lbs)",
+              "price_display": "$170.00",
+              "needs_review": false,
+              "weight_min_lbs": 41.0,
+              "weight_max_lbs": 80.0
+            }
+          ]
+        },
+        {
+          "name": "Raza especial - Amethyst: Cocker Spaniel & Mix",
+          "items": [
+            {
+              "label": "Bath - Small (hasta 20 lbs)",
+              "price_display": "$95.00",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 20.0
+            },
+            {
+              "label": "Full Grooming - Small (hasta 20 lbs)",
+              "price_display": "$120.00",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 20.0
+            },
+            {
+              "label": "Bath - Medium (21-40 lbs)",
+              "price_display": "$110.00",
+              "needs_review": false,
+              "weight_min_lbs": 21.0,
+              "weight_max_lbs": 40.0
+            },
+            {
+              "label": "Full Grooming - Medium (21-40 lbs)",
+              "price_display": "$145.00",
+              "needs_review": false,
+              "weight_min_lbs": 21.0,
+              "weight_max_lbs": 40.0
+            },
+            {
+              "label": "Bath - Large (41-80 lbs)",
+              "price_display": "$140.00",
+              "needs_review": false,
+              "weight_min_lbs": 41.0,
+              "weight_max_lbs": 80.0
+            }
+          ]
+        },
+        {
+          "name": "Raza especial - Pearl: Cavalier",
+          "items": [
+            {
+              "label": "Bath - Small (hasta 20 lbs)",
+              "price_display": "$90.00",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 20.0
+            },
+            {
+              "label": "Full Grooming - Small (hasta 20 lbs)",
+              "price_display": "$125.00",
+              "needs_review": false,
+              "weight_min_lbs": 0.0,
+              "weight_max_lbs": 20.0
+            },
+            {
+              "label": "Bath - Medium (21-60 lbs)",
+              "price_display": "$135.00",
+              "needs_review": false,
+              "weight_min_lbs": 21.0,
+              "weight_max_lbs": 60.0
+            },
+            {
+              "label": "Full Grooming - Medium (21-60 lbs)",
+              "price_display": "$170.00",
+              "needs_review": false,
+              "weight_min_lbs": 21.0,
+              "weight_max_lbs": 60.0
+            }
+          ]
+        },
+        {
+          "name": "Servicios adicionales",
+          "items": [
+            {
+              "label": "Platinum - Hand Scissor / Specialty Cut (20 min)",
+              "price_display": "$15.00",
+              "needs_review": false
+            }
+          ]
+        }
+      ]
     }
   ]
 }

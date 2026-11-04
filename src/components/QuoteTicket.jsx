@@ -90,7 +90,8 @@ function FilledTicket({ item, descriptions, rows, breedFromQuery, lang, onLangCh
   const doubleCoat = !item.is_cat && !dentalCleaning && coat === 'doble_capa';
   const priceText = isBundle ? option?.price : item.price_display;
   const needsReview = isBundle ? option?.needs_review : item.needs_review;
-  const serviceName = isBundle ? option?.name : item.is_cat ? catEquivalent(item, rows) : item.pill_label || item.category_name;
+  const specialtyLabel = !isBundle && /raza especial|double-coated|special breed/i.test(item.category_name || '') ? (item.label || '').split(' - ')[0].split(' (')[0].trim() : '';
+  const serviceName = isBundle ? option?.name : item.is_cat ? catEquivalent(item, rows) : specialtyLabel || item.pill_label || item.category_name;
   const description = getServiceDescription(descriptions, serviceName, item.company_slug, lang);
   const surchargeApplied = !isBundle && item.surcharge_amount_applied && item.original_price_display;
 
