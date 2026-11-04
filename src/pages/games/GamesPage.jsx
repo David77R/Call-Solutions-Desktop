@@ -3,6 +3,7 @@ import TriviaGame from './TriviaGame';
 import MazeGame from './MazeGame';
 import CatArtilleryGame from './CatArtilleryGame';
 import BomberGame from './BomberGame';
+import HockeyGame from './HockeyGame';
 import Leaderboard from './Leaderboard';
 import { useCatalog } from '../../lib/useCatalog';
 import { useGroomerRosters } from '../../lib/useGroomerRosters';
@@ -14,6 +15,7 @@ const TABS = [
   { key: 'maze', label: 'Laberinto' },
   { key: 'cats', label: 'Gatos' },
   { key: 'bombs', label: 'Bombas' },
+  { key: 'hockey', label: 'Hockey' },
   { key: 'board', label: 'Leaderboard' },
 ];
 
@@ -43,6 +45,7 @@ export default function GamesPage() {
         {tab === 'maze' && <MazeGame agentName={agentName} />}
         {tab === 'cats' && <CatArtilleryGame agentName={agentName} />}
         {tab === 'bombs' && <BomberGame agentName={agentName} />}
+        {tab === 'hockey' && <HockeyGame agentName={agentName} />}
         {tab === 'board' && <Leaderboard agentName={agentName} />}
       </div>
     </div>

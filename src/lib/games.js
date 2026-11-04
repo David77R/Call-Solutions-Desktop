@@ -65,6 +65,19 @@ export function saveBombScore(agentName, score, result, level) {
   }).catch(() => {});
 }
 
+export function saveHockeyScore(agentName, score, result, level) {
+  if (!agentName?.trim() || score <= 0) return Promise.resolve();
+  return setDoc(doc(db, 'catArtilleryScores', makeId()), {
+    agent_name: agentName.trim(),
+    game: 'hockey',
+    score,
+    result,
+    level,
+    date_key: todayKey(),
+    played_at: new Date().toISOString(),
+  }).catch(() => {});
+}
+
 function useWeekTotals(collectionName, game) {
   const [totals, setTotals] = useState({});
   useEffect(
@@ -94,7 +107,8 @@ export function useLeaderboard() {
   const maze = useWeekTotals('mazeScores');
   const cats = useWeekTotals('catArtilleryScores');
   const bombs = useWeekTotals('catArtilleryScores', 'bomb');
-  const names = new Set([...Object.keys(trivia), ...Object.keys(maze), ...Object.keys(cats), ...Object.keys(bombs)]);
+  const hockey = useWeekTotals('catArtilleryScores', 'hockey');
+  const names = new Set([...Object.keys(trivia), ...Object.keys(maze), ...Object.keys(cats), ...Object.keys(bombs), ...Object.keys(hockey)]);
   return [...names]
     .map((name) => ({
       name,
@@ -102,7 +116,8 @@ export function useLeaderboard() {
       maze: maze[name] || 0,
       cats: cats[name] || 0,
       bombs: bombs[name] || 0,
-      total: (trivia[name] || 0) + (maze[name] || 0) + (cats[name] || 0) + (bombs[name] || 0),
+      hockey: hockey[name] || 0,
+      total: (trivia[name] || 0) + (maze[name] || 0) + (cats[name] || 0) + (bombs[name] || 0) + (hockey[name] || 0),
     }))
     .sort((a, b) => b.total - a.total);
 }
