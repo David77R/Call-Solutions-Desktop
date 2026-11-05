@@ -481,34 +481,142 @@
   gap: 8px;
 }
 
-.rmh__strip {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(26px, 1fr));
-  gap: 4px;
+.rmh__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
-.rmh__cell {
+.rmh__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1.5px solid var(--line-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background-color 200ms ease,
+    border-color 200ms ease;
+}
+
+.rmh__pill i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--c);
+}
+
+.rmh__pill[aria-checked='true'] {
+  border-color: var(--c, #7f97e8);
+  background: var(--c, #7f97e8);
+  color: #ffffff;
+}
+
+.rmh__pill[aria-checked='true'] i {
+  background: #ffffff;
+}
+
+.rmh__months {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 12px;
+}
+
+.rmh__month {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md, 14px);
+  background: rgba(5, 3, 32, 0.28);
+}
+
+.rmh__month-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.rmh__month-head strong {
+  font-size: 14px;
+}
+
+.rmh__month-head small {
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.rmh__weekdays,
+.rmh__days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+
+.rmh__weekdays span {
+  font-size: 10.5px;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.rmh__day {
+  position: relative;
   display: grid;
   place-items: center;
   aspect-ratio: 1;
   border: 0;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text-muted);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-soft);
   font: inherit;
-  font-size: 10.5px;
+  font-size: 11.5px;
   font-weight: 700;
+}
+
+.rmh__day:disabled {
   cursor: default;
 }
 
-.rmh__cell.is-on {
-  background: color-mix(in srgb, var(--accent, #7f97e8) calc(30% + var(--k) * 70%), transparent);
+.rmh__day.is-out {
+  opacity: 0.35;
+}
+
+.rmh__day.is-today {
+  box-shadow: inset 0 0 0 1.5px #ffffff;
+}
+
+.rmh__day.is-on {
+  background: color-mix(in srgb, var(--c) calc(40% + var(--k) * 60%), transparent);
   color: #ffffff;
   cursor: pointer;
 }
 
-.rmh__cell.is-on:hover {
+.rmh__day.is-on:hover {
   outline: 2px solid #ffffff;
+}
+
+.rmh__dots {
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  display: flex;
+  gap: 2px;
+  transform: translateX(-50%);
+}
+
+.rmh__dots b {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(5, 3, 32, 0.5);
 }
 
 .rmh__totals {

@@ -6,8 +6,86 @@ import { shiftDateKey, shortLabel, todayKey } from '../../lib/summaries';
 const RANGES = [
   { key: 7, label: '7 días' },
   { key: 30, label: '30 días' },
+  { key: 90, label: '3 meses' },
   { key: 0, label: 'Todo' },
 ];
+const WEEKDAYS = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+const MAX_MONTHS = 12;
+
+const pad = (n) => String(n).padStart(2, '0');
+const monthKey = (key) => key.slice(0, 7);
+
+function monthsBetween(fromKey, toKey) {
+  const out = [];
+  let [y, m] = fromKey.split('-').map(Number);
+  const [ty, tm] = toKey.split('-').map(Number);
+  while (y < ty || (y === ty && m <= tm)) {
+    out.push(`${y}-${pad(m)}`);
+    m += 1;
+    if (m > 12) {
+      m = 1;
+      y += 1;
+    }
+  }
+  return out.slice(-MAX_MONTHS);
+}
+
+function MiniMonth({ month, info, since, today, colors, onPick }) {
+  const [y, m] = month.split('-').map(Number);
+  const first = new Date(y, m - 1, 1);
+  const lead = (first.getDay() + 6) % 7;
+  const count = new Date(y, m, 0).getDate();
+  const monthName = first.toLocaleDateString('es-VE', { month: 'long' });
+  const title = `${monthName.charAt(0).toUpperCase()}${monthName.slice(1)} ${y}`;
+  const worked = Array.from({ length: count }, (_, i) => info.get(`${month}-${pad(i + 1)}`)).filter(Boolean).length;
+  const peak = Math.max(1, ...Array.from({ length: count }, (_, i) => info.get(`${month}-${pad(i + 1)}`)?.zones || 0));
+  return (
+    <div className="rmh__month">
+      <div className="rmh__month-head">
+        <strong>{title}</strong>
+        <small>{worked ? `${worked} ${worked === 1 ? 'día' : 'días'}` : 'Sin remarketing'}</small>
+      </div>
+      <div className="rmh__weekdays" aria-hidden="true">
+        {WEEKDAYS.map((d, i) => (
+          <span key={i}>{d}</span>
+        ))}
+      </div>
+      <div className="rmh__days">
+        {Array.from({ length: lead }, (_, i) => (
+          <span key={`l${i}`} />
+        ))}
+        {Array.from({ length: count }, (_, i) => {
+          const key = `${month}-${pad(i + 1)}`;
+          const day = info.get(key);
+          const outside = (since && key < since) || key > today;
+          const cls = ['rmh__day', day ? 'is-on' : '', outside ? 'is-out' : '', key === today ? 'is-today' : ''].filter(Boolean).join(' ');
+          const label = day ? `${shortLabel(key)}: ${day.zones} zonas · ${day.items.map((d) => `${d.name} (${d.zones})`).join(', ')}` : `${shortLabel(key)}: sin remarketing`;
+          return (
+            <button
+              key={key}
+              type="button"
+              className={cls}
+              style={day ? { '--k': day.zones / peak, '--c': day.items.length === 1 ? colors.get(day.items[0].slug) : '#7f97e8' } : undefined}
+              title={label}
+              aria-label={label}
+              disabled={!day}
+              onClick={() => day && onPick(day.items[0].slug, key)}
+            >
+              <span>{i + 1}</span>
+              {day && day.items.length > 1 && (
+                <i className="rmh__dots" aria-hidden="true">
+                  {day.items.map((d) => (
+                    <b key={d.slug} style={{ background: colors.get(d.slug) }} />
+                  ))}
+                </i>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 function zoneIndex(slug) {
   const zones = REMARKETING_MAPS[mapForCompany(slug)]?.zones || [];
@@ -79,14 +157,15 @@ function DayRow({ day, company, showCompany, onOpen }) {
 }
 
 export default function RemarketingHistory({ companies, currentSlug, onOpen }) {
-  const [scope, setScope] = useState('company');
+  const [scope, setScope] = useState(currentSlug || 'all');
   const [range, setRange] = useState(30);
-  const { days, loading, error } = useRemarketingHistory(scope === 'all' ? 'all' : currentSlug);
+  const { days, loading, error } = useRemarketingHistory(scope);
   const today = todayKey();
   const since = range ? shiftDateKey(today, -(range - 1)) : null;
   const visible = useMemo(() => days.filter((d) => !since || d.dateKey >= since), [days, since]);
   const bySlug = new Map(companies.map((c) => [c.slug, c]));
-  const current = bySlug.get(currentSlug);
+  const current = bySlug.get(scope);
+  const colors = new Map(companies.map((c) => [c.slug, c.color_primary || '#7f97e8']));
 
   const totals = useMemo(() => {
     const agents = {};
@@ -102,12 +181,15 @@ export default function RemarketingHistory({ companies, currentSlug, onOpen }) {
       .sort((a, b) => b.zones - a.zones);
   }, [visible]);
 
-  const calendarDays = range || 30;
-  const perDay = new Map();
-  visible.forEach((d) => perDay.set(d.dateKey, (perDay.get(d.dateKey) || 0) + d.zips.length));
-  const strip = Array.from({ length: calendarDays }, (_, i) => shiftDateKey(today, -(calendarDays - 1 - i)));
-  const peak = Math.max(1, ...strip.map((k) => perDay.get(k) || 0));
-  const workedDays = strip.filter((k) => perDay.get(k)).length;
+  const info = new Map();
+  visible.forEach((d) => {
+    const entry = info.get(d.dateKey) || { zones: 0, items: [] };
+    entry.zones += d.zips.length;
+    entry.items.push({ slug: d.slug, name: bySlug.get(d.slug)?.name || d.slug, zones: d.zips.length });
+    info.set(d.dateKey, entry);
+  });
+  const earliest = visible.length ? visible[visible.length - 1].dateKey : today;
+  const months = monthsBetween(monthKey(since || earliest), monthKey(today));
   const zonesSum = visible.reduce((a, d) => a + d.zips.length, 0);
 
   return (
@@ -116,19 +198,11 @@ export default function RemarketingHistory({ companies, currentSlug, onOpen }) {
         <div>
           <h2 className="rmh__title">Historial de remarketing</h2>
           <p className="admin-hint">
-            {scope === 'all' ? 'Todas las empresas' : current?.name}: {visible.length} {visible.length === 1 ? 'día trabajado' : 'días trabajados'} y {zonesSum} zonas
+            {scope === 'all' ? 'Todas las empresas' : current?.name || 'Empresa'}: {visible.length} {visible.length === 1 ? 'día trabajado' : 'días trabajados'} y {zonesSum} zonas
             {range ? ` en los últimos ${range} días` : ''}.
           </p>
         </div>
         <div className="rmh__controls">
-          <div className="rmk__regions" role="group" aria-label="Empresas">
-            <button type="button" aria-pressed={scope === 'company'} onClick={() => setScope('company')}>
-              {current?.name || 'Esta empresa'}
-            </button>
-            <button type="button" aria-pressed={scope === 'all'} onClick={() => setScope('all')}>
-              Todas
-            </button>
-          </div>
           <div className="rmk__regions" role="group" aria-label="Rango">
             {RANGES.map((r) => (
               <button key={r.key} type="button" aria-pressed={range === r.key} onClick={() => setRange(r.key)}>
@@ -139,23 +213,30 @@ export default function RemarketingHistory({ companies, currentSlug, onOpen }) {
         </div>
       </div>
 
-      <div className="rmh__strip" role="list" aria-label={`${workedDays} de ${calendarDays} días con remarketing`}>
-        {strip.map((k) => {
-          const n = perDay.get(k) || 0;
-          return (
-            <button
-              key={k}
-              type="button"
-              role="listitem"
-              className={n ? 'rmh__cell is-on' : 'rmh__cell'}
-              style={{ '--k': n / peak }}
-              title={`${weekday(k)} ${shortLabel(k)}: ${n ? `${n} zonas` : 'sin remarketing'}`}
-              onClick={() => n && onOpen(scope === 'all' ? visible.find((d) => d.dateKey === k)?.slug || currentSlug : currentSlug, k)}
-            >
-              <span>{Number(k.slice(8))}</span>
-            </button>
-          );
-        })}
+      <div className="rmh__pills" role="radiogroup" aria-label="Empresa">
+        <button type="button" role="radio" aria-checked={scope === 'all'} className="rmh__pill" onClick={() => setScope('all')}>
+          Todas
+        </button>
+        {companies.map((c) => (
+          <button
+            key={c.slug}
+            type="button"
+            role="radio"
+            aria-checked={scope === c.slug}
+            className="rmh__pill"
+            style={{ '--c': c.color_primary || '#7f97e8' }}
+            onClick={() => setScope(c.slug)}
+          >
+            <i aria-hidden="true" />
+            {c.name}
+          </button>
+        ))}
+      </div>
+
+      <div className="rmh__months">
+        {months.map((month) => (
+          <MiniMonth key={month} month={month} info={info} since={since} today={today} colors={colors} onPick={onOpen} />
+        ))}
       </div>
 
       {totals.length > 0 && (
