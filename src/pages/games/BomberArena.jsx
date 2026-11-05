@@ -217,7 +217,7 @@ export default function BomberArena({ config, onExit, onSave, tour, onRoundOver,
     };
     const tick = (now) => {
       const st = stRef.current;
-      const dt = Math.min(0.1, (now - last) / 1000);
+      const dt = Math.max(0, Math.min(0.1, (now - last) / 1000));
       last = now;
       if (st) {
         if (st.ready > 0) st.ready = Math.max(0, st.ready - dt);
