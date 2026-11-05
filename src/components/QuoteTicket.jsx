@@ -298,7 +298,13 @@ function FilledTicket({ item, descriptions, rows, breedFromQuery, lang, onLangCh
       )}
 
       <div className="ticket__alerts">
-        {item.suggested && !item.heavier_than && <p className="ticket__alert ticket__alert--info">Sugerido por el peso, no por el nombre.</p>}
+        {item.suggested && !item.heavier_than && !item.companion && <p className="ticket__alert ticket__alert--info">Sugerido por el peso, no por el nombre.</p>}
+        {item.companion && (
+          <p className="ticket__alert ticket__alert--info">
+            Para razas de doble manto {item.company_name} cobra el Double-coated hair a $110 de 40 a 100 lbs. Este Full Grooming Extra Large es la otra opción para perros de 60 lbs
+            o más, si el cliente quiere el corte completo.
+          </p>
+        )}
         {item.heavier_than && (
           <p className="ticket__alert ticket__alert--info">
             Esta raza suele pesar hasta {item.heavier_than} lbs. Usa este precio si el cliente dice que pesa más; pregunta el peso para confirmar.

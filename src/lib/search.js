@@ -299,9 +299,18 @@ export function searchPriceItems({ companies, rows }, queryText, slug) {
   const pool = [...candidates, ...heavier.filter((r) => !candidates.some((c) => itemKey(c) === itemKey(r)))];
   const fallback = (breedInfo ? packagesForBreed(pool, breedInfo) : pool)
     .sort(
-      (a, b) => compare(a.company_name, b.company_name) || isDentalService(a) - isDentalService(b) || a.category_order - b.category_order || a.weight_min_lbs - b.weight_min_lbs,
+      (a, b) =>
+        compare(a.company_name, b.company_name) ||
+        isDentalService(a) - isDentalService(b) ||
+        (breedInfo ? isCompanion(a, breedInfo) - isCompanion(b, breedInfo) : 0) ||
+        a.category_order - b.category_order ||
+        a.weight_min_lbs - b.weight_min_lbs,
     )
-    .map((r) => (heavierKeys.has(itemKey(r)) ? { ...r, weight_match: true, suggested: true, heavier_than: breedRange.max } : { ...r, weight_match: true, suggested: true }));
+    .map((r) => {
+      const base = { ...r, weight_match: true, suggested: true };
+      if (breedInfo && isCompanion(r, breedInfo)) return { ...base, companion: true };
+      return heavierKeys.has(itemKey(r)) ? { ...base, heavier_than: breedRange.max } : base;
+    });
 
   return finish([...keepFlagged, ...fallback]);
 }
@@ -334,6 +343,12 @@ function breedFromCatalog(textResults) {
   };
 }
 
+const SPECIALTY_COMPANIONS = {
+  cutepaws: (r, breed) => breed.coat === 'doble_capa' && /^full grooming$/i.test(r.category_name || '') && /extra large/i.test(r.label || ''),
+};
+
+const isCompanion = (r, breed) => !!SPECIALTY_COMPANIONS[r.company_slug]?.(r, breed);
+
 function packagesForBreed(rows, breed) {
   const usable = rows.filter((r) => {
     if (EXTRA_CATEGORY.test(r.category_name)) return false;
@@ -344,7 +359,7 @@ function packagesForBreed(rows, breed) {
   const withSpecific = new Set(usable.filter((r) => specialtyFor(r)?.specific).map((r) => r.company_slug));
   const narrowed = usable.filter((r) => !withSpecific.has(r.company_slug) || !specialtyFor(r) || specialtyFor(r).specific);
   const withSpecialty = new Set(narrowed.filter((r) => specialtyFor(r)).map((r) => r.company_slug));
-  return narrowed.filter((r) => !withSpecialty.has(r.company_slug) || specialtyFor(r) || isDentalService(r));
+  return narrowed.filter((r) => !withSpecialty.has(r.company_slug) || specialtyFor(r) || isDentalService(r) || isCompanion(r, breed));
 }
 
 export function breedCoat(name) {
