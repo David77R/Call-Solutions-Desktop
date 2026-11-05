@@ -2,6 +2,10 @@ import { useState } from 'react';
 import { minutesOf, useProtocol } from '../../lib/protocol';
 import { CheckIcon } from '../../components/Icons';
 import SyncNotice from '../../components/SyncNotice';
+import { useAuth } from '../../lib/AuthContext';
+import { useAgentProfile } from '../../lib/useAgentProfile';
+import { isAdminRole } from '../../lib/roles';
+import TeamTimeline from './TeamTimeline';
 import './ProtocolPage.css';
 
 const ALERTS_KEY = 'ccs_protocol_alerts';
@@ -16,6 +20,11 @@ function readAlerts() {
 
 export default function ProtocolPage() {
   const { items, completions, toggle, nowMinutes, overdue, sync, dayKey, afterReset } = useProtocol();
+  const { user } = useAuth();
+  const profile = useAgentProfile(user);
+  const admin = isAdminRole(profile?.role);
+  const [view, setView] = useState('team');
+  const showTeam = admin && view === 'team';
   const [y, m, d] = dayKey.split('-').map(Number);
   const dayLabel = new Date(y, m - 1, d).toLocaleDateString('es-VE', { weekday: 'long', day: 'numeric', month: 'long' });
   const [alerts, setAlerts] = useState(readAlerts);
@@ -92,30 +101,46 @@ export default function ProtocolPage() {
         {alertError && <p className="protocol__error">{alertError}</p>}
       </div>
 
-      <ol className="timeline">
-        {items.map((item, i) => {
-          const done = !!completions[item.id];
-          const late = !done && minutesOf(item.time) <= nowMinutes;
-          const isNext = item === nextItem;
-          const state = done ? 'is-done' : late ? 'is-late' : isNext ? 'is-next' : '';
-          return (
-            <li key={item.id} className={`timeline__item ${state}`} style={{ '--i': i }}>
-              <span className="timeline__time">{item.time}</span>
-              <button type="button" className="timeline__check" aria-pressed={done} onClick={() => toggle(item.id)}>
-                <span className="timeline__box" aria-hidden="true">
-                  {done && <CheckIcon size={16} />}
-                </span>
-                <span className="timeline__label">{item.label}</span>
-                {late && <span className="timeline__tag">Atrasada</span>}
-                {isNext && <span className="timeline__tag timeline__tag--next">Siguiente</span>}
-                {done && completions[item.id]?.at && (
-                  <span className="timeline__by">{new Date(completions[item.id].at).toLocaleTimeString('es-VE', { hour: 'numeric', minute: '2-digit' })}</span>
-                )}
-              </button>
-            </li>
-          );
-        })}
-      </ol>
+      {admin && (
+        <div className="protocol__views" role="tablist" aria-label="Vista del protocolo">
+          <button type="button" role="tab" aria-selected={view === 'team'} onClick={() => setView('team')}>
+            Equipo
+          </button>
+          <button type="button" role="tab" aria-selected={view === 'mine'} onClick={() => setView('mine')}>
+            Mi protocolo
+          </button>
+          <span className="protocol__views-note">Vista de administración: ves qué agente marcó cada tarea y a qué hora.</span>
+        </div>
+      )}
+
+      {showTeam && <TeamTimeline dayKey={dayKey} nowMinutes={nowMinutes} />}
+
+      {!showTeam && (
+        <ol className="timeline">
+          {items.map((item, i) => {
+            const done = !!completions[item.id];
+            const late = !done && minutesOf(item.time) <= nowMinutes;
+            const isNext = item === nextItem;
+            const state = done ? 'is-done' : late ? 'is-late' : isNext ? 'is-next' : '';
+            return (
+              <li key={item.id} className={`timeline__item ${state}`} style={{ '--i': i }}>
+                <span className="timeline__time">{item.time}</span>
+                <button type="button" className="timeline__check" aria-pressed={done} onClick={() => toggle(item.id)}>
+                  <span className="timeline__box" aria-hidden="true">
+                    {done && <CheckIcon size={16} />}
+                  </span>
+                  <span className="timeline__label">{item.label}</span>
+                  {late && <span className="timeline__tag">Atrasada</span>}
+                  {isNext && <span className="timeline__tag timeline__tag--next">Siguiente</span>}
+                  {done && completions[item.id]?.at && (
+                    <span className="timeline__by">{new Date(completions[item.id].at).toLocaleTimeString('es-VE', { hour: 'numeric', minute: '2-digit' })}</span>
+                  )}
+                </button>
+              </li>
+            );
+          })}
+        </ol>
+      )}
     </div>
   );
 }

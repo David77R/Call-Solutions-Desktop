@@ -8,6 +8,7 @@ import ReviewLinksEditor from './ReviewLinksEditor';
 import TeamProtocol from './TeamProtocol';
 import { useAuth } from '../../lib/AuthContext';
 import { useAgentProfile } from '../../lib/useAgentProfile';
+import { isStaffRole } from '../../lib/roles';
 import CompanyTabs from '../../components/CompanyTabs';
 import { useCatalog } from '../../lib/useCatalog';
 import { useServiceDescriptionsSync } from '../../lib/useServiceDescriptions';
@@ -22,9 +23,6 @@ import './AdminPage.css';
 
 const ADMIN_PIN = import.meta.env.VITE_ADMIN_PIN || '';
 const SESSION_KEY = 'ccs_admin_unlocked';
-
-const STAFF_ROLES = ['administración', 'administracion', 'administrador', 'administradora', 'supervisor', 'supervisora', 'coordinador', 'coordinadora'];
-export const isStaffRole = (role) => STAFF_ROLES.includes((role || '').trim().toLowerCase());
 
 const TABS = [
   { key: 'protocol', label: 'Protocolo del equipo' },
