@@ -5,6 +5,7 @@ import { useAuth } from '../../lib/AuthContext';
 import { accentTokens } from '../../lib/color';
 import { REMARKETING_MAPS, mapForCompany } from '../../data/remarketingZones';
 import ZoneMap from './ZoneMap';
+import RemarketingHistory from './RemarketingHistory';
 import { REMARKETING_SLUGS, resetZones, toggleZone, useZoneProgress } from '../../lib/remarketing';
 import { labelFromDateKey, shiftDateKey, todayKey } from '../../lib/summaries';
 import '../summary/Summary.css';
@@ -218,6 +219,23 @@ export default function RemarketingPage() {
             ))}
         </aside>
       </div>
+
+      {company && (
+        <RemarketingHistory
+          companies={options}
+          currentSlug={company.slug}
+          onOpen={(s, key) => {
+            if (mapForCompany(s) !== mapId) {
+              setRegion('all');
+              setHover(null);
+              setFocus(null);
+            }
+            setSlug(s);
+            setDateKey(key);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+        />
+      )}
     </div>
   );
 }

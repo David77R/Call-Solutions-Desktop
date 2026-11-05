@@ -5,6 +5,9 @@ import ScriptEditor from './ScriptEditor';
 import RostersEditor from './RostersEditor';
 import MessagesEditor from './MessagesEditor';
 import ReviewLinksEditor from './ReviewLinksEditor';
+import TeamProtocol from './TeamProtocol';
+import { useAuth } from '../../lib/AuthContext';
+import { useAgentProfile } from '../../lib/useAgentProfile';
 import CompanyTabs from '../../components/CompanyTabs';
 import { useCatalog } from '../../lib/useCatalog';
 import { useServiceDescriptionsSync } from '../../lib/useServiceDescriptions';
@@ -20,7 +23,11 @@ import './AdminPage.css';
 const ADMIN_PIN = import.meta.env.VITE_ADMIN_PIN || '';
 const SESSION_KEY = 'ccs_admin_unlocked';
 
+const STAFF_ROLES = ['administración', 'administracion', 'administrador', 'administradora', 'supervisor', 'supervisora', 'coordinador', 'coordinadora'];
+export const isStaffRole = (role) => STAFF_ROLES.includes((role || '').trim().toLowerCase());
+
 const TABS = [
+  { key: 'protocol', label: 'Protocolo del equipo' },
   { key: 'prices', label: 'Precios' },
   { key: 'descriptions', label: 'Descripciones' },
   { key: 'script', label: 'Guion de llamada' },
@@ -80,7 +87,15 @@ function PinGate({ onUnlock }) {
         PIN
       </label>
       <div className="pin__field">
-        <input id="admin-pin" className="sf-input pin__input" type={visible ? 'text' : 'password'} autoFocus autoComplete="off" value={pin} onChange={(e) => setPin(e.target.value)} />
+        <input
+          id="admin-pin"
+          className="sf-input pin__input"
+          type={visible ? 'text' : 'password'}
+          autoFocus
+          autoComplete="off"
+          value={pin}
+          onChange={(e) => setPin(e.target.value)}
+        />
         <button type="button" className="pin__eye" onClick={() => setVisible((v) => !v)} aria-label={visible ? 'Ocultar PIN' : 'Mostrar PIN'} aria-pressed={visible}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" />
@@ -102,7 +117,8 @@ function Agents() {
   if (error === 'permission-denied') {
     return (
       <p className="co-card__issue">
-        Las reglas de Firestore no dejan leer la colección "agents". Hay que agregarla a las reglas en la consola de Firebase para que aparezcan los agentes y se guarden las fotos de perfil.
+        Las reglas de Firestore no dejan leer la colección "agents". Hay que agregarla a las reglas en la consola de Firebase para que aparezcan los agentes y se guarden las fotos
+        de perfil.
       </p>
     );
   }
@@ -123,8 +139,12 @@ function Agents() {
 }
 
 export default function AdminPage() {
-  const [unlocked, setUnlocked] = useState(readUnlocked);
-  const [tab, setTab] = useState('prices');
+  const { user } = useAuth();
+  const profile = useAgentProfile(user);
+  const byRole = isStaffRole(profile?.role);
+  const [pinUnlocked, setUnlocked] = useState(readUnlocked);
+  const unlocked = pinUnlocked || byRole;
+  const [tab, setTab] = useState('protocol');
   const [slug, setSlug] = useState(null);
   const { companies } = useCatalog();
   const { descriptions, missing } = useServiceDescriptionsSync();
@@ -141,20 +161,24 @@ export default function AdminPage() {
     <div className="admin" style={accentTokens(needsCompany ? company?.color_primary : null)}>
       <div className="admin__head">
         <h1 className="admin__title">Administración</h1>
-        <button
-          type="button"
-          className="sf-chip"
-          onClick={() => {
-            try {
-              sessionStorage.removeItem(SESSION_KEY);
-            } catch {
+        {byRole ? (
+          <span className="admin-hint">Entraste con tu cargo de {profile.role}.</span>
+        ) : (
+          <button
+            type="button"
+            className="sf-chip"
+            onClick={() => {
+              try {
+                sessionStorage.removeItem(SESSION_KEY);
+              } catch {
+                setUnlocked(false);
+              }
               setUnlocked(false);
-            }
-            setUnlocked(false);
-          }}
-        >
-          Bloquear panel
-        </button>
+            }}
+          >
+            Bloquear panel
+          </button>
+        )}
       </div>
 
       <div className="admin__tabs" role="tablist" aria-label="Secciones de administración">
@@ -175,6 +199,7 @@ export default function AdminPage() {
         {tab === 'messages' && <MessagesEditor key={JSON.stringify(templates).length} items={templates} />}
         {tab === 'rosters' && company && <RostersEditor key={company.slug + (rosters[company.slug] || []).join()} company={company} names={rosters[company.slug] || []} />}
         {tab === 'agents' && <Agents />}
+        {tab === 'protocol' && <TeamProtocol />}
       </div>
     </div>
   );

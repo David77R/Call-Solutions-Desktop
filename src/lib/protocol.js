@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { deleteField, doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
+import { useAuth } from './AuthContext';
 import { DAILY_PROTOCOL_ITEMS } from '../data/dailyProtocol';
 
 const RESET_HOUR = 20;
@@ -25,43 +26,67 @@ export function useNow(intervalMs = 30000) {
   return now;
 }
 
-export function useProtocol() {
-  const now = useNow();
-  const dayKey = protocolDayKey(now);
-  const [completions, setCompletions] = useState({});
+export function useProtocolDay(dayKey) {
+  const [data, setData] = useState({ completions: {}, agents: {} });
   const [sync, setSync] = useState({ fromCache: true, error: null });
-
   useEffect(
     () =>
       onSnapshot(
         doc(db, 'dailyProtocol', dayKey),
         { includeMetadataChanges: true },
         (snap) => {
-          setCompletions(snap.exists() ? snap.data().completions || {} : {});
+          const raw = snap.exists() ? snap.data() : {};
+          setData({ completions: raw.completions || {}, agents: raw.agents || {} });
           setSync({ fromCache: snap.metadata.fromCache, error: null });
         },
-        (err) => setSync({ fromCache: true, error: err.code || 'error' })
+        (err) => setSync({ fromCache: true, error: err.code || 'error' }),
       ),
-    [dayKey]
+    [dayKey],
   );
+  return { ...data, sync };
+}
+
+export function useProtocol() {
+  const { user } = useAuth();
+  const uid = user?.uid || null;
+  const now = useNow();
+  const dayKey = protocolDayKey(now);
+  const { completions: team, agents, sync } = useProtocolDay(dayKey);
+  const [optimistic, setOptimistic] = useState({});
+
+  useEffect(() => setOptimistic({}), [agents, dayKey]);
+
+  const myName = user?.displayName || user?.email || 'Agente';
+  const mine = { ...(agents[uid]?.items || {}), ...optimistic };
+  const completions = {};
+  Object.entries(mine).forEach(([id, at]) => {
+    if (at) completions[id] = { at, by: myName };
+  });
 
   const afterReset = now.getHours() >= RESET_HOUR;
   const nowMinutes = afterReset ? -1 : now.getHours() * 60 + now.getMinutes();
   const overdue = DAILY_PROTOCOL_ITEMS.filter((i) => !completions[i.id] && minutesOf(i.time) <= nowMinutes).length;
 
-  const toggle = (itemId, agentName) => {
+  const toggle = (itemId) => {
+    if (!uid) return Promise.resolve();
     const done = !!completions[itemId];
-    const value = done ? deleteField() : { at: new Date().toISOString(), by: agentName || null };
-    setCompletions((current) => {
-      const next = { ...current };
-      if (done) delete next[itemId];
-      else next[itemId] = value;
-      return next;
-    });
-    return setDoc(doc(db, 'dailyProtocol', dayKey), { completions: { [itemId]: value } }, { merge: true });
+    const at = new Date().toISOString();
+    setOptimistic((current) => ({ ...current, [itemId]: done ? null : at }));
+    const othersHaveIt = Object.entries(agents).some(([id, a]) => id !== uid && a?.items?.[itemId]);
+    const teamUpdate = {};
+    if (!done && !team[itemId]) teamUpdate[itemId] = { at, by: myName, byUid: uid };
+    if (done && team[itemId]?.byUid === uid && !othersHaveIt) teamUpdate[itemId] = deleteField();
+    return setDoc(
+      doc(db, 'dailyProtocol', dayKey),
+      {
+        agents: { [uid]: { name: myName, updated_at: at, items: { [itemId]: done ? deleteField() : at } } },
+        ...(Object.keys(teamUpdate).length ? { completions: teamUpdate } : {}),
+      },
+      { merge: true },
+    ).catch(() => {});
   };
 
-  return { items: DAILY_PROTOCOL_ITEMS, completions, toggle, now, nowMinutes, overdue, sync, dayKey, afterReset };
+  return { items: DAILY_PROTOCOL_ITEMS, completions, team, toggle, now, nowMinutes, overdue, sync, dayKey, afterReset };
 }
 
 export function useProtocolAlerts(enabled) {

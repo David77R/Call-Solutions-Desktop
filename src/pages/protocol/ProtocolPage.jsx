@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useAuth } from '../../lib/AuthContext';
 import { minutesOf, useProtocol } from '../../lib/protocol';
 import { CheckIcon } from '../../components/Icons';
 import SyncNotice from '../../components/SyncNotice';
@@ -16,7 +15,6 @@ function readAlerts() {
 }
 
 export default function ProtocolPage() {
-  const { user } = useAuth();
   const { items, completions, toggle, nowMinutes, overdue, sync, dayKey, afterReset } = useProtocol();
   const [y, m, d] = dayKey.split('-').map(Number);
   const dayLabel = new Date(y, m - 1, d).toLocaleDateString('es-VE', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -65,7 +63,7 @@ export default function ProtocolPage() {
           <p className="protocol__day">{afterReset ? `Ya cerró el de hoy. Mostrando el de mañana, ${dayLabel}.` : `Protocolo de hoy, ${dayLabel}.`}</p>
           <p className="protocol__sub">
             {doneCount} de {items.length} tareas hechas
-            {overdue > 0 ? `, ${overdue} ${overdue === 1 ? 'atrasada' : 'atrasadas'}` : ''}. Se reinicia a las 8:00 p.m. y lo comparte todo el equipo.
+            {overdue > 0 ? `, ${overdue} ${overdue === 1 ? 'atrasada' : 'atrasadas'}` : ''}. Es tu protocolo: cada agente marca el suyo y se reinicia a las 8:00 p.m.
           </p>
         </div>
         <div className="protocol__ring" style={{ '--pct': pct }} role="img" aria-label={`${pct}% completado`}>
@@ -73,7 +71,7 @@ export default function ProtocolPage() {
         </div>
       </div>
 
-      <SyncNotice fromCache={sync.fromCache} error={sync.error} what="las tareas marcadas por el equipo" />
+      <SyncNotice fromCache={sync.fromCache} error={sync.error} what="tus tareas marcadas" />
 
       <div className="protocol__alerts">
         {alerts ? (
@@ -103,14 +101,16 @@ export default function ProtocolPage() {
           return (
             <li key={item.id} className={`timeline__item ${state}`} style={{ '--i': i }}>
               <span className="timeline__time">{item.time}</span>
-              <button type="button" className="timeline__check" aria-pressed={done} onClick={() => toggle(item.id, user?.displayName)}>
+              <button type="button" className="timeline__check" aria-pressed={done} onClick={() => toggle(item.id)}>
                 <span className="timeline__box" aria-hidden="true">
                   {done && <CheckIcon size={16} />}
                 </span>
                 <span className="timeline__label">{item.label}</span>
                 {late && <span className="timeline__tag">Atrasada</span>}
                 {isNext && <span className="timeline__tag timeline__tag--next">Siguiente</span>}
-                {done && completions[item.id]?.by && <span className="timeline__by">{completions[item.id].by}</span>}
+                {done && completions[item.id]?.at && (
+                  <span className="timeline__by">{new Date(completions[item.id].at).toLocaleTimeString('es-VE', { hour: 'numeric', minute: '2-digit' })}</span>
+                )}
               </button>
             </li>
           );

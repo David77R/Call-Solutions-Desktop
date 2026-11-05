@@ -77,8 +77,8 @@ export default function ZoneMap({ mapId = 'miami', zips, region, focus, hoverZip
           interactive: false,
           keyboard: false,
           icon: L.divIcon({ className: 'rmk-zip', html: `<span>${z.zip}</span>`, iconSize: null }),
-        })
-      )
+        }),
+      ),
     );
     const syncLabels = () => {
       if (map.getZoom() >= LABEL_ZOOM) zipLabels.addTo(map);
