@@ -8,6 +8,26 @@ export const BH = ROWS * T;
 export const FLOOR = 0;
 export const WALL = 1;
 export const BLOCK = 2;
+export const WATER = 3;
+const RIVER_COL = 8;
+const BRIDGES = [2, 5, 8];
+const PIRANHA_CYCLE = 2.4;
+const PIRANHA_WARN = 1.1;
+const PIRANHA_BITE = 0.5;
+const SEAL_LANES = [3, 7];
+const SEAL_CYCLE = 5;
+const SEAL_WARN = 1.2;
+const SEAL_SPEED = 10;
+const BEAR_SPEED = 2.4;
+const BEAR_PATH = (() => {
+  const path = [];
+  for (let c = 3; c <= 13; c += 1) path.push([c, 3]);
+  for (let r = 4; r <= 7; r += 1) path.push([13, r]);
+  for (let c = 12; c >= 3; c -= 1) path.push([c, 7]);
+  for (let r = 6; r >= 4; r -= 1) path.push([3, r]);
+  return path;
+})();
+const onBearPath = (c, r) => BEAR_PATH.some(([pc, pr]) => pc === c && pr === r);
 export const FUSE = 2.5;
 export const FLAME_TIME = 0.55;
 export const SUDDEN_AT = 90;
@@ -66,6 +86,17 @@ export const MAPS = {
   abierto: { name: 'Pista abierta', text: 'Pocos pilares y mucho espacio.', density: 0.5, wall: (c, r) => c % 4 === 0 && r % 4 === 0 },
   cruce: { name: 'Cruce', text: 'Dos avenidas despejadas en cruz.', density: 0.8, wall: grid, open: (c, r) => r === 5 || c === 7 || c === 9 },
   laberinto: { name: 'Laberinto', text: 'Pasillos estrechos y esquinas peligrosas.', density: 0.55, wall: mazeWall },
+  rio: {
+    name: 'Río de pirañas',
+    text: 'Cruza por los puentes antes de que salten las pirañas.',
+    density: 0.62,
+    wall: (c, r) => grid(c, r) && c !== RIVER_COL,
+    water: (c, r) => c === RIVER_COL && !BRIDGES.includes(r),
+    open: (c) => c === RIVER_COL,
+    hazard: 'piranhas',
+  },
+  focas: { name: 'Carril de focas', text: 'Las focas pasan deslizándose por los carriles.', density: 0.68, wall: grid, open: (c, r) => SEAL_LANES.includes(r), hazard: 'seals' },
+  oso: { name: 'Guarida del oso', text: 'Un oso polar patrulla el centro del mapa.', density: 0.6, wall: grid, open: onBearPath, hazard: 'bear' },
 };
 export const MAP_KEYS = Object.keys(MAPS);
 
@@ -117,6 +148,7 @@ export function makeBoard(seed, mapKey = 'clasico') {
       const i = idx(c, r);
       const vault = map.vault?.(c, r);
       if (isPillar(c, r)) cells[i] = WALL;
+      else if (map.water?.(c, r)) cells[i] = WATER;
       else if (!clear.has(i) && !map.open?.(c, r) && (vault || rnd() < map.density)) {
         cells[i] = BLOCK;
         if (rnd() < (vault ? 0.85 : 0.34)) {
@@ -128,14 +160,107 @@ export function makeBoard(seed, mapKey = 'clasico') {
   }
   const spiral = makeSpiral();
   currentWall = grid;
-  return { cells, hidden, powerups: {}, spiral };
+  return { cells, hidden, powerups: {}, spiral, hazard: map.hazard || null, bridges: map.hazard === 'piranhas' ? BRIDGES.map((r) => idx(RIVER_COL, r)) : [] };
+}
+
+function hash(seed, n) {
+  let h = (seed ^ Math.imul(n + 1, 2654435761)) >>> 0;
+  h = Math.imul(h ^ (h >>> 15), 2246822507) >>> 0;
+  return (h ^ (h >>> 13)) >>> 0;
+}
+
+export function hazardState(st, t = st.time) {
+  const kind = st.board.hazard;
+  if (kind === 'piranhas') {
+    const cycle = Math.floor(t / PIRANHA_CYCLE);
+    const phase = t - cycle * PIRANHA_CYCLE;
+    const bridge = st.board.bridges[hash(st.config.seed, cycle) % st.board.bridges.length];
+    const bite = phase >= PIRANHA_WARN && phase < PIRANHA_WARN + PIRANHA_BITE;
+    return { kind, bridge, warn: phase < PIRANHA_WARN, bite, k: bite ? (phase - PIRANHA_WARN) / PIRANHA_BITE : phase / PIRANHA_WARN };
+  }
+  if (kind === 'seals') {
+    return {
+      kind,
+      seals: SEAL_LANES.map((row, lane) => {
+        const shifted = t + lane * (SEAL_CYCLE / 2);
+        const cycle = Math.floor(shifted / SEAL_CYCLE);
+        const phase = shifted - cycle * SEAL_CYCLE;
+        const dir = (cycle + lane) % 2 ? 1 : -1;
+        const entry = dir > 0 ? 0 : COLS - 1;
+        const travel = (COLS - 1) / SEAL_SPEED;
+        const sliding = phase >= SEAL_WARN && phase < SEAL_WARN + travel;
+        return { row, dir, entry, warn: phase < SEAL_WARN, sliding, x: sliding ? entry + dir * (phase - SEAL_WARN) * SEAL_SPEED : null, phase };
+      }),
+    };
+  }
+  if (kind === 'bear') {
+    const total = BEAR_PATH.length;
+    const d = (t * BEAR_SPEED) % total;
+    const i = Math.floor(d);
+    const [c0, r0] = BEAR_PATH[i];
+    const [c1, r1] = BEAR_PATH[(i + 1) % total];
+    const k = d - i;
+    return { kind, x: c0 + (c1 - c0) * k, y: r0 + (r1 - r0) * k, face: c1 > c0 ? 1 : c1 < c0 ? -1 : 0 };
+  }
+  return null;
+}
+
+const HAZARD_TEXT = { piranhas: '¡Pirañas!', seals: '¡Foca!', bear: '¡El oso!' };
+
+function hazardHits(st, p) {
+  const h = hazardState(st);
+  if (!h) return false;
+  if (h.kind === 'piranhas') return h.bite && idx(...cellOf(p)) === h.bridge;
+  if (h.kind === 'seals') return h.seals.some((s) => s.sliding && Math.abs(p.y - s.row) < 0.6 && Math.abs(p.x - s.x) < 0.8);
+  return Math.hypot(p.x - h.x, p.y - h.y) < 0.75;
+}
+
+function hazardDanger(st, danger) {
+  const kind = st.board.hazard;
+  if (!kind) return;
+  if (kind === 'piranhas') {
+    for (let ahead = 0; ahead <= 1; ahead += 1) {
+      const cycle = Math.floor(st.time / PIRANHA_CYCLE) + ahead;
+      const strikeAt = cycle * PIRANHA_CYCLE + PIRANHA_WARN - st.time;
+      if (strikeAt + PIRANHA_BITE < 0 || strikeAt > 2) continue;
+      const bridge = st.board.bridges[hash(st.config.seed, cycle) % st.board.bridges.length];
+      danger[bridge] = Math.min(danger[bridge], Math.max(0, strikeAt));
+    }
+    return;
+  }
+  if (kind === 'seals') {
+    hazardState(st).seals.forEach((s) => {
+      if (!s.warn && !s.sliding && s.phase < SEAL_CYCLE - 1.5) return;
+      for (let c = 1; c < COLS - 1; c += 1) {
+        const i = idx(c, s.row);
+        const arrive = SEAL_WARN + Math.abs(c - s.entry) / SEAL_SPEED - s.phase;
+        const passed = s.sliding && (c - s.x) * s.dir < -1;
+        if (!passed && arrive < 2) danger[i] = Math.min(danger[i], Math.max(0, arrive));
+      }
+    });
+    return;
+  }
+  for (let k = 0; k <= 4; k += 1) {
+    const h = hazardState(st, st.time + k * 0.3);
+    const c = Math.round(h.x);
+    const r = Math.round(h.y);
+    [
+      [0, 0],
+      [1, 0],
+      [-1, 0],
+      [0, 1],
+      [0, -1],
+    ].forEach(([dx, dy]) => {
+      if (inside(c + dx, r + dy)) danger[idx(c + dx, r + dy)] = Math.min(danger[idx(c + dx, r + dy)], k * 0.3);
+    });
+  }
 }
 
 export function createState(config) {
   const board = makeBoard(config.seed, config.map);
   const conquest = config.rules === 'conquest';
   let paintable = 0;
-  board.cells.forEach((cell) => cell !== WALL && (paintable += 1));
+  board.cells.forEach((cell) => cell !== WALL && cell !== WATER && (paintable += 1));
   const players = config.players.map((pl, slot) => {
     const [c, r] = SPAWNS[slot];
     return {
@@ -291,7 +416,7 @@ function explode(st, b) {
   blastCells(st, b).forEach((i) => {
     st.flames[i] = FLAME_TIME;
     st.flameOwner[i] = b.owner;
-    if (st.conquest) st.paint[i] = b.owner;
+    if (st.conquest && st.board.cells[i] !== WATER) st.paint[i] = b.owner;
     if (st.board.cells[i] === BLOCK) {
       st.board.cells[i] = FLOOR;
       if (owner) owner.blocks += 1;
@@ -328,6 +453,7 @@ function dangerMap(st, extra) {
     );
   }
   bombs.forEach((b) => b.cells.forEach((i) => (danger[i] = Math.min(danger[i], b.t))));
+  hazardDanger(st, danger);
   if (!st.conquest && st.time > SUDDEN_AT - 4) st.board.spiral.slice(st.suddenIndex, st.suddenIndex + 8).forEach((i) => (danger[i] = Math.min(danger[i], 1)));
   return danger;
 }
@@ -558,6 +684,10 @@ export function step(st, dt, hooks = {}) {
     const i = idx(...cellOf(p));
     if (st.flames[i] > 0) {
       killPlayer(st, p, st.flameOwner[i]);
+      hooks.onDeath?.(p);
+    } else if (hazardHits(st, p)) {
+      killPlayer(st, p, -2);
+      st.texts.push({ x: p.x, y: p.y - 0.6, text: HAZARD_TEXT[st.board.hazard], life: 1.4 });
       hooks.onDeath?.(p);
     }
   });

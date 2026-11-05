@@ -27,6 +27,9 @@ export async function createBombRoom(player, seed, options = {}) {
     seed,
     map: options.map || 'clasico',
     rules: options.rules || 'survival',
+    format: options.format || 'single',
+    maps: options.maps || null,
+    tour: null,
     status: 'waiting',
     host: player.uid,
     players: [{ ...player, slot: 0 }],
@@ -73,6 +76,10 @@ export function startBombRoom(code) {
 
 export function finishBombRoom(code, winner) {
   return updateDoc(doc(db, COLLECTION, roomId(code)), { status: 'over', winner, updated_at: new Date().toISOString() }).catch(() => {});
+}
+
+export function updateBombTour(code, tour) {
+  return updateDoc(doc(db, COLLECTION, roomId(code)), { tour, updated_at: new Date().toISOString() }).catch(() => {});
 }
 
 export function useBombRoom(code) {

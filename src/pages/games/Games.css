@@ -1923,3 +1923,31 @@
     animation: none;
   }
 }
+
+.bomb__trophy {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: #ffd166;
+  font-size: 11.5px;
+  font-weight: 800;
+}
+
+.bomb__round-tag {
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: rgba(255, 209, 102, 0.18);
+  color: #ffd166;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.bomb__standings li.is-champion {
+  box-shadow: 0 0 0 2px #ffd166;
+}
+
+.bomb__select-wide {
+  grid-column: 1 / -1;
+}

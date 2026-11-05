@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import fifo from '../../assets/fifo.webp';
-import { BH, BW, CONQUEST_TIME, RESPAWN, SLOT_COLORS, SUDDEN_AT, applyRemote, bomberScore, createState, encodePaint, paintCounts, placeBomb, step } from './bomberEngine';
+import { BH, BW, CONQUEST_TIME, MAPS, RESPAWN, SLOT_COLORS, SUDDEN_AT, applyRemote, bomberScore, createState, encodePaint, paintCounts, placeBomb, step } from './bomberEngine';
 import { drawScene } from './bomberDraw';
 import { finishBombRoom, pushBombPlayer, watchBombPlayer } from '../../lib/bombRooms';
 
@@ -27,7 +27,24 @@ function Stat({ kind, value }) {
   );
 }
 
-export default function BomberArena({ config, onExit, onSave }) {
+const HAZARD_HELP = {
+  piranhas: 'Cuidado en los puentes: cuando el agua burbujea, las pirañas están por saltar.',
+  seals: 'Cuando parpadea la flecha roja, una foca viene deslizándose por ese carril.',
+  bear: 'El oso polar da vueltas por el centro: no te le cruces.',
+};
+
+function Trophy({ count }) {
+  return (
+    <span className="bomb__trophy" title={`${count} rondas ganadas`} aria-label={`${count} rondas ganadas`}>
+      <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M7 3h10v3h3a3 3 0 0 1-3 5 5 5 0 0 1-4 4v3h3v3H8v-3h3v-3a5 5 0 0 1-4-4 3 3 0 0 1-3-5h3z" fill="currentColor" />
+      </svg>
+      {count}
+    </span>
+  );
+}
+
+export default function BomberArena({ config, onExit, onSave, tour, onRoundOver, onNext }) {
   const canvasRef = useRef(null);
   const rootRef = useRef(null);
   const stRef = useRef(null);
@@ -49,7 +66,7 @@ export default function BomberArena({ config, onExit, onSave }) {
         pub.last = Date.now();
         pub.timer = 0;
         pub.seq += 1;
-        pushBombPlayer(config.code, mine, {
+        pushBombPlayer(config.channel || config.code, mine, {
           slot: mine,
           uid: p.uid || null,
           x: Math.round(p.x * 1000) / 1000,
@@ -73,7 +90,7 @@ export default function BomberArena({ config, onExit, onSave }) {
       if (now || wait <= 0) send();
       else pub.timer = window.setTimeout(send, wait);
     },
-    [online, config.code, mine],
+    [online, config.code, config.channel, mine],
   );
 
   const syncHud = useCallback(() => {
@@ -120,7 +137,7 @@ export default function BomberArena({ config, onExit, onSave }) {
     if (!online) return undefined;
     const unsubs = config.players.map((pl, slot) =>
       pl.controller === 'remote'
-        ? watchBombPlayer(config.code, slot, (data) => {
+        ? watchBombPlayer(config.channel || config.code, slot, (data) => {
             const st = stRef.current;
             if (!st) return;
             applyRemote(st, slot, data);
@@ -172,7 +189,7 @@ export default function BomberArena({ config, onExit, onSave }) {
         if (online && mine === 0) {
           pubRef.current.final = { winner };
           publish(true);
-          finishBombRoom(config.code, winner);
+          if (!config.tournament) finishBombRoom(config.code, winner);
         }
         if (online && st.conquest && mine !== 0) {
           st.waitingFinal = true;
@@ -195,6 +212,7 @@ export default function BomberArena({ config, onExit, onSave }) {
         st.score = bomberScore(st, mine, won);
         onSave?.(st.score, won ? 'won' : 'lost');
       }
+      onRoundOver?.(winner);
       syncHud();
     };
     const tick = (now) => {
@@ -228,7 +246,7 @@ export default function BomberArena({ config, onExit, onSave }) {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [config, online, mine, publish, onSave, syncHud]);
+  }, [config, online, mine, publish, onSave, onRoundOver, syncHud]);
 
   useEffect(() => {
     const humans = config.players.map((pl, slot) => ({ slot, keys: KEYSETS[pl.keys] })).filter((h) => h.keys && config.players[h.slot].controller === 'human');
@@ -346,6 +364,7 @@ export default function BomberArena({ config, onExit, onSave }) {
                     {p.name}
                     {online && slot === mine ? ' (tú)' : ''}
                   </strong>
+                  {tour && <Trophy count={tour.wins[slot] || 0} />}
                   {conquest && <span className="bomb__pct">{pct(p.tiles)}%</span>}
                   <Stat kind="bomb" value={p.bomb} />
                   <Stat kind="fire" value={p.fire} />
@@ -394,8 +413,25 @@ export default function BomberArena({ config, onExit, onSave }) {
         {hud?.over && (
           <div className="cats__over">
             <img src={fifo} alt="" className={hud.winner === mine && config.mode !== 'local' ? 'game-intro__fifo game-intro__fifo--party' : 'game-intro__fifo'} />
-            <h2>{title}</h2>
+            {tour && <span className="bomb__round-tag">{tour.champion != null ? 'Torneo terminado' : `Ronda ${tour.round + 1}`}</span>}
+            <h2>{tour?.champion != null ? `¡${hud.players[tour.champion]?.name} es campeón del torneo!` : title}</h2>
             {config.mode !== 'local' && <p className="game-score">{hud.score} pts</p>}
+            {tour && (
+              <ul className="bomb__final bomb__standings">
+                {hud.players
+                  .map((p, slot) => ({ ...p, slot, w: tour.wins[slot] || 0 }))
+                  .sort((a, b) => b.w - a.w)
+                  .map((p) => (
+                    <li key={p.slot} style={{ '--c': SLOT_COLORS[p.slot] }} className={tour.champion === p.slot ? 'is-champion' : ''}>
+                      <i aria-hidden="true" />
+                      {p.name}
+                      <b>
+                        {p.w}/{tour.target}
+                      </b>
+                    </li>
+                  ))}
+              </ul>
+            )}
             {conquest && (
               <ul className="bomb__final">
                 {hud.players
@@ -420,9 +456,24 @@ export default function BomberArena({ config, onExit, onSave }) {
               </p>
             )}
             <div className="cats__over-actions">
-              <button type="button" className="game-btn" onClick={onExit}>
-                {online ? 'Volver a las salas' : 'Jugar otra'}
-              </button>
+              {tour && tour.champion == null ? (
+                <>
+                  {onNext ? (
+                    <button type="button" className="game-btn" onClick={onNext}>
+                      {tour.auto ? `Siguiente ronda en ${tour.auto}…` : 'Siguiente ronda'}
+                    </button>
+                  ) : (
+                    <p className="cats__muted">{tour.pending ? 'Contando la ronda…' : 'La siguiente ronda empieza en un momento…'}</p>
+                  )}
+                  <button type="button" className="sf-chip" onClick={leave}>
+                    Salir del torneo
+                  </button>
+                </>
+              ) : (
+                <button type="button" className="game-btn" onClick={onExit}>
+                  {online ? 'Volver a las salas' : 'Jugar otra'}
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -434,6 +485,7 @@ export default function BomberArena({ config, onExit, onSave }) {
         {conquest
           ? 'Conquista: tus explosiones pintan el piso de tu color. Si te atrapan vuelves a los 3 segundos. Al terminar el tiempo gana quien tenga más cuadros.'
           : `A los ${Math.floor(SUDDEN_AT / 60)}:${String(SUDDEN_AT % 60).padStart(2, '0')} empieza la muerte súbita y el hielo cierra el mapa.`}
+        {MAPS[config.map]?.hazard ? ` ${HAZARD_HELP[MAPS[config.map].hazard]}` : ''}
       </p>
     </div>
   );

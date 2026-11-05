@@ -2,12 +2,39 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import fifo from '../../assets/fifo.webp';
 import { useAuth } from '../../lib/AuthContext';
 import { saveBombScore } from '../../lib/games';
-import { MAX_PLAYERS, createBombRoom, joinBombRoom, leaveBombRoom, startBombRoom, useBombRoom, useOpenBombRooms } from '../../lib/bombRooms';
+import { MAX_PLAYERS, createBombRoom, finishBombRoom, joinBombRoom, leaveBombRoom, startBombRoom, updateBombTour, useBombRoom, useOpenBombRooms } from '../../lib/bombRooms';
 import { newSeed } from './catArtillery';
 import { CHARACTERS, CharFace, CharPicker, charOf } from './characters';
-import { BH, BOT_LEVELS, BW, MAPS, RULES, makeBoard, resolveMap } from './bomberEngine';
-import { drawBoard } from './bomberDraw';
+import { BH, BOT_LEVELS, BW, MAP_KEYS, MAPS, RULES, makeBoard, resolveMap } from './bomberEngine';
+import { drawBoard, drawHazards } from './bomberDraw';
 import BomberArena from './BomberArena';
+
+const TOUR_TARGET = 3;
+const FORMATS = {
+  single: { name: 'Partida única', text: 'Una sola partida en el mapa que elijas.' },
+  tournament: { name: 'Torneo', text: `Gana quien se lleve ${TOUR_TARGET} rondas. El mapa cambia en cada ronda.` },
+};
+
+function tourMaps(seed, first) {
+  const rest = MAP_KEYS.filter((k) => k !== first);
+  let k = seed >>> 0;
+  for (let i = rest.length - 1; i > 0; i -= 1) {
+    k = (Math.imul(k, 1103515245) + 12345) >>> 0;
+    const j = k % (i + 1);
+    [rest[i], rest[j]] = [rest[j], rest[i]];
+  }
+  return [first, ...rest];
+}
+
+function roundConfig(base, round) {
+  return {
+    ...base,
+    round,
+    seed: (base.baseSeed + round * 7919) % 2147483647,
+    map: base.tournament ? base.maps[round % base.maps.length] : base.map,
+    channel: base.mode === 'online' && base.tournament ? `${base.code}r${round}` : undefined,
+  };
+}
 
 const MODES = [
   { key: 'bot', title: 'Contra Fifo', text: 'Tú contra 1 a 3 bots.' },
@@ -35,8 +62,11 @@ function MapPreview({ map }) {
     canvas.height = h * dpr;
     const ctx = canvas.getContext('2d');
     ctx.setTransform((dpr * w) / BW, 0, 0, (dpr * w) / BW, 0, 0);
-    if (MAPS[map]) drawBoard(ctx, { board: makeBoard(4242, map), fallen: [] });
-    else {
+    if (MAPS[map]) {
+      const preview = { board: makeBoard(4242, map), fallen: [], time: 1.3, config: { seed: 4242 } };
+      drawBoard(ctx, preview);
+      drawHazards(ctx, preview);
+    } else {
       ctx.fillStyle = '#24427f';
       ctx.fillRect(0, 0, BW, BH);
       ctx.fillStyle = '#ffffff';
@@ -58,6 +88,22 @@ function MapPicker({ value, onChange }) {
             <MapPreview map={key} />
             <strong>{m.name}</strong>
             <small>{m.text}</small>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function FormatPicker({ value, onChange }) {
+  return (
+    <div className="cats__picker">
+      <span className="cats__picker-label">Formato</span>
+      <div className="bomb__rules" role="radiogroup" aria-label="Formato">
+        {Object.entries(FORMATS).map(([key, f]) => (
+          <button key={key} type="button" role="radio" aria-checked={value === key} className="cats__mode" onClick={() => onChange(key)}>
+            <strong>{f.name}</strong>
+            <small>{f.text}</small>
           </button>
         ))}
       </div>
@@ -116,6 +162,7 @@ function WaitingRoom({ code, room, me, onLeave }) {
       <img src={fifo} alt="" className="game-intro__fifo" />
       <h2>Sala {code}</h2>
       <p className="bomb__room-meta">
+        {room?.format === 'tournament' ? `Torneo a ${TOUR_TARGET} rondas · ` : ''}
         {RULES[room?.rules]?.name || 'Supervivencia'} · {MAPS[room?.map]?.name || 'Mapa sorpresa'}
       </p>
       <p>{isHost ? 'Cuando estén todos, dale a Empezar. Pueden entrar hasta 4.' : `Esperando a que ${hostName || 'el anfitrión'} empiece la partida…`}</p>
@@ -143,7 +190,7 @@ function WaitingRoom({ code, room, me, onLeave }) {
   );
 }
 
-function Lobby({ user, firstName, char, setChar, map, setMap, rules, setRules, onStart, onBack }) {
+function Lobby({ user, firstName, char, setChar, map, setMap, rules, setRules, format, setFormat, onStart, onBack }) {
   const rooms = useOpenBombRooms(true);
   const [code, setCode] = useState('');
   const [myRoom, setMyRoom] = useState(null);
@@ -203,7 +250,8 @@ function Lobby({ user, firstName, char, setChar, map, setMap, rules, setRules, o
                     <span>
                       <strong>Sala de {host?.name || 'un compañero'}</strong>
                       <small>
-                        {r.code} · {count}/{MAX_PLAYERS} jugadores · {RULES[r.rules]?.name || 'Supervivencia'} · {MAPS[r.map]?.name || 'Clásico'}
+                        {r.code} · {count}/{MAX_PLAYERS} jugadores · {r.format === 'tournament' ? 'Torneo · ' : ''}
+                        {RULES[r.rules]?.name || 'Supervivencia'} · {MAPS[r.map]?.name || 'Clásico'}
                       </small>
                     </span>
                     <button type="button" className="game-btn" disabled={busy || count >= MAX_PLAYERS} onClick={() => run(() => joinBombRoom(r.code, player))}>
@@ -220,6 +268,16 @@ function Lobby({ user, firstName, char, setChar, map, setMap, rules, setRules, o
         <section>
           <h3>Crear o entrar con código</h3>
           <div className="bomb__selects">
+            <label className="cats__select bomb__select-wide">
+              <span>Formato</span>
+              <select className="sf-input" value={format} onChange={(e) => setFormat(e.target.value)}>
+                {Object.entries(FORMATS).map(([key, f]) => (
+                  <option key={key} value={key}>
+                    {f.name}
+                  </option>
+                ))}
+              </select>
+            </label>
             <label className="cats__select">
               <span>Reglas</span>
               <select className="sf-input" value={rules} onChange={(e) => setRules(e.target.value)}>
@@ -248,7 +306,8 @@ function Lobby({ user, firstName, char, setChar, map, setMap, rules, setRules, o
             onClick={() =>
               run(() => {
                 const seed = newSeed();
-                return createBombRoom(player, seed, { map: resolveMap(map, seed), rules });
+                const first = resolveMap(map, seed);
+                return createBombRoom(player, seed, { map: first, rules, format, maps: format === 'tournament' ? tourMaps(seed, first) : null });
               })
             }
           >
@@ -286,9 +345,88 @@ export default function BomberGame({ agentName }) {
   const [level, setLevel] = useState('medio');
   const [map, setMap] = useState('clasico');
   const [rules, setRules] = useState('survival');
+  const [format, setFormat] = useState('single');
   const [config, setConfig] = useState(null);
+  const [tour, setTour] = useState(null);
+  const baseRef = useRef(null);
+  const timerRef = useRef(0);
+  const liveRoom = useBombRoom(config?.mode === 'online' && config.tournament ? config.code : null);
 
   const save = useCallback((score, result) => saveBombScore(agentName, score, result, config?.mode === 'online' ? 'online' : config?.level), [agentName, config]);
+
+  const mineSlot = config?.mode === 'online' ? config.me : 0;
+  const isHost = config?.mode !== 'online' || config?.me === 0;
+
+  const tourRef = useRef(null);
+  tourRef.current = tour;
+
+  const advance = useCallback(() => {
+    window.clearTimeout(timerRef.current);
+    const base = baseRef.current;
+    const t = tourRef.current;
+    if (!base || !t || t.champion != null) return;
+    const next = t.round + 1;
+    if (base.mode === 'online') {
+      updateBombTour(base.code, { current: next, wins: t.wins, champion: null, done: false });
+      setTour({ ...t, auto: 0 });
+      return;
+    }
+    setTour({ ...t, round: next, auto: 0, pending: false });
+    setConfig(roundConfig(base, next));
+  }, []);
+
+  const onRoundOver = useCallback(
+    (winner) => {
+      const base = baseRef.current;
+      const t = tourRef.current;
+      if (!base?.tournament || !t) return;
+      if (base.mode === 'online' && !isHost) {
+        setTour({ ...t, pending: true });
+        return;
+      }
+      const wins = [...t.wins];
+      if (winner >= 0) wins[winner] = (wins[winner] || 0) + 1;
+      const champion = winner >= 0 && wins[winner] >= TOUR_TARGET ? winner : null;
+      if (champion != null && champion === mineSlot && base.mode !== 'local') saveBombScore(agentName, 150, 'campeon', base.mode === 'online' ? 'online' : base.level);
+      if (base.mode === 'online') {
+        updateBombTour(base.code, { current: t.round, wins, champion, done: true });
+        if (champion != null) finishBombRoom(base.code, champion);
+      }
+      setTour({ ...t, wins, champion, auto: champion == null ? 5 : 0 });
+      if (champion != null) return;
+      let left = 5;
+      const tickDown = () => {
+        left -= 1;
+        if (left <= 0) advance();
+        else {
+          setTour((x) => (x ? { ...x, auto: left } : x));
+          timerRef.current = window.setTimeout(tickDown, 1000);
+        }
+      };
+      window.clearTimeout(timerRef.current);
+      timerRef.current = window.setTimeout(tickDown, 1000);
+    },
+    [isHost, mineSlot, agentName, advance],
+  );
+
+  useEffect(() => {
+    const base = baseRef.current;
+    const remote = liveRoom?.tour;
+    if (!base || !remote || !config) return;
+    if (remote.current > config.round) {
+      setTour({ round: remote.current, wins: remote.wins, champion: null, target: TOUR_TARGET, auto: 0 });
+      setConfig(roundConfig(base, remote.current));
+      return;
+    }
+    if (!isHost && remote.current === config.round && remote.done) {
+      const t = tourRef.current;
+      if (t && t.champion == null && remote.champion != null && remote.champion === mineSlot) saveBombScore(agentName, 150, 'campeon', 'online');
+      if (!t || t.pending || t.champion !== remote.champion || JSON.stringify(t.wins) !== JSON.stringify(remote.wins))
+        setTour({ round: remote.current, wins: remote.wins, champion: remote.champion, target: TOUR_TARGET, pending: false });
+    }
+  }, [liveRoom, config, isHost, mineSlot, agentName]);
+
+  useEffect(() => () => window.clearTimeout(timerRef.current), []);
 
   const startOffline = () => {
     const seed = newSeed();
@@ -301,7 +439,13 @@ export default function BomberGame({ agentName }) {
           ]
         : [{ name: firstName, kind: a.kind, colors: a.colors, controller: 'human', keys: 'all' }];
     const taken = mode === 'local' ? [charA, charB] : [charA];
-    setConfig({ mode, level, seed, map: resolveMap(map, seed), rules, players: [...humans, ...botPlayers(mode === 'local' ? extraBots : bots, taken, seed)] });
+    const first = resolveMap(map, seed);
+    const players = [...humans, ...botPlayers(mode === 'local' ? extraBots : bots, taken, seed)];
+    const tournament = format === 'tournament';
+    const base = { mode, level, baseSeed: seed, map: first, rules, players, tournament, maps: tournament ? tourMaps(seed, first) : null };
+    baseRef.current = base;
+    setTour(tournament ? { round: 0, wins: players.map(() => 0), champion: null, target: TOUR_TARGET } : null);
+    setConfig(roundConfig(base, 0));
     setScreen('game');
   };
 
@@ -309,29 +453,49 @@ export default function BomberGame({ agentName }) {
     (room) => {
       const me = user?.uid || 'anon';
       const list = [...(room.players || [])].sort((x, y) => x.slot - y.slot);
-      setConfig({
+      const tournament = room.format === 'tournament' && Array.isArray(room.maps);
+      const base = {
         mode: 'online',
         code: room.code,
-        seed: room.seed,
+        baseSeed: room.seed,
         map: resolveMap(room.map, room.seed),
+        maps: tournament ? room.maps : null,
+        tournament,
         rules: room.rules || 'survival',
         me: list.findIndex((p) => p.uid === me),
         players: list.map((p) => {
           const c = charOf(p.char);
           return { name: p.name, uid: p.uid, kind: c.kind, colors: c.colors, controller: p.uid === me ? 'human' : 'remote', keys: 'all' };
         }),
-      });
+      };
+      baseRef.current = base;
+      setTour(tournament ? { round: 0, wins: list.map(() => 0), champion: null, target: TOUR_TARGET } : null);
+      setConfig(roundConfig(base, 0));
       setScreen('game');
     },
     [user],
   );
 
   const exit = useCallback(() => {
+    window.clearTimeout(timerRef.current);
+    baseRef.current = null;
+    setTour(null);
     setScreen(config?.mode === 'online' ? 'lobby' : 'setup');
     setConfig(null);
   }, [config]);
 
-  if (screen === 'game' && config) return <BomberArena key={`${config.seed}-${config.code || ''}`} config={config} onExit={exit} onSave={save} />;
+  if (screen === 'game' && config)
+    return (
+      <BomberArena
+        key={`${config.seed}-${config.code || ''}-${config.round || 0}`}
+        config={config}
+        onExit={exit}
+        onSave={save}
+        tour={tour}
+        onRoundOver={config.tournament ? onRoundOver : undefined}
+        onNext={config.tournament && isHost ? advance : undefined}
+      />
+    );
   if (screen === 'lobby')
     return (
       <Lobby
@@ -343,6 +507,8 @@ export default function BomberGame({ agentName }) {
         setMap={setMap}
         rules={rules}
         setRules={setRules}
+        format={format}
+        setFormat={setFormat}
         onStart={startOnline}
         onBack={() => setScreen('setup')}
       />
@@ -370,6 +536,7 @@ export default function BomberGame({ agentName }) {
       <CharPicker label={mode === 'local' ? 'Personaje del jugador 1' : 'Tu personaje'} value={charA} onChange={setCharA} taken={mode === 'local' ? [charB] : []} />
       {mode === 'local' && <CharPicker label="Personaje del jugador 2" value={charB} onChange={setCharB} taken={[charA]} />}
 
+      {mode !== 'online' && <FormatPicker value={format} onChange={setFormat} />}
       {mode !== 'online' && <RulesPicker value={rules} onChange={setRules} />}
       {mode !== 'online' && <MapPicker value={map} onChange={setMap} />}
 
