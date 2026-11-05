@@ -45,7 +45,8 @@ function Badges({ row, breedName }) {
         </span>
       )}
       {row.needs_review && <span className="result__badge result__badge--warn">Verificar</span>}
-      {row.suggested && <span className="result__badge">Por peso</span>}
+      {row.suggested && !row.heavier_than && <span className="result__badge">Por peso</span>}
+      {row.heavier_than && <span className="result__badge result__badge--heavier">Si pesa más de {row.heavier_than} lbs</span>}
       {row.surcharge_alert && <span className="result__badge result__badge--warn">Cargo especial</span>}
       {row.only_gold_alert && <span className="result__badge result__badge--warn">Solo Gold</span>}
       {row.double_coat_large_alert && <span className="result__badge result__badge--warn">Precio Large</span>}

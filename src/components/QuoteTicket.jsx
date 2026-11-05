@@ -298,7 +298,12 @@ function FilledTicket({ item, descriptions, rows, breedFromQuery, lang, onLangCh
       )}
 
       <div className="ticket__alerts">
-        {item.suggested && <p className="ticket__alert ticket__alert--info">Sugerido por el peso, no por el nombre.</p>}
+        {item.suggested && !item.heavier_than && <p className="ticket__alert ticket__alert--info">Sugerido por el peso, no por el nombre.</p>}
+        {item.heavier_than && (
+          <p className="ticket__alert ticket__alert--info">
+            Esta raza suele pesar hasta {item.heavier_than} lbs. Usa este precio si el cliente dice que pesa más; pregunta el peso para confirmar.
+          </p>
+        )}
         {item.only_gold_alert && (
           <p className="ticket__alert">
             <AlertIcon size={16} />

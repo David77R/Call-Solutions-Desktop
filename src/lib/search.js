@@ -5,27 +5,24 @@ const WEIGHT_REGEX = /(\d+(?:\.\d+)?)\s*(lbs?|libras?)?/i;
 const SPECIAL_BREED_SURCHARGE_AMOUNT = 10;
 const PRICE_TOKEN_REGEX = /\$(\d+(?:\.\d{1,2})?)/g;
 const LARGE_WEIGHT_THRESHOLD_LBS = 46;
-const DOUBLE_COAT_LARGE_ALERT_FOUND =
-  'Raza de doble capa: se cobra el precio Large sin importar el tamaño natural de la raza.';
-const DOUBLE_COAT_LARGE_ALERT_MISSING =
-  'Raza de doble capa: verificar con la empresa el precio Large a cobrar (no hay tarifa Large genérica registrada para esta empresa).';
-const ONLY_GOLD_DESCRIPTION =
-  'Baño, secado, limpieza de oídos, cuidado de uñas, afeitado sanitario + corte de pelo o deslanado profesional';
+const DOUBLE_COAT_LARGE_ALERT_FOUND = 'Raza de doble capa: se cobra el precio Large sin importar el tamaño natural de la raza.';
+const DOUBLE_COAT_LARGE_ALERT_MISSING = 'Raza de doble capa: verificar con la empresa el precio Large a cobrar (no hay tarifa Large genérica registrada para esta empresa).';
+const ONLY_GOLD_DESCRIPTION = 'Baño, secado, limpieza de oídos, cuidado de uñas, afeitado sanitario + corte de pelo o deslanado profesional';
 const DENTAL_KEYWORDS = ['dental', 'smile', 'placa', 'diente'];
 const BREED_CATEGORY_PREFIX = 'grooming por raza';
 const SEARCH_LIMIT = 200;
 
 const lower = (v) => (v || '').toLowerCase();
 const compare = (x, y) => (x < y ? -1 : x > y ? 1 : 0);
-const byCatalogOrder = (a, b) =>
-  compare(a.company_name, b.company_name) ||
-  compare(a.category_name, b.category_name) ||
-  a.sort_order - b.sort_order;
+const byCatalogOrder = (a, b) => compare(a.company_name, b.company_name) || compare(a.category_name, b.category_name) || a.sort_order - b.sort_order;
 
 const CAT_QUERY = /(^|[^a-z])(gat[oa]s?|gatit[oa]s?|cats?|kittens?|kitty|felin[oa]s?|michis?|minin[oa]s?)([^a-z]|$)/;
 const CAT_ROW = /gato|(^|[^a-z])cats?([^a-z]|$)|feline/i;
 
-const plain = (text) => lower(text).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+const plain = (text) =>
+  lower(text)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
 
 export function isCatQuery(text) {
   return CAT_QUERY.test(plain(text));
@@ -186,12 +183,7 @@ function getMixedBreedLargePrice(rows, slug) {
     if (r.company_slug !== slug) return false;
     const label = lower(r.label);
     const cat = lower(r.category_name);
-    return (
-      label.includes('mixed breed') &&
-      (cat.includes('large') || label.includes('large')) &&
-      !cat.includes('extra large') &&
-      !label.includes('extra large')
-    );
+    return label.includes('mixed breed') && (cat.includes('large') || label.includes('large')) && !cat.includes('extra large') && !label.includes('extra large');
   });
   candidates.sort((a, b) => (b.weight_min_lbs ?? -Infinity) - (a.weight_min_lbs ?? -Infinity));
   return candidates[0] || null;
@@ -231,6 +223,13 @@ function weightPointSearch(rows, weight, slug) {
     .slice(0, SEARCH_LIMIT);
 }
 
+const HEAVIER_FROM_LBS = 40;
+
+function heavierRows(rows, max, slug) {
+  const margin = Math.max(8, max * 0.15);
+  return rows.filter(inCompany(slug)).filter((r) => hasWeights(r) && r.weight_min_lbs > max && r.weight_min_lbs <= max + margin);
+}
+
 function weightRangeSearch(rows, min, max, slug) {
   return rows
     .filter(inCompany(slug))
@@ -253,7 +252,11 @@ export function searchPriceItems({ companies, rows }, queryText, slug) {
 
   const surchargeMap = getSurchargeMap(companies, textPart, slug);
   const doubleCoatMap = getDoubleCoatMap(companies, textPart, slug);
-  const finish = (list) => applyDoubleCoat(list.map((r) => withSurcharge(r, surchargeMap)), doubleCoatMap).map((r) => withDoubleCoatLargePricing(rows, r));
+  const finish = (list) =>
+    applyDoubleCoat(
+      list.map((r) => withSurcharge(r, surchargeMap)),
+      doubleCoatMap,
+    ).map((r) => withDoubleCoatLargePricing(rows, r));
 
   let textResults = [];
   if (textPart) {
@@ -288,21 +291,17 @@ export function searchPriceItems({ companies, rows }, queryText, slug) {
   const keepFlagged = explicitWeight != null ? flagged.filter((r) => r.weight_match !== false) : flagged;
   const coveredSlugs = new Set(keepFlagged.map((r) => r.company_slug));
 
-  const weightRows =
-    explicitWeight != null
-      ? weightPointSearch(rows, explicitWeight, slug)
-      : weightRangeSearch(rows, breedRange.min, breedRange.max, slug);
+  const weightRows = explicitWeight != null ? weightPointSearch(rows, explicitWeight, slug) : weightRangeSearch(rows, breedRange.min, breedRange.max, slug);
 
   const candidates = weightRows.filter((r) => !coveredSlugs.has(r.company_slug));
-  const fallback = (breedInfo ? packagesForBreed(candidates, breedInfo) : candidates)
+  const heavier = breedRange && breedRange.max >= HEAVIER_FROM_LBS ? heavierRows(rows, breedRange.max, slug).filter((r) => !coveredSlugs.has(r.company_slug)) : [];
+  const heavierKeys = new Set(heavier.map((r) => itemKey(r)));
+  const pool = [...candidates, ...heavier.filter((r) => !candidates.some((c) => itemKey(c) === itemKey(r)))];
+  const fallback = (breedInfo ? packagesForBreed(pool, breedInfo) : pool)
     .sort(
-      (a, b) =>
-        compare(a.company_name, b.company_name) ||
-        isDentalService(a) - isDentalService(b) ||
-        a.category_order - b.category_order ||
-        a.weight_min_lbs - b.weight_min_lbs
+      (a, b) => compare(a.company_name, b.company_name) || isDentalService(a) - isDentalService(b) || a.category_order - b.category_order || a.weight_min_lbs - b.weight_min_lbs,
     )
-    .map((r) => ({ ...r, weight_match: true, suggested: true }));
+    .map((r) => (heavierKeys.has(itemKey(r)) ? { ...r, weight_match: true, suggested: true, heavier_than: breedRange.max } : { ...r, weight_match: true, suggested: true }));
 
   return finish([...keepFlagged, ...fallback]);
 }
@@ -369,13 +368,7 @@ export function getBreedBundle({ rows }, slug, breedLabel) {
 
   if (hasWeights(breedItem)) {
     rows
-      .filter(
-        (r) =>
-          r.company_slug === slug &&
-          r.weight_min_lbs === breedItem.weight_min_lbs &&
-          r.weight_max_lbs === breedItem.weight_max_lbs &&
-          !isBreedCategory(r.category_name)
-      )
+      .filter((r) => r.company_slug === slug && r.weight_min_lbs === breedItem.weight_min_lbs && r.weight_max_lbs === breedItem.weight_max_lbs && !isBreedCategory(r.category_name))
       .sort((a, b) => a.category_order - b.category_order)
       .forEach((r) => options.push({ name: r.pill_label || r.category_name, price: r.price_display, needs_review: !!r.needs_review }));
   }
@@ -430,9 +423,7 @@ export function getSizeBands(company) {
     if (isBreedCategory(cat.name)) continue;
     const items = (cat.items || []).filter((i) => i.weight_min_lbs != null && i.weight_max_lbs != null);
     if (items.length >= 3) {
-      return items
-        .map((i) => ({ name: sizeName(i.label), min: i.weight_min_lbs, max: i.weight_max_lbs }))
-        .sort((a, b) => a.min - b.min);
+      return items.map((i) => ({ name: sizeName(i.label), min: i.weight_min_lbs, max: i.weight_max_lbs })).sort((a, b) => a.min - b.min);
     }
   }
   return [];

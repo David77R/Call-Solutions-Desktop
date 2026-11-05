@@ -658,3 +658,9 @@
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gem) 55%, transparent);
   color: var(--text);
 }
+
+.result__badge--heavier {
+  background: rgba(242, 201, 76, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(242, 201, 76, 0.45);
+  color: var(--text);
+}
