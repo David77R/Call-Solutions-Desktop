@@ -32,6 +32,7 @@ export default function Leaderboard({ agentName }) {
             <th scope="col">Bombas</th>
             <th scope="col">Hockey</th>
             <th scope="col">Dodge</th>
+            <th scope="col">Conquista</th>
             <th scope="col">Total</th>
           </tr>
         </thead>
@@ -46,6 +47,7 @@ export default function Leaderboard({ agentName }) {
               <td>{r.bombs}</td>
               <td>{r.hockey}</td>
               <td>{r.dodge}</td>
+              <td>{r.conquest}</td>
               <td>
                 <strong>{r.total}</strong>
               </td>
@@ -53,7 +55,7 @@ export default function Leaderboard({ agentName }) {
           ))}
         </tbody>
       </table>
-      <p className="lb__note">Se reinicia cada lunes. Suma trivia, laberinto, gatos, bombas, hockey y dodgeball de la app móvil y de escritorio.</p>
+      <p className="lb__note">Se reinicia cada lunes. Suma trivia, laberinto, gatos, bombas, hockey, dodgeball y conquista de la app móvil y de escritorio.</p>
     </div>
   );
 }
