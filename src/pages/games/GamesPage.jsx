@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { GameActiveContext } from './gameActivity';
 import TriviaGame from './TriviaGame';
 import MazeGame from './MazeGame';
 import CatArtilleryGame from './CatArtilleryGame';
@@ -23,8 +24,9 @@ const TABS = [
   { key: 'board', label: 'Leaderboard' },
 ];
 
-export default function GamesPage() {
+export default function GamesPage({ active = true }) {
   const [tab, setTab] = useState('trivia');
+  const [opened, setOpened] = useState(['trivia']);
   const { companies } = useCatalog();
   const rosters = useGroomerRosters();
   const { user } = useAuth();
@@ -38,22 +40,35 @@ export default function GamesPage() {
         <div className="games__tabs" role="tablist" aria-label="Juego">
           <span className="games__thumb" style={{ transform: `translateX(${index * 100}%)` }} aria-hidden="true" />
           {TABS.map((t) => (
-            <button key={t.key} type="button" role="tab" aria-selected={tab === t.key} onClick={() => setTab(t.key)}>
+            <button
+              key={t.key}
+              type="button"
+              role="tab"
+              aria-selected={tab === t.key}
+              onClick={() => {
+                setTab(t.key);
+                setOpened((list) => (list.includes(t.key) ? list : [...list, t.key]));
+              }}
+            >
               {t.label}
             </button>
           ))}
         </div>
       </div>
-      <div className="games__stage" key={tab}>
-        {tab === 'trivia' && <TriviaGame companies={companies} rosters={rosters} agentName={agentName} />}
-        {tab === 'maze' && <MazeGame agentName={agentName} />}
-        {tab === 'cats' && <CatArtilleryGame agentName={agentName} />}
-        {tab === 'bombs' && <BomberGame agentName={agentName} />}
-        {tab === 'hockey' && <HockeyGame agentName={agentName} />}
-        {tab === 'dodge' && <DodgeGame agentName={agentName} />}
-        {tab === 'conquest' && <ConquestGame agentName={agentName} />}
-        {tab === 'board' && <Leaderboard agentName={agentName} />}
-      </div>
+      {opened.map((key) => (
+        <div key={key} className={tab === key ? 'games__stage' : undefined} hidden={tab !== key}>
+          <GameActiveContext.Provider value={active && tab === key}>
+            {key === 'trivia' && <TriviaGame companies={companies} rosters={rosters} agentName={agentName} />}
+            {key === 'maze' && <MazeGame agentName={agentName} />}
+            {key === 'cats' && <CatArtilleryGame agentName={agentName} />}
+            {key === 'bombs' && <BomberGame agentName={agentName} />}
+            {key === 'hockey' && <HockeyGame agentName={agentName} />}
+            {key === 'dodge' && <DodgeGame agentName={agentName} />}
+            {key === 'conquest' && <ConquestGame agentName={agentName} />}
+            {key === 'board' && <Leaderboard agentName={agentName} />}
+          </GameActiveContext.Provider>
+        </div>
+      ))}
     </div>
   );
 }

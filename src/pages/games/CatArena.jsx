@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useGameActiveRef } from './gameActivity';
 import fifo from '../../assets/fifo.webp';
 import {
   BARREL,
@@ -151,6 +152,7 @@ export default function CatArena({ config, onExit, onSave }) {
   const [hud, setHud] = useState(null);
   const [expanded, setExpanded] = useState(false);
   const online = config.mode === 'online';
+  const activeRef = useGameActiveRef();
   const room = useRoom(online ? config.code : null);
   const roomRef = useRef(null);
   roomRef.current = room;
@@ -462,7 +464,7 @@ export default function CatArena({ config, onExit, onSave }) {
 
     const tick = () => {
       const g = gameRef.current;
-      if (!g) {
+      if (!g || (!activeRef.current && !online)) {
         raf = requestAnimationFrame(tick);
         return;
       }
@@ -666,7 +668,7 @@ export default function CatArena({ config, onExit, onSave }) {
   useEffect(() => {
     const onKey = (e) => {
       const g = gameRef.current;
-      if (!canAim(g)) return;
+      if (!activeRef.current || !canAim(g)) return;
       const tag = e.target.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
       const team = g.teams[g.turnTeam];

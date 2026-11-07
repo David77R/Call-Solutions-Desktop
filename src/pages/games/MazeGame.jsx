@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useGameActive } from './gameActivity';
 import { MAZE_LEVELS } from '../../data/mazeLevels';
 import { saveMazeScore } from '../../lib/games';
 import fifo from '../../assets/fifo.webp';
@@ -49,6 +50,7 @@ function afterHit(g) {
 }
 
 export default function MazeGame({ agentName }) {
+  const active = useGameActive();
   const [g, setG] = useState(null);
   const savedRef = useRef(false);
   const rootRef = useRef(null);
@@ -83,7 +85,7 @@ export default function MazeGame({ agentName }) {
   }, []);
 
   useEffect(() => {
-    if (!g || g.status !== 'playing') return undefined;
+    if (!g || g.status !== 'playing' || !active) return undefined;
     const t = setInterval(() => {
       setG((prev) => {
         if (!prev || prev.status !== 'playing') return prev;
@@ -103,7 +105,7 @@ export default function MazeGame({ agentName }) {
       });
     }, FLEA_TICK_MS);
     return () => clearInterval(t);
-  }, [g?.status, g?.index]);
+  }, [g?.status, g?.index, active]);
 
   useEffect(() => {
     if (g?.status !== 'clear') return undefined;
@@ -121,6 +123,7 @@ export default function MazeGame({ agentName }) {
   }, [g?.status, g?.score, agentName]);
 
   useEffect(() => {
+    if (!active) return undefined;
     const onKey = (e) => {
       const dir = KEYS[e.key] || KEYS[e.key?.toLowerCase()];
       if (!dir || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
@@ -129,7 +132,7 @@ export default function MazeGame({ agentName }) {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [move]);
+  }, [move, active]);
 
   if (!g) {
     return (

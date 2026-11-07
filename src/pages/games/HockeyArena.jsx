@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useGameActiveRef } from './gameActivity';
 import fifo from '../../assets/fifo.webp';
 import { HH, HW, MATCH_TIME, WIN_GOALS, applySnapshot, createMatch, hockeyScore, setKey, setPointer, setRemoteMallet, snapshot, stepLocalOnly, stepMatch } from './hockeyEngine';
 import { drawMatch } from './hockeyDraw';
@@ -20,6 +21,7 @@ export default function HockeyArena({ config, onExit, onSave }) {
   const [expanded, setExpanded] = useState(false);
   const [lost, setLost] = useState(false);
   const online = config.mode === 'online';
+  const activeRef = useGameActiveRef();
   const host = !online || config.side === 0;
   const mine = online ? config.side : 0;
   const link = config.link;
@@ -124,6 +126,10 @@ export default function HockeyArena({ config, onExit, onSave }) {
       const st = stRef.current;
       const dt = Math.max(0, Math.min(0.05, (now - last) / 1000));
       last = now;
+      if (!activeRef.current && !online) {
+        raf = requestAnimationFrame(tick);
+        return;
+      }
       if (st) {
         if (st.ready > 0) st.ready = Math.max(0, st.ready - dt);
         if (!st.over && st.ready <= 0) {
@@ -158,7 +164,7 @@ export default function HockeyArena({ config, onExit, onSave }) {
     };
     const handle = (down) => (e) => {
       const st = stRef.current;
-      if (!st || st.over) return;
+      if (!st || st.over || (down && !activeRef.current)) return;
       const tag = e.target.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
       const hit = find(normKey(e.key));

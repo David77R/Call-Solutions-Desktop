@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import { AuthProvider, useAuth } from './lib/AuthContext';
@@ -35,6 +35,8 @@ const LOADERS = {
 };
 
 const PAGES = Object.fromEntries(Object.entries(LOADERS).map(([path, load]) => [path, lazy(load)]));
+const KEEP_ALIVE = '/juegos';
+const KeptPage = PAGES[KEEP_ALIVE];
 
 function usePrefetchPages() {
   useEffect(() => {
@@ -74,19 +76,34 @@ function PageLoader() {
 
 function AnimatedRoutes() {
   const location = useLocation();
+  const onKept = location.pathname === KEEP_ALIVE;
+  const [kept, setKept] = useState(onKept);
+  if (onKept && !kept) setKept(true);
   return (
-    <div className="route-stage" key={location.pathname}>
-      <Suspense fallback={<PageLoader />}>
-        <Routes location={location}>
-          <Route path="/" element={<Navigate to="/precios" replace />} />
-          {ALL_SECTIONS.map((section) => {
-            const Page = PAGES[section.path];
-            return <Route key={section.path} path={section.path} element={Page ? <Page /> : <ComingSoon title={section.label} />} />;
-          })}
-          <Route path="*" element={<Navigate to="/precios" replace />} />
-        </Routes>
-      </Suspense>
-    </div>
+    <>
+      {!onKept && (
+        <div className="route-stage" key={location.pathname}>
+          <Suspense fallback={<PageLoader />}>
+            <Routes location={location}>
+              <Route path="/" element={<Navigate to="/precios" replace />} />
+              {ALL_SECTIONS.map((section) => {
+                const Page = PAGES[section.path];
+                if (section.path === KEEP_ALIVE) return <Route key={section.path} path={section.path} element={null} />;
+                return <Route key={section.path} path={section.path} element={Page ? <Page /> : <ComingSoon title={section.label} />} />;
+              })}
+              <Route path="*" element={<Navigate to="/precios" replace />} />
+            </Routes>
+          </Suspense>
+        </div>
+      )}
+      {kept && (
+        <div className={onKept ? 'route-stage' : undefined} hidden={!onKept}>
+          <Suspense fallback={<PageLoader />}>
+            <KeptPage active={onKept} />
+          </Suspense>
+        </div>
+      )}
+    </>
   );
 }
 

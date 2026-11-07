@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useGameActiveRef } from './gameActivity';
 import fifo from '../../assets/fifo.webp';
 import { BH, BW, CONQUEST_TIME, MAPS, RESPAWN, SLOT_COLORS, SUDDEN_AT, applyRemote, bomberScore, createState, encodePaint, paintCounts, placeBomb, step } from './bomberEngine';
 import { drawScene } from './bomberDraw';
@@ -53,6 +54,7 @@ export default function BomberArena({ config, onExit, onSave, tour, onRoundOver,
   const [hud, setHud] = useState(null);
   const [expanded, setExpanded] = useState(false);
   const online = config.mode === 'online';
+  const activeRef = useGameActiveRef();
   const mine = online ? config.me : 0;
 
   const publish = useCallback(
@@ -219,6 +221,10 @@ export default function BomberArena({ config, onExit, onSave, tour, onRoundOver,
       const st = stRef.current;
       const dt = Math.max(0, Math.min(0.1, (now - last) / 1000));
       last = now;
+      if (!activeRef.current && !online) {
+        raf = requestAnimationFrame(tick);
+        return;
+      }
       if (st) {
         if (st.ready > 0) st.ready = Math.max(0, st.ready - dt);
         else step(st, dt, hooks);
@@ -259,7 +265,7 @@ export default function BomberArena({ config, onExit, onSave, tour, onRoundOver,
     };
     const onDown = (e) => {
       const st = stRef.current;
-      if (!st || st.over) return;
+      if (!st || st.over || !activeRef.current) return;
       const tag = e.target.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
       const hit = find(normKey(e.key));

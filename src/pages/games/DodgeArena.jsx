@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useGameActiveRef } from './gameActivity';
 import fifo from '../../assets/fifo.webp';
 import { DH, DW, DYNAMICS, ROUND_TIME, TEAM_COLORS, WIN_ROUNDS, applyDodgeSnapshot, controlledFor, createDodge, dodgeScore, dodgeSnapshot, stepDodge } from './dodgeEngine';
 import { drawDodge } from './dodgeDraw';
@@ -32,6 +33,7 @@ export default function DodgeArena({ config, onExit, onSave }) {
   const [expanded, setExpanded] = useState(false);
   const [lost, setLost] = useState(false);
   const online = config.mode === 'online';
+  const activeRef = useGameActiveRef();
   const host = !online || config.host;
   const humans = config.humans;
   const localHumans = useMemo(() => humans.filter((h) => h.local), [humans]);
@@ -162,6 +164,10 @@ export default function DodgeArena({ config, onExit, onSave }) {
       const st = stRef.current;
       const dt = Math.max(0, Math.min(0.05, (now - last) / 1000));
       last = now;
+      if (!activeRef.current && !online) {
+        raf = requestAnimationFrame(tick);
+        return;
+      }
       if (st) {
         if (host) {
           Object.entries(assignRef.current).forEach(([key, id]) => {
@@ -236,7 +242,7 @@ export default function DodgeArena({ config, onExit, onSave }) {
     };
     const handle = (down) => (e) => {
       const st = stRef.current;
-      if (!st || st.phase === 'over') return;
+      if (!st || st.phase === 'over' || (down && !activeRef.current)) return;
       const tag = e.target.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
       const hit = find(e.code);

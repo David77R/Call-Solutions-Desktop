@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useGameActiveRef } from './gameActivity';
 import fifo from '../../assets/fifo.webp';
 import {
   AGES,
@@ -101,6 +102,7 @@ export default function ConquestArena({ config, onExit, onSave }) {
   const [confirmQuit, setConfirmQuit] = useState(false);
   const [mode, setMode] = useState(null);
   const online = config.mode === 'online';
+  const activeRef = useGameActiveRef();
   const host = !online || config.side === 0;
   const mine = online ? config.side : 0;
   const link = config.link;
@@ -289,6 +291,10 @@ export default function ConquestArena({ config, onExit, onSave }) {
       const st = stRef.current;
       const dt = Math.max(0, Math.min(0.1, (now - last) / 1000));
       last = now;
+      if (!activeRef.current && !online) {
+        raf = requestAnimationFrame(tick);
+        return;
+      }
       if (st) {
         const run = !st.over && !(pausedRef.current && !online);
         if (run) {
@@ -662,6 +668,7 @@ export default function ConquestArena({ config, onExit, onSave }) {
       s: 'down',
     };
     const down = (e) => {
+      if (!activeRef.current) return;
       const tag = e.target.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
       const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
