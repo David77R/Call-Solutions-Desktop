@@ -1,6 +1,6 @@
 import { isDentalCleaning, isDoubleCoat, itemKey, labelWithRange } from '../../lib/search';
 import fifo from '../../assets/fifo.webp';
-import { CatIcon, CoatIcon, GemIcon, ToothIcon } from '../../components/Icons';
+import { CatIcon, CoatIcon, GemIcon, PinIcon, ToothIcon } from '../../components/Icons';
 import { gemForRow } from '../../lib/gems';
 
 function groupByCompany(results) {
@@ -20,6 +20,12 @@ function Badges({ row, breedName }) {
   const gem = gemForRow(row);
   return (
     <span className="result__badges">
+      {row.tag && (
+        <span className="result__badge result__badge--zone">
+          <PinIcon size={13} />
+          {row.tag}
+        </span>
+      )}
       {gem && (
         <span className="result__badge result__badge--gem" style={{ '--gem': gem.color }}>
           <GemIcon gem={gem} size={13} />

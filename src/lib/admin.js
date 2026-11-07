@@ -24,7 +24,7 @@ async function setAndVerify(ref, data) {
 }
 
 export function saveCompanyCatalog(company) {
-  const { seed_only: _seedOnly, ...data } = company;
+  const { seed_only: _seedOnly, pending_updates: _pending, ...data } = company;
   return setAndVerify(doc(db, 'priceCatalog', data.slug), data);
 }
 

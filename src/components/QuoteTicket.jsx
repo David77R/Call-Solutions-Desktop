@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { wikiForBreedName } from '../lib/breedWiki';
 import AnimatedPrice from './AnimatedPrice';
 import ZonePicker from './ZonePicker';
-import { AlertIcon, CatIcon, ChatIcon, CheckIcon, CloseIcon, CoatIcon, CopyIcon, GemIcon, PawIcon, StarIcon, ToothIcon } from './Icons';
+import { AlertIcon, CatIcon, ChatIcon, CheckIcon, CloseIcon, CoatIcon, CopyIcon, GemIcon, PawIcon, PinIcon, StarIcon, ToothIcon } from './Icons';
 import { gemFor, gemForRow } from '../lib/gems';
 import { coatDescriptions } from '../data/coats';
 import { getServiceDescription } from '../data/serviceDescriptions';
@@ -185,8 +185,14 @@ function FilledTicket({ item, descriptions, rows, breedFromQuery, lang, onLangCh
       </header>
 
       <div className="ticket__titles">
-        {(item.is_cat || dentalCleaning || doubleCoat || gem) && (
+        {(item.is_cat || dentalCleaning || doubleCoat || gem || item.tag) && (
           <div className="ticket__tags">
+            {item.tag && (
+              <span className="ticket__cat ticket__tag--zone">
+                <PinIcon size={16} />
+                Precio de {item.tag}
+              </span>
+            )}
             {gem && (
               <span className="ticket__cat ticket__tag--gem" style={{ '--gem': gem.color }}>
                 <GemIcon gem={gem} size={16} />

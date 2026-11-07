@@ -28,6 +28,10 @@ export function isCatQuery(text) {
   return CAT_QUERY.test(plain(text));
 }
 
+export function isCatText(text) {
+  return CAT_ROW.test(text || '');
+}
+
 export function isCatRow(row) {
   return CAT_ROW.test(`${row.category_name || ''} ${row.label || ''}`);
 }
@@ -36,7 +40,7 @@ export function catCoverage(companies) {
   const withCats = new Set();
   for (const company of companies) {
     for (const cat of company.categories || []) {
-      if ((cat.items || []).some((item) => CAT_ROW.test(`${cat.name} ${item.label}`))) withCats.add(company.slug);
+      if ((cat.items || []).some((item) => item.is_cat === true || CAT_ROW.test(`${cat.name} ${item.label}`))) withCats.add(company.slug);
     }
   }
   return companies.filter((c) => !withCats.has(c.slug));
@@ -66,7 +70,8 @@ export function flattenCatalog(companies) {
           service_note: item.service_note ?? null,
           weight_min_lbs: item.weight_min_lbs ?? null,
           weight_max_lbs: item.weight_max_lbs ?? null,
-          is_cat: CAT_ROW.test(`${cat.name} ${item.label}`),
+          is_cat: typeof item.is_cat === 'boolean' ? item.is_cat : CAT_ROW.test(`${cat.name} ${item.label}`),
+          tag: item.tag || cat.tag || null,
         });
       });
     });
@@ -238,15 +243,16 @@ function weightRangeSearch(rows, min, max, slug) {
     .slice(0, SEARCH_LIMIT);
 }
 
-export function searchPriceItems({ companies, rows }, queryText, slug) {
+export function searchPriceItems({ companies, rows: allRows }, queryText, slug) {
   if (isCatQuery(queryText)) {
-    return rows
+    return allRows
       .filter(inCompany(slug))
       .filter((r) => r.is_cat)
       .sort((a, b) => compare(a.company_name, b.company_name) || a.category_order - b.category_order || a.sort_order - b.sort_order)
       .map((r) => ({ ...r, weight_match: null, suggested: false }));
   }
 
+  const rows = allRows.filter((r) => !(r.is_cat && hasWeights(r)));
   const explicitWeight = extractWeightLbs(queryText);
   const textPart = (explicitWeight != null ? queryText.replace(WEIGHT_REGEX, '') : queryText).trim();
 

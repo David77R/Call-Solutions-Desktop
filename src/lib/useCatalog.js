@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from './firebase';
 import { flattenCatalog } from './search';
+import { applyCatalogUpdates } from '../data/catalogUpdates';
 
 const OFFLINE_FALLBACK_MS = 6000;
 let seedCompanies = null;
@@ -27,7 +28,8 @@ function emit(next) {
   listeners.forEach((listener) => listener());
 }
 
-function setCompanies(companies, status) {
+function setCompanies(list, status) {
+  const companies = list.map(applyCatalogUpdates);
   emit({ companies, rows: flattenCatalog(companies), status });
 }
 

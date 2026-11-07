@@ -304,6 +304,10 @@ export default function ConquestArena({ config, onExit, onSave }) {
   }, [link, host, mine, finish, toast]);
 
   useEffect(() => {
+    rootRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  }, []);
+
+  useEffect(() => {
     const onChange = () => setExpanded(!!document.fullscreenElement && document.fullscreenElement === rootRef.current);
     document.addEventListener('fullscreenchange', onChange);
     return () => document.removeEventListener('fullscreenchange', onChange);
@@ -973,115 +977,124 @@ export default function ConquestArena({ config, onExit, onSave }) {
         </div>
 
         <div className="conq__dock">
-          <canvas
-            ref={miniRef}
-            className="conq__mini"
-            onPointerDown={(e) => {
-              miniJump(e);
-              if (e.button === 0) e.currentTarget.setPointerCapture?.(e.pointerId);
-            }}
-            onPointerMove={(e) => e.buttons === 1 && miniJump(e)}
-            onContextMenu={(e) => e.preventDefault()}
-            aria-label="Minimapa"
-          />
-          <div className="conq__info">
-            {!sel.length && (
-              <div className="conq__tips">
-                <strong>{TRIBES[tribe].name}</strong>: {TRIBES[tribe].perk}
-                <span>
-                  Selecciona a tus aldeanos con clic izquierdo y mándalos a trabajar con clic derecho sobre un árbol, las bayas o el oro. Los controles completos están debajo del
-                  juego.
-                </span>
-              </div>
-            )}
-            {single && single.kind === 'u' && (
-              <div className="conq__one">
-                <img src={iconUrl('u', single.type, st.players[single.owner].color, st.players[single.owner].tribe)} alt="" />
-                <div>
-                  <strong>
-                    {UNITS[single.type].name}
-                    {single.owner !== mine ? ` de ${st.players[single.owner].name}` : ''}
-                  </strong>
-                  <span className="conq__hp">
-                    <i style={{ '--p': `${(single.hp / single.max) * 100}%` }} />
-                    <em>
-                      {Math.ceil(single.hp)}/{single.max}
-                    </em>
+          <div className="conq__dock-inner">
+            <canvas
+              ref={miniRef}
+              className="conq__mini"
+              onPointerDown={(e) => {
+                miniJump(e);
+                if (e.button === 0) e.currentTarget.setPointerCapture?.(e.pointerId);
+              }}
+              onPointerMove={(e) => e.buttons === 1 && miniJump(e)}
+              onContextMenu={(e) => e.preventDefault()}
+              aria-label="Minimapa"
+            />
+            <div className="conq__info">
+              {!sel.length && (
+                <div className="conq__tips">
+                  <p>
+                    <strong>{TRIBES[tribe].name}:</strong> {TRIBES[tribe].perk}
+                  </p>
+                  <span>
+                    Selecciona a tus aldeanos con clic izquierdo y mándalos a trabajar con clic derecho sobre un árbol, las bayas o el oro. Los controles completos están debajo del
+                    juego.
                   </span>
-                  <small>
-                    ⚔ {UNITS[single.type].atk} · 🛡 {UNITS[single.type].armor}
-                    {UNITS[single.type].missile ? ` · 🎯 ${unitRange(st, single.owner, single.type)}` : ''}
-                    {single.owner === mine ? ` · ${(ORDER_TEXT[single.order.k] || ORDER_TEXT.idle)(single.order)}` : ''}
-                  </small>
-                  <small className="conq__muted">{UNITS[single.type].text}</small>
                 </div>
-              </div>
-            )}
-            {single && single.kind === 'b' && (
-              <div className="conq__one">
-                <img src={iconUrl('b', single.type, st.players[single.owner].color, st.players[single.owner].tribe)} alt="" />
-                <div>
-                  <strong>
-                    {BUILDINGS[single.type].name}
-                    {single.owner !== mine ? ` de ${st.players[single.owner].name}` : ''}
-                  </strong>
-                  <span className="conq__hp">
-                    <i style={{ '--p': `${(single.hp / single.max) * 100}%` }} />
-                    <em>
-                      {Math.ceil(single.hp)}/{single.max}
-                    </em>
-                  </span>
-                  {!single.done && <small>En construcción: {Math.round(single.progress * 100)}% · haz clic derecho con aldeanos para ayudar</small>}
-                  {single.done && single.aging !== null && single.owner === mine && <small>Subiendo de edad: {Math.round(single.aging * 100)}%</small>}
-                  {single.done && single.blocked && single.owner === mine && <small className="conq__warn">Sin espacio: construye más casas.</small>}
-                  {single.done && !single.queue.length && single.aging === null && <small className="conq__muted">{BUILDINGS[single.type].text}</small>}
-                  {single.owner === mine && single.queue.length > 0 && (
-                    <div className="conq__queue">
-                      {single.queue.map((q, i) => (
-                        <button
-                          key={`${q}-${i}`}
-                          type="button"
-                          onClick={() => issue({ k: 'untrain', bid: single.id })}
-                          title="Clic para cancelar el último de la cola"
-                          style={{
-                            '--p': i === 0 ? `${Math.round(single.train * 100)}%` : '0%',
-                          }}
-                        >
-                          <img src={iconUrl('u', q, color, tribe)} alt={UNITS[q].name} />
-                        </button>
-                      ))}
-                    </div>
-                  )}
+              )}
+              {single && single.kind === 'u' && (
+                <div className="conq__one">
+                  <img src={iconUrl('u', single.type, st.players[single.owner].color, st.players[single.owner].tribe)} alt="" />
+                  <div>
+                    <strong>
+                      {UNITS[single.type].name}
+                      {single.owner !== mine ? ` de ${st.players[single.owner].name}` : ''}
+                    </strong>
+                    <span className="conq__hp">
+                      <i style={{ '--p': `${(single.hp / single.max) * 100}%` }} />
+                      <em>
+                        {Math.ceil(single.hp)}/{single.max}
+                      </em>
+                    </span>
+                    <small>
+                      ⚔ {UNITS[single.type].atk} · 🛡 {UNITS[single.type].armor}
+                      {UNITS[single.type].missile ? ` · 🎯 ${unitRange(st, single.owner, single.type)}` : ''}
+                      {single.owner === mine ? ` · ${(ORDER_TEXT[single.order.k] || ORDER_TEXT.idle)(single.order)}` : ''}
+                    </small>
+                    <small className="conq__muted">{UNITS[single.type].text}</small>
+                  </div>
                 </div>
-              </div>
-            )}
-            {sel.length > 1 && (
-              <div className="conq__group">
-                {Object.entries(groups).map(([type, n]) => (
-                  <button key={type} type="button" onClick={() => selectOnly(units.filter((u) => u.type === type).map((u) => u.id))} title={`Seleccionar solo ${UNITS[type].name}`}>
-                    <img src={iconUrl('u', type, color, tribe)} alt="" />
-                    <b>{n}</b>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          <div className="conq__actions">
-            {actions.map((a, i) => (
-              <button
-                key={a.key}
-                type="button"
-                className={a.poor ? 'conq__act is-poor' : 'conq__act'}
-                disabled={a.disabled}
-                onClick={a.run}
-                title={`${a.title || a.label} (tecla ${i + 1})`}
-              >
-                {a.img ? <img src={a.img} alt="" /> : <span className="conq__act-icon">{a.icon}</span>}
-                <span className="conq__act-label">{a.label}</span>
-                {a.locked ? <small className="conq__lock">🔒 {a.locked}</small> : <Cost cost={a.cost} />}
-                <kbd>{i + 1}</kbd>
-              </button>
-            ))}
+              )}
+              {single && single.kind === 'b' && (
+                <div className="conq__one">
+                  <img src={iconUrl('b', single.type, st.players[single.owner].color, st.players[single.owner].tribe)} alt="" />
+                  <div>
+                    <strong>
+                      {BUILDINGS[single.type].name}
+                      {single.owner !== mine ? ` de ${st.players[single.owner].name}` : ''}
+                    </strong>
+                    <span className="conq__hp">
+                      <i style={{ '--p': `${(single.hp / single.max) * 100}%` }} />
+                      <em>
+                        {Math.ceil(single.hp)}/{single.max}
+                      </em>
+                    </span>
+                    {!single.done && <small>En construcción: {Math.round(single.progress * 100)}% · haz clic derecho con aldeanos para ayudar</small>}
+                    {single.done && single.aging !== null && single.owner === mine && <small>Subiendo de edad: {Math.round(single.aging * 100)}%</small>}
+                    {single.done && single.blocked && single.owner === mine && <small className="conq__warn">Sin espacio: construye más casas.</small>}
+                    {single.done && !single.queue.length && single.aging === null && <small className="conq__muted">{BUILDINGS[single.type].text}</small>}
+                    {single.owner === mine && single.queue.length > 0 && (
+                      <div className="conq__queue">
+                        {single.queue.map((q, i) => (
+                          <button
+                            key={`${q}-${i}`}
+                            type="button"
+                            onClick={() => issue({ k: 'untrain', bid: single.id })}
+                            title="Clic para cancelar el último de la cola"
+                            style={{
+                              '--p': i === 0 ? `${Math.round(single.train * 100)}%` : '0%',
+                            }}
+                          >
+                            <img src={iconUrl('u', q, color, tribe)} alt={UNITS[q].name} />
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              {sel.length > 1 && (
+                <div className="conq__group">
+                  {Object.entries(groups).map(([type, n]) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => selectOnly(units.filter((u) => u.type === type).map((u) => u.id))}
+                      title={`Seleccionar solo ${UNITS[type].name}`}
+                    >
+                      <img src={iconUrl('u', type, color, tribe)} alt="" />
+                      <b>{n}</b>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="conq__actions">
+              {actions.map((a, i) => (
+                <button
+                  key={a.key}
+                  type="button"
+                  className={a.poor ? 'conq__act is-poor' : 'conq__act'}
+                  disabled={a.disabled}
+                  onClick={a.run}
+                  title={`${a.title || a.label} (tecla ${i + 1})`}
+                >
+                  {a.img ? <img src={a.img} alt="" /> : <span className="conq__act-icon">{a.icon}</span>}
+                  <span className="conq__act-label">{a.label}</span>
+                  {a.locked ? <small className="conq__lock">🔒 {a.locked}</small> : <Cost cost={a.cost} />}
+                  <kbd>{i + 1}</kbd>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -1171,7 +1184,7 @@ function ConquestHelp({ online }) {
             <Key>W</Key> <Key>A</Key> <Key>S</Key> <Key>D</Key> o las <Key>flechas</Key>: mueven la cámara.
           </li>
           <li>
-            <Key>1</Key> al <Key>9</Key>: los botones del panel de abajo, en orden (construir, entrenar, subir de edad).
+            <Key>1</Key> al <Key>9</Key>: los botones del panel de acciones, en orden (construir, entrenar, subir de edad).
           </li>
           <li>
             <Key>H</Key>: va a tu castillo y lo selecciona.

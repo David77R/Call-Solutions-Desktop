@@ -2269,8 +2269,9 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-width: 1200px;
+  max-width: min(1200px, max(600px, calc((100vh - 272px) * 16 / 9)));
   margin: 0 auto;
+  scroll-margin-top: 8px;
 }
 
 .conq.is-full,
@@ -2748,4 +2749,96 @@
   font-size: 12px;
   font-weight: 700;
   white-space: nowrap;
+}
+
+.conq__dock-inner {
+  display: contents;
+}
+
+.conq__tips p {
+  margin: 0;
+}
+
+@media (min-width: 1000px) {
+  .conq {
+    max-width: min(1500px, max(760px, calc((100vh - 84px) * 16 / 9 + 252px)));
+  }
+
+  .conq:fullscreen .conq__stage {
+    max-width: min(100%, calc((100vh - 76px) * 16 / 9 + 252px));
+  }
+
+  .conq__stage {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 252px;
+    grid-template-areas:
+      'top top'
+      'view dock';
+  }
+
+  .conq__top {
+    grid-area: top;
+  }
+
+  .conq__view {
+    grid-area: view;
+  }
+
+  .conq__dock {
+    position: relative;
+    display: block;
+    grid-area: dock;
+    min-height: 0;
+    padding: 0;
+    border-top: 0;
+    border-left: 1px solid var(--line);
+  }
+
+  .conq__dock-inner {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+    padding: 8px;
+    scrollbar-width: thin;
+  }
+
+  .conq__mini {
+    flex: none;
+    align-self: center;
+    width: 100%;
+    max-width: 192px;
+    height: auto;
+    aspect-ratio: 3 / 2;
+  }
+
+  .conq__actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+  }
+
+  .conq__act {
+    min-height: 58px;
+    padding: 3px 2px;
+  }
+
+  .conq__act img {
+    width: 28px;
+    height: 24px;
+  }
+
+  .conq__act-label {
+    font-size: 10.5px;
+  }
+
+  .conq__hp {
+    width: 130px;
+  }
+
+  .conq__one > img {
+    width: 48px;
+    height: 54px;
+  }
 }

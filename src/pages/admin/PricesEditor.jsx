@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import SaveBar, { useSaver } from './SaveBar';
 import { saveCompanyCatalog } from '../../lib/admin';
+import { isCatText } from '../../lib/search';
 
 const clone = (v) => JSON.parse(JSON.stringify(v));
 
@@ -39,11 +40,23 @@ export default function PricesEditor({ company }) {
       {company.seed_only && publish !== 'done' && (
         <div className="desc-sync">
           <p>
-            {company.name} es nueva y todavía no está en la base de datos. Ya la ve todo el equipo en la app, pero Fifo no la conoce hasta que la publiques. Al publicarla, los cambios de
-            precios que hagas aquí también quedan guardados.
+            {company.name} es nueva y todavía no está en la base de datos. Ya la ve todo el equipo en la app, pero Fifo no la conoce hasta que la publiques. Al publicarla, los
+            cambios de precios que hagas aquí también quedan guardados.
           </p>
           <button type="button" className="savebar__save" disabled={publish === 'saving'} onClick={publishCompany}>
             {publish === 'saving' ? 'Publicando…' : 'Publicar empresa'}
+          </button>
+          {publishError && <p className="sf-error">{publishError}</p>}
+        </div>
+      )}
+      {company.pending_updates?.length > 0 && !company.seed_only && publish !== 'done' && (
+        <div className="desc-sync">
+          <p>
+            Hay precios nuevos de {company.name} que el equipo ya ve en la app de escritorio: {company.pending_updates.join(' · ')}. Guárdalos en la base de datos para que Fifo y
+            la app del celular también los tengan.
+          </p>
+          <button type="button" className="savebar__save" disabled={publish === 'saving'} onClick={publishCompany}>
+            {publish === 'saving' ? 'Guardando…' : 'Guardar en la base de datos'}
           </button>
           {publishError && <p className="sf-error">{publishError}</p>}
         </div>
@@ -59,10 +72,19 @@ export default function PricesEditor({ company }) {
               {cat.items.map((item, ii) => (
                 <div key={ii} className="price-row">
                   <input className="sf-input" aria-label="Servicio" value={item.label} onChange={(e) => setItem(ci, ii, 'label', e.target.value)} />
-                  <input className="sf-input price-row__price" aria-label={`Precio de ${item.label}`} value={item.price_display || ''} onChange={(e) => setItem(ci, ii, 'price_display', e.target.value)} />
+                  <input
+                    className="sf-input price-row__price"
+                    aria-label={`Precio de ${item.label}`}
+                    value={item.price_display || ''}
+                    onChange={(e) => setItem(ci, ii, 'price_display', e.target.value)}
+                  />
                   <label className="sf-check">
                     <input type="checkbox" checked={!!item.needs_review} onChange={(e) => setItem(ci, ii, 'needs_review', e.target.checked)} />
                     Verificar
+                  </label>
+                  <label className="sf-check" title="Marca este precio como servicio para gatos">
+                    <input type="checkbox" checked={item.is_cat ?? isCatText(`${cat.name} ${item.label}`)} onChange={(e) => setItem(ci, ii, 'is_cat', e.target.checked)} />
+                    Gato
                   </label>
                 </div>
               ))}

@@ -961,3 +961,7 @@
     animation: none;
   }
 }
+
+.ticket__tag--zone {
+  background: #b4532a;
+}
