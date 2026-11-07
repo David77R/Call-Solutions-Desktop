@@ -2851,3 +2851,17 @@
     height: 54px;
   }
 }
+
+.conq__canvas.is-hand {
+  cursor: grab;
+}
+
+.conq__canvas.is-grabbing {
+  cursor: grabbing;
+}
+
+.conq .cats__iconbtn.is-on {
+  border-color: #5ef2ff;
+  background: rgba(94, 242, 255, 0.2);
+  color: #5ef2ff;
+}

@@ -146,6 +146,7 @@ export default function ConquestArena({ config, onExit, onSave }) {
   const [paused, setPaused] = useState(false);
   const [confirmQuit, setConfirmQuit] = useState(false);
   const [mode, setMode] = useState(null);
+  const [hand, setHand] = useState(false);
   const online = config.mode === 'online';
   const activeRef = useGameActiveRef();
   const host = !online || config.side === 0;
@@ -491,6 +492,30 @@ export default function ConquestArena({ config, onExit, onSave }) {
 
   const myUnits = () => [...selRef.current].map((id) => stRef.current.ents.get(id)).filter((e) => e && e.kind === 'u' && e.owner === mine);
 
+  const startPan = (e, onTap) => {
+    const canvas = canvasRef.current;
+    const start = { x: e.clientX, y: e.clientY, cam: { ...camRef.current }, moved: false };
+    const rect = canvas.getBoundingClientRect();
+    const move = (ev) => {
+      if (!start.moved && Math.hypot(ev.clientX - start.x, ev.clientY - start.y) < 6) return;
+      if (!start.moved) canvas.classList.add('is-grabbing');
+      start.moved = true;
+      camRef.current = clampCam(
+        start.cam.x - ((ev.clientX - start.x) * VW) / rect.width / start.cam.z,
+        start.cam.y - ((ev.clientY - start.y) * VH) / rect.height / start.cam.z,
+        start.cam.z,
+      );
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      canvas.classList.remove('is-grabbing');
+      if (!start.moved) onTap?.();
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
+
   const onPointerDown = (e) => {
     const st = stRef.current;
     if (!st || st.over) return;
@@ -498,24 +523,21 @@ export default function ConquestArena({ config, onExit, onSave }) {
     const cam = camRef.current;
     const wx = cam.x + vx / cam.z;
     const wy = cam.y + vy / cam.z;
-    if (e.button === 2) return;
+    if (e.button === 2) {
+      startPan(e, () => command(wx, wy));
+      return;
+    }
     if (e.button === 1) {
       e.preventDefault();
-      const start = { x: e.clientX, y: e.clientY, cam: { ...cam } };
-      const rect = canvasRef.current.getBoundingClientRect();
-      const move = (ev) => {
-        camRef.current = clampCam(
-          start.cam.x - ((ev.clientX - start.x) * VW) / rect.width / start.cam.z,
-          start.cam.y - ((ev.clientY - start.y) * VH) / rect.height / start.cam.z,
-          start.cam.z,
-        );
-      };
-      const up = () => {
-        window.removeEventListener('pointermove', move);
-        window.removeEventListener('pointerup', up);
-      };
-      window.addEventListener('pointermove', move);
-      window.addEventListener('pointerup', up);
+      startPan(e);
+      return;
+    }
+    if (hand && !placeRef.current && mode !== 'amove') {
+      const shift = e.shiftKey;
+      startPan(e, () => {
+        boxRef.current = { x0: vx, y0: vy, x1: vx, y1: vy, shift };
+        onPointerUp({ button: 0 });
+      });
       return;
     }
     if (placeRef.current) {
@@ -660,8 +682,6 @@ export default function ConquestArena({ config, onExit, onSave }) {
 
   const onContextMenu = (e) => {
     e.preventDefault();
-    const { vx, vy } = viewPoint(e);
-    command(camRef.current.x + vx / camRef.current.z, camRef.current.y + vy / camRef.current.z);
   };
 
   const onWheel = (e) => {
@@ -740,6 +760,7 @@ export default function ConquestArena({ config, onExit, onSave }) {
       }
       if (key === 'h') selectCastle();
       if (key === '+' || key === '=') zoomBy(ZOOM_STEP);
+      if (key === 'm') setHand((v) => !v);
       if (key === '-') zoomBy(1 / ZOOM_STEP);
       if (key === '.') nextIdle();
       if (key === ' ') {
@@ -946,6 +967,18 @@ export default function ConquestArena({ config, onExit, onSave }) {
                 </svg>
               </button>
             )}
+            <button
+              type="button"
+              className={hand ? 'cats__iconbtn is-on' : 'cats__iconbtn'}
+              onClick={() => setHand((v) => !v)}
+              aria-pressed={hand}
+              aria-label="Mover el mapa arrastrando"
+              title="Mano: arrastra con clic izquierdo para mover el mapa (tecla M)"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V12M11 11.5v-8a1.5 1.5 0 0 1 3 0V12M14 6.5a1.5 1.5 0 0 1 3 0V13M17 9.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-1.5a6 6 0 0 1-4.8-2.4L4.3 14.9a1.5 1.5 0 0 1 2.3-1.9L8 14.5" />
+              </svg>
+            </button>
             <button type="button" className="cats__iconbtn" onClick={() => zoomBy(1 / ZOOM_STEP)} aria-label="Alejar" title="Alejar (tecla -)">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
                 <circle cx="11" cy="11" r="7" />
@@ -980,7 +1013,7 @@ export default function ConquestArena({ config, onExit, onSave }) {
         <div className="conq__view">
           <canvas
             ref={canvasRef}
-            className={mode ? `conq__canvas is-${mode}` : 'conq__canvas'}
+            className={['conq__canvas', mode ? `is-${mode}` : '', hand && !mode ? 'is-hand' : ''].filter(Boolean).join(' ')}
             style={{ aspectRatio: `${VW} / ${VH}` }}
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
@@ -1189,6 +1222,10 @@ function ConquestHelp({ online }) {
             <Key>Clic derecho en el suelo</Key>: caminan hasta ahí.
           </li>
           <li>
+            <Key>Clic derecho arrastrando</Key> o <Key>botón del medio arrastrando</Key>: mueven el mapa. Con el botón de la mano activo (tecla <Key>M</Key>), también se mueve
+            arrastrando con <Key>clic izquierdo</Key>.
+          </li>
+          <li>
             <Key>Clic derecho en árbol, bayas u oro</Key> con aldeanos: recolectan solos y llevan todo al castillo o al almacén.
           </li>
           <li>
@@ -1201,8 +1238,8 @@ function ConquestHelp({ online }) {
             Con un edificio seleccionado, <Key>clic derecho</Key> marca dónde se juntan las tropas nuevas.
           </li>
           <li>
-            <Key>Rueda</Key> o los botones de lupa arriba: acercan o alejan el mapa. <Key>Botón del medio arrastrando</Key>: mueve la cámara. En el minimapa, <Key>clic</Key> salta
-            a ese lugar y <Key>clic derecho</Key> manda a la selección.
+            <Key>Rueda</Key> o los botones de lupa arriba: acercan o alejan el mapa. En el minimapa, <Key>clic</Key> salta a ese lugar y <Key>clic derecho</Key> manda a la
+            selección.
           </li>
         </ul>
       </div>
@@ -1220,6 +1257,9 @@ function ConquestHelp({ online }) {
           </li>
           <li>
             <Key>+</Key> y <Key>-</Key>: acercan o alejan el mapa.
+          </li>
+          <li>
+            <Key>M</Key>: activa o desactiva la mano para mover el mapa con clic izquierdo.
           </li>
           <li>
             <Key>.</Key> (punto): va al siguiente aldeano sin trabajo.
