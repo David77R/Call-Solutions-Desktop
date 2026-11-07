@@ -9,7 +9,7 @@ export const CATALOG_UPDATES = [
     id: 'famous-orlando',
     slug: 'famous',
     title: 'Precios de Orlando (Silver, Gold, gato y limpieza dental)',
-    addNotes: ['Ahora también cubren Orlando: esos precios salen con la etiqueta Orlando y son distintos a los de Miami.'],
+    addNotes: ['Ahora también cubren Orlando: usa el botón Miami / Orlando de arriba para ver los precios de cada zona. Los de Orlando son distintos a los de Miami.'],
     addCategories: [
       {
         name: 'Silver Orlando (baño + sanitario)',
@@ -49,6 +49,23 @@ export const CATALOG_UPDATES = [
     ],
   },
 ];
+
+const ZONE_BASE = { famous: 'Miami' };
+const SHARED_CATEGORY = /adicional|add-on/i;
+
+export function companyZones(company) {
+  if (!company) return [];
+  const tags = [...new Set((company.categories || []).map((c) => c.tag).filter(Boolean))];
+  return tags.length ? [ZONE_BASE[company.slug] || 'Principal', ...tags] : [];
+}
+
+export const isSharedCategory = (name) => SHARED_CATEGORY.test(name || '');
+
+export function inZone(zone, zones, tag, categoryName) {
+  if (!zone || zones.length < 2) return true;
+  if (SHARED_CATEGORY.test(categoryName || '')) return true;
+  return zone === zones[0] ? !tag : tag === zone;
+}
 
 export function applyCatalogUpdates(company) {
   const updates = CATALOG_UPDATES.filter((u) => u.slug === company.slug);

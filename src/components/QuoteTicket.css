@@ -962,6 +962,28 @@
   }
 }
 
-.ticket__tag--zone {
-  background: #b4532a;
+.zone-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 9px 2px 7px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ff9a4d, #ff5c8a);
+  box-shadow:
+    0 4px 12px -4px rgba(255, 110, 120, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.zone-tag svg {
+  flex: none;
+}
+
+.zone-tag--big {
+  padding: 4px 12px 4px 9px;
+  font-size: 13px;
 }

@@ -6,6 +6,8 @@ import QuoteTicket from '../../components/QuoteTicket';
 import { CloseIcon, SearchIcon } from '../../components/Icons';
 import ResultsList from './ResultsList';
 import CompanyOverview from './CompanyOverview';
+import ZoneSwitch from './ZoneSwitch';
+import { companyZones, inZone } from '../../data/catalogUpdates';
 import { useCatalog } from '../../lib/useCatalog';
 import { useServiceDescriptions } from '../../lib/useServiceDescriptions';
 import { accentTokens } from '../../lib/color';
@@ -37,6 +39,7 @@ export default function PricesPage() {
   const catalog = useCatalog();
   const descriptions = useServiceDescriptions();
   const [activeSlug, setActiveSlug] = useState(null);
+  const [zoneBySlug, setZoneBySlug] = useState({});
   const location = useLocation();
   const [query, setQuery] = useState(() => location.state?.query || '');
   const [selected, setSelected] = useState(null);
@@ -46,10 +49,13 @@ export default function PricesPage() {
   const openedFromState = useRef(false);
 
   const trimmed = query.trim();
-  const results = useMemo(
-    () => (trimmed && catalog.rows.length ? searchPriceItems(catalog, trimmed, activeSlug) : null),
-    [catalog, trimmed, activeSlug]
-  );
+  const activeZones = useMemo(() => companyZones(catalog.companies.find((c) => c.slug === activeSlug)), [catalog.companies, activeSlug]);
+  const zone = activeZones.length ? zoneBySlug[activeSlug] || activeZones[0] : null;
+  const results = useMemo(() => {
+    if (!trimmed || !catalog.rows.length) return null;
+    const found = searchPriceItems(catalog, trimmed, activeSlug);
+    return zone ? found.filter((r) => inZone(zone, activeZones, r.tag, r.category_name)) : found;
+  }, [catalog, trimmed, activeSlug, zone, activeZones]);
 
   const weight = trimmed ? extractWeightLbs(trimmed) : null;
   const breedText = trimmed ? stripWeight(trimmed) : '';
@@ -127,7 +133,12 @@ export default function PricesPage() {
   return (
     <div className="prices" style={accentTokens(accentColor)}>
       <div className="prices__top">
-        <CompanyTabs companies={catalog.companies} activeSlug={activeSlug} onChange={handleCompany} />
+        <div className="prices__tabs-row">
+          <CompanyTabs companies={catalog.companies} activeSlug={activeSlug} onChange={handleCompany} />
+          {activeZones.length > 1 && (
+            <ZoneSwitch zones={activeZones} value={zone} color={activeCompany?.color_primary} onChange={(z) => setZoneBySlug((m) => ({ ...m, [activeSlug]: z }))} />
+          )}
+        </div>
         <span className={`prices__status is-${catalog.status}`}>
           <span className="prices__status-dot" aria-hidden="true" />
           {STATUS_TEXT[catalog.status]}
@@ -173,6 +184,8 @@ export default function PricesPage() {
             <CompanyOverview
               companies={catalog.companies}
               company={activeCompany}
+              zone={zone}
+              zones={activeZones}
               onPickCompany={handleCompany}
               onSelect={handleSelect}
               selectedKey={itemKey(selected)}

@@ -1,4 +1,6 @@
-import { itemKey, labelWithRange } from '../../lib/search';
+import { isCatText, itemKey, labelWithRange } from '../../lib/search';
+import { inZone, isSharedCategory } from '../../data/catalogUpdates';
+import { PinIcon } from '../../components/Icons';
 import { readableOn } from '../../lib/color';
 import { getFavorites, getHistory } from '../../lib/favorites';
 
@@ -20,7 +22,7 @@ function QuickList({ title, items, onSelect }) {
   );
 }
 
-export default function CompanyOverview({ companies, company, onPickCompany, onSelect, selectedKey }) {
+export default function CompanyOverview({ companies, company, zone = null, zones = [], onPickCompany, onSelect, selectedKey }) {
   if (!company) {
     return (
       <div className="overview">
@@ -46,7 +48,7 @@ export default function CompanyOverview({ companies, company, onPickCompany, onS
   }
 
   return (
-    <div className="overview" key={company.slug}>
+    <div className="overview" key={`${company.slug}-${zone || ''}`}>
       {company.notes?.length > 0 && (
         <ul className="overview__notes">
           {company.notes.map((note) => (
@@ -55,38 +57,51 @@ export default function CompanyOverview({ companies, company, onPickCompany, onS
         </ul>
       )}
       <div className="overview__categories">
-        {(company.categories || []).map((cat, ci) => (
-          <section key={cat.name} className="category" style={{ '--i': ci }}>
-            <h3 className="category__title">{cat.name}</h3>
-            <ul className="category__items">
-              {(cat.items || []).map((item) => {
-                const row = {
-                  company_slug: company.slug,
-                  company_name: company.name,
-                  color_primary: company.color_primary,
-                  category_name: cat.name,
-                  pill_label: cat.pill_label || null,
-                  label: item.label,
-                  price_display: item.price_display ?? null,
-                  needs_review: !!item.needs_review,
-                  coat: item.coat ?? null,
-                  service_note: item.service_note ?? null,
-                  weight_min_lbs: item.weight_min_lbs ?? null,
-                  weight_max_lbs: item.weight_max_lbs ?? null,
-                };
-                const key = itemKey(row);
-                return (
-                  <li key={key}>
-                    <button type="button" className={selectedKey === key ? 'category__item is-selected' : 'category__item'} onClick={() => onSelect(row)}>
-                      <span>{labelWithRange(item)}</span>
-                      <span className="category__price">{item.price_display || 'Por confirmar'}</span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-        ))}
+        {(company.categories || [])
+          .filter((cat) => inZone(zone, zones, cat.tag, cat.name))
+          .sort((a, b) => (zone && zone !== zones[0] ? isSharedCategory(a.name) - isSharedCategory(b.name) : 0))
+          .map((cat, ci) => (
+            <section key={cat.name} className="category" style={{ '--i': ci }}>
+              <h3 className="category__title">
+                {cat.name}
+                {cat.tag && (
+                  <span className="zone-tag">
+                    <PinIcon size={12} />
+                    {cat.tag}
+                  </span>
+                )}
+              </h3>
+              <ul className="category__items">
+                {(cat.items || []).map((item) => {
+                  const row = {
+                    company_slug: company.slug,
+                    company_name: company.name,
+                    color_primary: company.color_primary,
+                    category_name: cat.name,
+                    pill_label: cat.pill_label || null,
+                    label: item.label,
+                    price_display: item.price_display ?? null,
+                    needs_review: !!item.needs_review,
+                    coat: item.coat ?? null,
+                    service_note: item.service_note ?? null,
+                    weight_min_lbs: item.weight_min_lbs ?? null,
+                    weight_max_lbs: item.weight_max_lbs ?? null,
+                    is_cat: typeof item.is_cat === 'boolean' ? item.is_cat : isCatText(`${cat.name} ${item.label}`),
+                    tag: item.tag || cat.tag || null,
+                  };
+                  const key = itemKey(row);
+                  return (
+                    <li key={key}>
+                      <button type="button" className={selectedKey === key ? 'category__item is-selected' : 'category__item'} onClick={() => onSelect(row)}>
+                        <span>{labelWithRange(item)}</span>
+                        <span className="category__price">{item.price_display || 'Por confirmar'}</span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ))}
       </div>
     </div>
   );

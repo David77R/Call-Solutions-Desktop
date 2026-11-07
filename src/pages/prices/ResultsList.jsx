@@ -21,8 +21,8 @@ function Badges({ row, breedName }) {
   return (
     <span className="result__badges">
       {row.tag && (
-        <span className="result__badge result__badge--zone">
-          <PinIcon size={13} />
+        <span className="zone-tag">
+          <PinIcon size={12} />
           {row.tag}
         </span>
       )}

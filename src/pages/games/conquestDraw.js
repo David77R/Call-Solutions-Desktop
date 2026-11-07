@@ -1268,13 +1268,17 @@ export function drawWorld(ctx, st, view) {
   st.me = me;
   ctx.fillStyle = '#05031c';
   ctx.fillRect(0, 0, VW, VH);
+  const z = cam.z || 1;
+  const viewW = VW / z;
+  const viewH = VH / z;
   ctx.save();
-  ctx.translate(-Math.round(cam.x), -Math.round(cam.y));
+  ctx.scale(z, z);
+  ctx.translate(-Math.round(cam.x * z) / z, -Math.round(cam.y * z) / z);
   ctx.drawImage(terrain, 0, 0);
   const x0 = Math.max(0, Math.floor(cam.x / TILE) - 1);
   const y0 = Math.max(0, Math.floor(cam.y / TILE) - 1);
-  const x1 = Math.min(MW - 1, Math.ceil((cam.x + VW) / TILE) + 1);
-  const y1 = Math.min(MH - 1, Math.ceil((cam.y + VH) / TILE) + 2);
+  const x1 = Math.min(MW - 1, Math.ceil((cam.x + viewW) / TILE) + 1);
+  const y1 = Math.min(MH - 1, Math.ceil((cam.y + viewH) / TILE) + 2);
   const explored = st.players[me].explored;
 
   st.buildings.forEach((b) => {
@@ -1300,7 +1304,7 @@ export function drawWorld(ctx, st, view) {
     });
   });
   st.units.forEach((u) => {
-    if (u.x < cam.x - 60 || u.x > cam.x + VW + 60 || u.y < cam.y - 60 || u.y > cam.y + VH + 80) return;
+    if (u.x < cam.x - 60 || u.x > cam.x + viewW + 60 || u.y < cam.y - 60 || u.y > cam.y + viewH + 80) return;
     if (!unitVisible(st, me, u)) return;
     drawList.push({
       y: u.y,
@@ -1393,7 +1397,7 @@ export function drawMinimap(ctx, st, me, cam, w, h) {
   ctx.drawImage(off, 0, 0, w, h);
   ctx.strokeStyle = '#ffffff';
   ctx.lineWidth = 1.2;
-  ctx.strokeRect((cam.x / WORLD_W) * w + 0.5, (cam.y / WORLD_H) * h + 0.5, (VW / WORLD_W) * w, (VH / WORLD_H) * h);
+  ctx.strokeRect((cam.x / WORLD_W) * w + 0.5, (cam.y / WORLD_H) * h + 0.5, (VW / (cam.z || 1) / WORLD_W) * w, (VH / (cam.z || 1) / WORLD_H) * h);
 }
 
 export function drawMapPreview(ctx, tiles, w, h) {

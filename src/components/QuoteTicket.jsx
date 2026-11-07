@@ -188,8 +188,8 @@ function FilledTicket({ item, descriptions, rows, breedFromQuery, lang, onLangCh
         {(item.is_cat || dentalCleaning || doubleCoat || gem || item.tag) && (
           <div className="ticket__tags">
             {item.tag && (
-              <span className="ticket__cat ticket__tag--zone">
-                <PinIcon size={16} />
+              <span className="zone-tag zone-tag--big">
+                <PinIcon size={15} />
                 Precio de {item.tag}
               </span>
             )}

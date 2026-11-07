@@ -76,6 +76,14 @@ function ResIcon({ kind, size = 15 }) {
 const MINI_W = 216;
 const MINI_H = 144;
 const PAN_SPEED = 760;
+const ZOOM_MIN = 0.75;
+const ZOOM_MAX = 2.2;
+const ZOOM_START = 1.35;
+const ZOOM_STEP = 1.15;
+
+function clampCam(x, y, z) {
+  return { x: Math.max(0, Math.min(WORLD_W - VW / z, x)), y: Math.max(0, Math.min(WORLD_H - VH / z, y)), z };
+}
 const ORDER_TEXT = {
   gather: (o) => `Recolectando ${{ food: 'comida', wood: 'madera', gold: 'oro' }[o.res] || ''}`,
   farm: () => 'Trabajando la granja',
@@ -121,7 +129,7 @@ export default function ConquestArena({ config, onExit, onSave }) {
   const rootRef = useRef(null);
   const stRef = useRef(null);
   const terrainRef = useRef(null);
-  const camRef = useRef({ x: 0, y: 0 });
+  const camRef = useRef({ x: 0, y: 0, z: ZOOM_START });
   const selRef = useRef(new Set());
   const placeRef = useRef(null);
   const ghostRef = useRef(null);
@@ -246,10 +254,16 @@ export default function ConquestArena({ config, onExit, onSave }) {
   );
 
   const centerOn = useCallback((x, y) => {
-    camRef.current = {
-      x: Math.max(0, Math.min(WORLD_W - VW, x - VW / 2)),
-      y: Math.max(0, Math.min(WORLD_H - VH, y - VH / 2)),
-    };
+    const { z } = camRef.current;
+    camRef.current = clampCam(x - VW / z / 2, y - VH / z / 2, z);
+  }, []);
+
+  const zoomBy = useCallback((factor) => {
+    const cam = camRef.current;
+    const z = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, cam.z * factor));
+    const cx = cam.x + VW / cam.z / 2;
+    const cy = cam.y + VH / cam.z / 2;
+    camRef.current = clampCam(cx - VW / z / 2, cy - VH / z / 2, z);
   }, []);
 
   useEffect(() => {
@@ -387,12 +401,11 @@ export default function ConquestArena({ config, onExit, onSave }) {
           if (p.vy > VH - 14) dy += 1;
         }
         if (dx || dy) {
-          cam.x = Math.max(0, Math.min(WORLD_W - VW, cam.x + dx * PAN_SPEED * dt));
-          cam.y = Math.max(0, Math.min(WORLD_H - VH, cam.y + dy * PAN_SPEED * dt));
+          Object.assign(cam, clampCam(cam.x + (dx * PAN_SPEED * dt) / cam.z, cam.y + (dy * PAN_SPEED * dt) / cam.z, cam.z));
         }
         if (placeRef.current) {
-          const wx = cam.x + p.vx;
-          const wy = cam.y + p.vy;
+          const wx = cam.x + p.vx / cam.z;
+          const wy = cam.y + p.vy / cam.z;
           const size = BUILDINGS[placeRef.current].size;
           const tx = Math.floor(wx / TILE - size / 2 + 0.5);
           const ty = Math.floor(wy / TILE - size / 2 + 0.5);
@@ -483,18 +496,19 @@ export default function ConquestArena({ config, onExit, onSave }) {
     if (!st || st.over) return;
     const { vx, vy } = viewPoint(e);
     const cam = camRef.current;
-    const wx = cam.x + vx;
-    const wy = cam.y + vy;
+    const wx = cam.x + vx / cam.z;
+    const wy = cam.y + vy / cam.z;
     if (e.button === 2) return;
     if (e.button === 1) {
       e.preventDefault();
       const start = { x: e.clientX, y: e.clientY, cam: { ...cam } };
       const rect = canvasRef.current.getBoundingClientRect();
       const move = (ev) => {
-        camRef.current = {
-          x: Math.max(0, Math.min(WORLD_W - VW, start.cam.x - ((ev.clientX - start.x) * VW) / rect.width)),
-          y: Math.max(0, Math.min(WORLD_H - VH, start.cam.y - ((ev.clientY - start.y) * VH) / rect.height)),
-        };
+        camRef.current = clampCam(
+          start.cam.x - ((ev.clientX - start.x) * VW) / rect.width / start.cam.z,
+          start.cam.y - ((ev.clientY - start.y) * VH) / rect.height / start.cam.z,
+          start.cam.z,
+        );
       };
       const up = () => {
         window.removeEventListener('pointermove', move);
@@ -549,10 +563,10 @@ export default function ConquestArena({ config, onExit, onSave }) {
     const cam = camRef.current;
     const big = Math.abs(box.x1 - box.x0) > 6 || Math.abs(box.y1 - box.y0) > 6;
     if (big) {
-      const x0 = cam.x + Math.min(box.x0, box.x1);
-      const x1 = cam.x + Math.max(box.x0, box.x1);
-      const y0 = cam.y + Math.min(box.y0, box.y1);
-      const y1 = cam.y + Math.max(box.y0, box.y1);
+      const x0 = cam.x + Math.min(box.x0, box.x1) / cam.z;
+      const x1 = cam.x + Math.max(box.x0, box.x1) / cam.z;
+      const y0 = cam.y + Math.min(box.y0, box.y1) / cam.z;
+      const y1 = cam.y + Math.max(box.y0, box.y1) / cam.z;
       const inside = st.units.filter((u) => u.owner === mine && u.x >= x0 - 6 && u.x <= x1 + 6 && u.y - 10 >= y0 - 10 && u.y - 10 <= y1 + 10);
       const military = inside.filter((u) => UNITS[u.type].military);
       const pick = military.length && military.length < inside.length && !box.shift ? military : inside;
@@ -561,12 +575,12 @@ export default function ConquestArena({ config, onExit, onSave }) {
       syncHud();
       return;
     }
-    const wx = cam.x + box.x1;
-    const wy = cam.y + box.y1;
+    const wx = cam.x + box.x1 / cam.z;
+    const wy = cam.y + box.y1 / cam.z;
     const hit = pickAt(wx, wy);
     const now = performance.now();
     if (hit && hit.kind === 'u' && hit.owner === mine && now - lastClickRef.current.t < 340 && lastClickRef.current.type === hit.type) {
-      const same = st.units.filter((u) => u.owner === mine && u.type === hit.type && u.x >= cam.x && u.x <= cam.x + VW && u.y >= cam.y && u.y <= cam.y + VH);
+      const same = st.units.filter((u) => u.owner === mine && u.type === hit.type && u.x >= cam.x && u.x <= cam.x + VW / cam.z && u.y >= cam.y && u.y <= cam.y + VH / cam.z);
       selectOnly(same.map((u) => u.id));
       lastClickRef.current = { t: 0, type: null };
       return;
@@ -647,15 +661,16 @@ export default function ConquestArena({ config, onExit, onSave }) {
   const onContextMenu = (e) => {
     e.preventDefault();
     const { vx, vy } = viewPoint(e);
-    command(camRef.current.x + vx, camRef.current.y + vy);
+    command(camRef.current.x + vx / camRef.current.z, camRef.current.y + vy / camRef.current.z);
   };
 
   const onWheel = (e) => {
     const cam = camRef.current;
-    camRef.current = {
-      x: Math.max(0, Math.min(WORLD_W - VW, cam.x + (e.shiftKey ? e.deltaY : e.deltaX) * 0.8)),
-      y: Math.max(0, Math.min(WORLD_H - VH, cam.y + (e.shiftKey ? 0 : e.deltaY) * 0.8)),
-    };
+    const { vx, vy } = viewPoint(e);
+    const z = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, cam.z * (e.deltaY < 0 ? ZOOM_STEP : 1 / ZOOM_STEP)));
+    const wx = cam.x + vx / cam.z;
+    const wy = cam.y + vy / cam.z;
+    camRef.current = clampCam(wx - vx / z, wy - vy / z, z);
   };
 
   useEffect(() => {
@@ -724,6 +739,8 @@ export default function ConquestArena({ config, onExit, onSave }) {
         return;
       }
       if (key === 'h') selectCastle();
+      if (key === '+' || key === '=') zoomBy(ZOOM_STEP);
+      if (key === '-') zoomBy(1 / ZOOM_STEP);
       if (key === '.') nextIdle();
       if (key === ' ') {
         e.preventDefault();
@@ -929,6 +946,18 @@ export default function ConquestArena({ config, onExit, onSave }) {
                 </svg>
               </button>
             )}
+            <button type="button" className="cats__iconbtn" onClick={() => zoomBy(1 / ZOOM_STEP)} aria-label="Alejar" title="Alejar (tecla -)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="7" />
+                <path d="M20 20l-3.5-3.5M8 11h6" />
+              </svg>
+            </button>
+            <button type="button" className="cats__iconbtn" onClick={() => zoomBy(ZOOM_STEP)} aria-label="Acercar" title="Acercar (tecla +)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="7" />
+                <path d="M20 20l-3.5-3.5M8 11h6M11 8v6" />
+              </svg>
+            </button>
             <button
               type="button"
               className="cats__iconbtn"
@@ -1172,8 +1201,8 @@ function ConquestHelp({ online }) {
             Con un edificio seleccionado, <Key>clic derecho</Key> marca dónde se juntan las tropas nuevas.
           </li>
           <li>
-            <Key>Rueda</Key> o <Key>botón del medio arrastrando</Key>: mueven la cámara. En el minimapa, <Key>clic</Key> salta a ese lugar y <Key>clic derecho</Key> manda a la
-            selección.
+            <Key>Rueda</Key> o los botones de lupa arriba: acercan o alejan el mapa. <Key>Botón del medio arrastrando</Key>: mueve la cámara. En el minimapa, <Key>clic</Key> salta
+            a ese lugar y <Key>clic derecho</Key> manda a la selección.
           </li>
         </ul>
       </div>
@@ -1188,6 +1217,9 @@ function ConquestHelp({ online }) {
           </li>
           <li>
             <Key>H</Key>: va a tu castillo y lo selecciona.
+          </li>
+          <li>
+            <Key>+</Key> y <Key>-</Key>: acercan o alejan el mapa.
           </li>
           <li>
             <Key>.</Key> (punto): va al siguiente aldeano sin trabajo.
