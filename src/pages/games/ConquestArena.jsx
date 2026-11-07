@@ -35,7 +35,44 @@ import {
 } from './conquestEngine';
 import { buildingSprite, drawMinimap, drawWorld, makeTerrain, unitSprite, unitVisible } from './conquestDraw';
 
-const RES_ICON = { food: '🍖', wood: '🪵', gold: '🪙' };
+const RES_LABEL = { food: 'Comida', wood: 'Madera', gold: 'Oro' };
+
+function ResIcon({ kind, size = 15 }) {
+  return (
+    <svg className="conq__icon" width={size} height={size} viewBox="0 0 16 16" aria-hidden="true">
+      {kind === 'food' && (
+        <>
+          <rect x="1.6" y="9.6" width="7" height="2.4" rx="1.2" transform="rotate(-40 5 10.8)" fill="#f3e9d8" />
+          <circle cx="2.6" cy="13.2" r="1.7" fill="#f3e9d8" />
+          <ellipse cx="10" cy="6" rx="5.2" ry="4.6" fill="#d9773f" />
+          <ellipse cx="8.6" cy="4.6" rx="1.8" ry="1.2" fill="#f2a46e" />
+        </>
+      )}
+      {kind === 'wood' && (
+        <>
+          <rect x="0.8" y="5" width="11" height="7" rx="2" fill="#8b5a2b" />
+          <rect x="0.8" y="7.4" width="9" height="0.9" fill="#6b4128" />
+          <ellipse cx="12" cy="8.5" rx="3.2" ry="3.6" fill="#d9b07a" />
+          <ellipse cx="12" cy="8.5" rx="1.6" ry="1.9" fill="none" stroke="#8b5a2b" strokeWidth="0.9" />
+        </>
+      )}
+      {kind === 'gold' && (
+        <>
+          <circle cx="8" cy="8" r="6.6" fill="#e8b830" />
+          <circle cx="8" cy="8" r="4.6" fill="#f6d55c" stroke="#c99a1e" strokeWidth="1" />
+          <path d="M6.6 6.2h2.6M6.6 9.8h2.6M8 5v6" stroke="#c99a1e" strokeWidth="1.1" strokeLinecap="round" />
+        </>
+      )}
+      {kind === 'pop' && (
+        <>
+          <path d="M8 1.8 1.4 7.4h2v6.6h9.2V7.4h2z" fill="#e8eef9" />
+          <path d="M8 1.8 1.4 7.4h13.2z" fill="#ff8a5c" />
+          <rect x="6.6" y="9.6" width="2.8" height="4.4" rx="0.6" fill="#8b5a2b" />
+        </>
+      )}
+    </svg>
+  );
+}
 const MINI_W = 216;
 const MINI_H = 144;
 const PAN_SPEED = 760;
@@ -67,8 +104,8 @@ function Cost({ cost }) {
   return (
     <span className="conq__cost">
       {parts.map((k) => (
-        <span key={k}>
-          {RES_ICON[k]}
+        <span key={k} title={RES_LABEL[k]}>
+          <ResIcon kind={k} size={12} />
           {cost[k]}
         </span>
       ))}
@@ -848,11 +885,11 @@ export default function ConquestArena({ config, onExit, onSave }) {
             <div className="conq__res">
               {RES_KEYS.map((k) => (
                 <span key={k} className="conq__chip" title={{ food: 'Comida', wood: 'Madera', gold: 'Oro' }[k]}>
-                  {RES_ICON[k]} <b>{Math.floor(hud.res[k])}</b>
+                  <ResIcon kind={k} /> <b>{Math.floor(hud.res[k])}</b>
                 </span>
               ))}
               <span className={capped ? 'conq__chip is-warn' : 'conq__chip'} title="Población: construye casas para subirla">
-                🏠 <b>{hud.pop}</b>/{hud.popCap}
+                <ResIcon kind="pop" /> <b>{hud.pop}</b>/{hud.popCap}
               </span>
               <span className="conq__chip conq__age" title={ageName}>
                 {ageName}
@@ -951,7 +988,10 @@ export default function ConquestArena({ config, onExit, onSave }) {
             {!sel.length && (
               <div className="conq__tips">
                 <strong>{TRIBES[tribe].name}</strong>: {TRIBES[tribe].perk}
-                <span>Clic: seleccionar · Arrastrar: varios · Clic derecho: mover, recolectar o atacar · W A S D o flechas: cámara · H: castillo · Espacio: ir al ataque</span>
+                <span>
+                  Selecciona a tus aldeanos con clic izquierdo y mándalos a trabajar con clic derecho sobre un árbol, las bayas o el oro. Los controles completos están debajo del
+                  juego.
+                </span>
               </div>
             )}
             {single && single.kind === 'u' && (
@@ -1079,6 +1119,95 @@ export default function ConquestArena({ config, onExit, onSave }) {
           </div>
         )}
       </div>
+      <ConquestHelp online={online} />
     </div>
+  );
+}
+
+function Key({ children }) {
+  return <kbd className="conq-help__key">{children}</kbd>;
+}
+
+function ConquestHelp({ online }) {
+  return (
+    <section className="conq-help" aria-label="Controles de Conquista">
+      <div className="conq-help__col">
+        <h3>Con el mouse</h3>
+        <ul>
+          <li>
+            <Key>Clic izquierdo</Key> sobre un aldeano, tropa o edificio para seleccionarlo.
+          </li>
+          <li>
+            <Key>Arrastra con clic izquierdo</Key> para seleccionar varios a la vez.
+          </li>
+          <li>
+            <Key>Doble clic</Key> en una tropa para elegir todas las de ese tipo en pantalla. <Key>Shift</Key> + clic las suma o quita.
+          </li>
+          <li>
+            <Key>Clic derecho en el suelo</Key>: caminan hasta ahí.
+          </li>
+          <li>
+            <Key>Clic derecho en árbol, bayas u oro</Key> con aldeanos: recolectan solos y llevan todo al castillo o al almacén.
+          </li>
+          <li>
+            <Key>Clic derecho en un enemigo</Key>: lo atacan.
+          </li>
+          <li>
+            <Key>Clic derecho en un edificio tuyo</Key> con aldeanos: lo terminan de construir, lo reparan o trabajan la granja.
+          </li>
+          <li>
+            Con un edificio seleccionado, <Key>clic derecho</Key> marca dónde se juntan las tropas nuevas.
+          </li>
+          <li>
+            <Key>Rueda</Key> o <Key>botón del medio arrastrando</Key>: mueven la cámara. En el minimapa, <Key>clic</Key> salta a ese lugar y <Key>clic derecho</Key> manda a la
+            selección.
+          </li>
+        </ul>
+      </div>
+      <div className="conq-help__col">
+        <h3>Con el teclado</h3>
+        <ul>
+          <li>
+            <Key>W</Key> <Key>A</Key> <Key>S</Key> <Key>D</Key> o las <Key>flechas</Key>: mueven la cámara.
+          </li>
+          <li>
+            <Key>1</Key> al <Key>9</Key>: los botones del panel de abajo, en orden (construir, entrenar, subir de edad).
+          </li>
+          <li>
+            <Key>H</Key>: va a tu castillo y lo selecciona.
+          </li>
+          <li>
+            <Key>.</Key> (punto): va al siguiente aldeano sin trabajo.
+          </li>
+          <li>
+            <Key>Espacio</Key>: va a donde te están atacando.
+          </li>
+          <li>
+            <Key>Esc</Key>: cancela lo que estás colocando o quita la selección.
+          </li>
+          <li>
+            <Key>Shift</Key> al colocar un edificio: sigues colocando más del mismo.
+          </li>
+          {!online && (
+            <li>
+              <Key>P</Key>: pausa y reanuda.
+            </li>
+          )}
+        </ul>
+      </div>
+      <div className="conq-help__col">
+        <h3>Para empezar</h3>
+        <ol>
+          <li>Manda a tus aldeanos a cortar árboles, recoger bayas y sacar oro.</li>
+          <li>Haz clic en el castillo y entrena más aldeanos (tecla 1).</li>
+          <li>
+            Cuando la casita <ResIcon kind="pop" size={12} /> se ponga roja, construye casas: cada una da 5 de población.
+          </li>
+          <li>Construye un cuartel, entrena lanceros y sube a la Edad Feudal desde el castillo.</li>
+          <li>Junta un ejército y derriba el castillo enemigo. Si cae el tuyo, pierdes.</li>
+        </ol>
+        <p>Lancero le gana a caballero, caballero a arquero y arquero a lancero. La catapulta derriba edificios.</p>
+      </div>
+    </section>
   );
 }
