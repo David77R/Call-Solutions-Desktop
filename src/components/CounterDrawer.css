@@ -3,23 +3,27 @@
   inset: 0;
   z-index: 8000;
   pointer-events: none;
+  visibility: hidden;
+  transition: visibility 0s linear 560ms;
 }
 
 .ctr.is-open {
   pointer-events: auto;
+  visibility: visible;
+  transition: none;
 }
 
 .ctr__backdrop {
   position: absolute;
   inset: 0;
   background: rgba(3, 2, 20, 0.45);
-  backdrop-filter: blur(2px);
   opacity: 0;
   transition: opacity 320ms ease;
 }
 
 .ctr.is-open .ctr__backdrop {
   opacity: 1;
+  backdrop-filter: blur(2px);
 }
 
 .ctr__panel {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { useGameActiveRef } from './gameActivity';
 import fifo from '../../assets/fifo.webp';
 import {
@@ -1203,7 +1203,7 @@ function Key({ children }) {
   return <kbd className="conq-help__key">{children}</kbd>;
 }
 
-function ConquestHelp({ online }) {
+const ConquestHelp = memo(function ConquestHelp({ online }) {
   return (
     <section className="conq-help" aria-label="Controles de Conquista">
       <div className="conq-help__col">
@@ -1295,4 +1295,4 @@ function ConquestHelp({ online }) {
       </div>
     </section>
   );
-}
+});

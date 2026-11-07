@@ -1659,6 +1659,7 @@ function stampVision(vis, explored, tx, ty, r) {
 }
 
 export function computeVision(st) {
+  st.visRev = (st.visRev || 0) + 1;
   st.players.forEach((pl) => pl.vis.fill(0));
   st.units.forEach((u) => {
     const pl = st.players[u.owner];

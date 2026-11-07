@@ -2381,6 +2381,7 @@
   height: auto;
   cursor: default;
   touch-action: none;
+  will-change: transform;
 }
 
 .conq__canvas.is-place {

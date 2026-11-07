@@ -1036,12 +1036,16 @@ export function makeTerrain(st) {
 
 let fogCanvas = null;
 let fogData = null;
+let fogKey = '';
 function fogLayer(st, me) {
   if (!fogCanvas) {
     fogCanvas = document.createElement('canvas');
     fogCanvas.width = MW;
     fogCanvas.height = MH;
   }
+  const key = `${st.seed}|${me}|${st.visRev || 0}`;
+  if (key === fogKey) return fogCanvas;
+  fogKey = key;
   const g = fogCanvas.getContext('2d');
   if (!fogData) fogData = g.createImageData(MW, MH);
   const { vis, explored } = st.players[me];
@@ -1274,7 +1278,11 @@ export function drawWorld(ctx, st, view) {
   ctx.save();
   ctx.scale(z, z);
   ctx.translate(-Math.round(cam.x * z) / z, -Math.round(cam.y * z) / z);
-  ctx.drawImage(terrain, 0, 0);
+  const sx = Math.max(0, Math.floor(cam.x));
+  const sy = Math.max(0, Math.floor(cam.y));
+  const sw = Math.min(WORLD_W - sx, Math.ceil(viewW) + 2);
+  const sh = Math.min(WORLD_H - sy, Math.ceil(viewH) + 2);
+  ctx.drawImage(terrain, sx, sy, sw, sh, sx, sy, sw, sh);
   const x0 = Math.max(0, Math.floor(cam.x / TILE) - 1);
   const y0 = Math.max(0, Math.floor(cam.y / TILE) - 1);
   const x1 = Math.min(MW - 1, Math.ceil((cam.x + viewW) / TILE) + 1);
@@ -1332,7 +1340,11 @@ export function drawWorld(ctx, st, view) {
   });
 
   ctx.imageSmoothingEnabled = true;
-  ctx.drawImage(fogLayer(st, me), 0, 0, MW, MH, 0, 0, WORLD_W, WORLD_H);
+  const fx = Math.max(0, x0 - 1);
+  const fy = Math.max(0, y0 - 1);
+  const fw = Math.min(MW, x1 + 2) - fx;
+  const fh = Math.min(MH, y1 + 2) - fy;
+  ctx.drawImage(fogLayer(st, me), fx, fy, fw, fh, fx * TILE, fy * TILE, fw * TILE, fh * TILE);
 
   if (ghost) {
     const size = BUILDINGS[ghost.type].size;
@@ -1359,8 +1371,16 @@ export function drawWorld(ctx, st, view) {
   }
 }
 
+let miniCanvas = null;
+let miniData = null;
 export function drawMinimap(ctx, st, me, cam, w, h) {
-  const img = ctx.createImageData(MW, MH);
+  if (!miniCanvas) {
+    miniCanvas = document.createElement('canvas');
+    miniCanvas.width = MW;
+    miniCanvas.height = MH;
+    miniData = miniCanvas.getContext('2d').createImageData(MW, MH);
+  }
+  const img = miniData;
   const d = img.data;
   const { vis, explored } = st.players[me];
   for (let i = 0; i < MW * MH; i += 1) {
@@ -1388,13 +1408,10 @@ export function drawMinimap(ctx, st, me, cam, w, h) {
     if (!unitVisible(st, me, u)) return;
     put(Math.floor(u.x / TILE), Math.floor(u.y / TILE), u.owner === me ? [255, 255, 255] : colors[u.owner]);
   });
-  const off = document.createElement('canvas');
-  off.width = MW;
-  off.height = MH;
-  off.getContext('2d').putImageData(img, 0, 0);
+  miniCanvas.getContext('2d').putImageData(img, 0, 0);
   ctx.imageSmoothingEnabled = false;
   ctx.clearRect(0, 0, w, h);
-  ctx.drawImage(off, 0, 0, w, h);
+  ctx.drawImage(miniCanvas, 0, 0, w, h);
   ctx.strokeStyle = '#ffffff';
   ctx.lineWidth = 1.2;
   ctx.strokeRect((cam.x / WORLD_W) * w + 0.5, (cam.y / WORLD_H) * h + 0.5, (VW / (cam.z || 1) / WORLD_W) * w, (VH / (cam.z || 1) / WORLD_H) * h);

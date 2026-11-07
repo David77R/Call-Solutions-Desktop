@@ -3,23 +3,27 @@
   inset: 0;
   z-index: 8000;
   pointer-events: none;
+  visibility: hidden;
+  transition: visibility 0s linear 560ms;
 }
 
 .msgs.is-open {
   pointer-events: auto;
+  visibility: visible;
+  transition: none;
 }
 
 .msgs__backdrop {
   position: absolute;
   inset: 0;
   background: rgba(3, 2, 20, 0.45);
-  backdrop-filter: blur(2px);
   opacity: 0;
   transition: opacity 320ms ease;
 }
 
 .msgs.is-open .msgs__backdrop {
   opacity: 1;
+  backdrop-filter: blur(2px);
 }
 
 .msgs__panel {
